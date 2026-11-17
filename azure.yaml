@@ -1,0 +1,7 @@
+# azd entry point (ADR-0005). Written at scaffolding; not executed. See infra/README.md.
+name: hivespace
+services:
+  app:
+    language: dotnet
+    project: ./apphost/HiveSpace.AppHost/HiveSpace.AppHost.csproj
+    host: containerapp

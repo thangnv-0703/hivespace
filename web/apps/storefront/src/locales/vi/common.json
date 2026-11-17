@@ -1,0 +1,25 @@
+{
+  "common": {
+    "loading": "Đang tải…",
+    "retry": "Thử lại",
+    "language": "Ngôn ngữ",
+    "toggleTheme": "Đổi giao diện sáng/tối",
+    "sellerCentre": "Kênh người bán"
+  },
+  "home": {
+    "title": "Chào mừng đến HiveSpace",
+    "subtitle": "Mua sắm từ nhiều cửa hàng trong một lần thanh toán."
+  },
+  "catalog": {
+    "categories": "Danh mục",
+    "empty": "Chưa có danh mục nào.",
+    "loadFailed": "Không tải được danh mục."
+  },
+  "errors": {
+    "backHome": "Về trang chủ",
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "message": "Trang bạn tìm không tồn tại hoặc đã được chuyển đi."
+    }
+  }
+}

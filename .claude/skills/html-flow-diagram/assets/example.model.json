@@ -1,0 +1,107 @@
+{
+  "meta": {
+    "title": "Checkout platform flow",
+    "subtitle": "Runtime view of the web checkout: who calls what, the data on each arrow, and open design notes. Click any component, arrow or numbered pin. <b>Considerations</b> shows suggested additions that are not agreed yet.",
+    "description": "Customers and support agents reach a CDN with WAF, a web storefront and a checkout API. The API calls identity, order and payment services; orders are stored in PostgreSQL and published to a queue consumed by a fulfilment worker that emails customers.",
+    "viewBox": [1180, 640],
+    "overview": [
+      ["Users", "Customers, support agents"],
+      ["Runtime", ".NET 10 APIs, React SPA"],
+      ["Data", "PostgreSQL, queue, Key Vault"],
+      ["External", "Stripe, email provider"]
+    ],
+    "footnote": "Example model shipped with the html-flow-diagram skill."
+  },
+  "frames": [
+    { "x": 200, "y": 30, "w": 790, "h": 500, "label": "Cloud · shop.example.com", "style": "region" },
+    { "x": 660, "y": 140, "w": 190, "h": 190, "label": "Microservices", "labelPos": "bottom", "tone": "service" },
+    { "x": 1000, "y": 50, "w": 170, "h": 460, "label": "External", "labelPos": "bottom", "style": "dashed" }
+  ],
+  "nodes": [
+    { "id": "customer", "kind": "external", "x": 20, "y": 80, "w": 150, "h": 50, "label": "Customer", "sub": "browser · mobile", "flow": "checkout", "desc": "Shopper placing an order." },
+    { "id": "agent", "kind": "external", "x": 20, "y": 160, "w": 150, "h": 50, "label": "Support agent", "sub": "employee SSO", "flow": "support", "desc": "Looks up and amends orders for customers." },
+    { "id": "cdn", "kind": "security", "x": 230, "y": 80, "w": 160, "h": 130, "label": "CDN + WAF", "sub": "TLS · bot rules", "sub2": "shop.example.com", "desc": "Only public entry point." },
+    { "id": "web", "kind": "frontend", "x": 440, "y": 80, "w": 180, "h": 50, "label": "Web storefront", "sub": "React SPA", "desc": "Catalogue, cart and checkout screens." },
+    { "id": "bff", "kind": "backend", "x": 440, "y": 160, "w": 180, "h": 56, "label": "Checkout API", "sub": ".NET 10 · BFF", "desc": "Session, validation and orchestration." },
+    { "id": "auth", "kind": "security", "x": 680, "y": 70, "w": 150, "h": 50, "label": "Identity", "sub": "OIDC · roles", "desc": "Customer and employee sign-in." },
+    { "id": "order", "kind": "service", "x": 680, "y": 160, "w": 150, "h": 56, "label": "Order service", "sub": "create · amend", "desc": "Owns the order lifecycle." },
+    { "id": "pay", "kind": "service", "x": 680, "y": 250, "w": 150, "h": 56, "label": "Payment service", "sub": "authorize · capture", "desc": "Wraps the payment provider." },
+    { "id": "db", "kind": "database", "x": 870, "y": 160, "w": 110, "h": 56, "label": "Orders DB", "sub": "PostgreSQL", "desc": "System of record for orders." },
+    { "id": "kv", "kind": "security", "x": 870, "y": 350, "w": 110, "h": 56, "label": "Key Vault", "sub": "secrets", "desc": "Provider keys and certificates." },
+    { "id": "queue", "kind": "backend", "x": 440, "y": 350, "w": 180, "h": 50, "label": "Order events", "sub": "queue · topic", "sigil": "service", "desc": "Decouples fulfilment from checkout." },
+    { "id": "worker", "kind": "service", "x": 440, "y": 440, "w": 180, "h": 56, "label": "Fulfilment worker", "sub": "pick · ship · notify", "desc": "Consumes order events." },
+    { "id": "stripe", "kind": "external", "x": 1010, "y": 250, "w": 150, "h": 50, "label": "Stripe", "sub": "payments API", "desc": "Card payments." },
+    { "id": "mail", "kind": "external", "x": 1010, "y": 430, "w": 150, "h": 50, "label": "Email provider", "sub": "transactional", "desc": "Order confirmation emails." },
+    { "id": "erp", "kind": "external", "ghost": true, "x": 1010, "y": 70, "w": 150, "h": 50, "label": "ERP", "sub": "Phase 2", "desc": "Not agreed: push orders to ERP." }
+  ],
+  "edges": [
+    { "id": "e1", "from": "customer", "to": "cdn", "s": "emphasis", "label": "HTTPS", "data": { "p": "Pages, API calls", "f": "HTTPS · JSON", "c": "pii", "s": "TLS 1.2+, WAF" } },
+    { "id": "e2", "from": "agent", "to": "cdn", "s": "default", "label": "HTTPS", "data": { "p": "Back-office calls", "f": "HTTPS · JSON", "c": "pii", "s": "Employee SSO + MFA" } },
+    { "id": "e3", "from": "cdn", "to": "web", "s": "emphasis" },
+    { "id": "e4", "from": "web", "to": "bff", "s": "emphasis", "data": { "p": "Cart, checkout request", "f": "REST · JSON", "c": "pii", "s": "Cookie session, CSRF token" } },
+    { "id": "e5", "from": "bff", "to": "auth", "s": "security", "label": "OIDC", "data": { "p": "Tokens, claims", "f": "OpenID Connect", "c": "pii", "s": "PKCE; tokens kept server-side" } },
+    { "id": "e6", "from": "bff", "to": "order", "s": "emphasis", "data": { "p": "Create order", "f": "REST · JSON", "c": "pii", "s": "mTLS inside the VNet" } },
+    { "id": "e7", "from": "bff", "to": "pay", "s": "emphasis", "midX": 640, "data": { "p": "Authorize amount", "f": "REST · JSON", "c": "conf", "s": "Idempotency key" } },
+    { "id": "e8", "from": "order", "to": "db", "s": "default", "data": { "p": "Order row + lines", "f": "SQL", "c": "pii", "s": "Managed identity; encrypted at rest" } },
+    { "id": "e9", "from": "pay", "to": "stripe", "s": "emphasis", "label": "charge", "data": { "p": "Payment intent (token, amount)", "f": "HTTPS · JSON", "c": "restr", "s": "No card data stored; API key from Key Vault" } },
+    { "id": "e10", "from": "pay", "to": "kv", "s": "security", "data": { "p": "Stripe secret key", "f": "Key Vault API", "c": "restr", "s": "Managed identity" } },
+    { "id": "e11", "from": "order", "to": "queue", "s": "emphasis", "fromSide": "left", "fromAt": 0.85, "toSide": "right", "via": [[660, 375]], "label": "OrderPlaced", "data": { "p": "OrderPlaced event (id, lines)", "f": "Message · JSON", "c": "pii", "s": "Private endpoint", "w": "After payment is authorized" }, "lx": 660, "ly": 332 },
+    { "id": "e12", "from": "queue", "to": "worker", "s": "emphasis" },
+    { "id": "e13", "from": "worker", "to": "mail", "s": "default", "label": "confirmation", "data": { "p": "Recipient, order summary", "f": "HTTPS · JSON", "c": "pii", "s": "API key; SPF/DKIM" } },
+    { "id": "g1", "from": "order", "to": "erp", "s": "ghost", "ghost": true, "fromSide": "right", "fromAt": 0.2, "toSide": "left", "via": [[850, 95]], "label": "Phase 2" }
+  ],
+  "flows": {
+    "checkout": {
+      "title": "Customer checkout",
+      "color": "frontend",
+      "intro": "From cart to confirmed order.",
+      "steps": [
+        { "e": ["e1", "e3"], "t": "<strong>Open the shop</strong> through the CDN/WAF." },
+        { "e": ["e4", "e5"], "t": "<strong>Sign in</strong> and submit the cart to the checkout API." },
+        { "e": ["e7", "e9", "e10"], "t": "<strong>Authorize payment</strong> with Stripe, using the key from Key Vault." },
+        { "e": ["e6", "e8"], "t": "<strong>Create the order</strong> and store it." },
+        { "e": ["e11", "e12", "e13"], "t": "<strong>Fulfil</strong>: the event is queued, then the worker ships and emails." }
+      ]
+    },
+    "support": {
+      "title": "Support agent amends an order",
+      "color": "security",
+      "steps": [
+        { "e": ["e2", "e3", "e4"], "t": "<strong>Agent signs in</strong> with employee SSO." },
+        { "e": ["e6", "e8"], "t": "<strong>Amend the order</strong>; the change is audited." }
+      ]
+    }
+  },
+  "notes": [
+    { "id": "N1", "on": "pay", "st": "decision", "t": "3-D Secure handling", "b": "Decide whether the SPA or the payment service drives the 3-D Secure challenge.", "r": "Payments workshop" },
+    { "id": "N2", "on": "queue", "st": "risk", "t": "No dead-letter queue yet", "b": "Poison messages would block fulfilment; add a DLQ and an alert." },
+    { "id": "N3", "on": "db", "st": "consider", "t": "Read replica for reporting", "b": "Keep reporting queries off the primary." },
+    { "id": "G1", "st": "decision", "t": "Data retention", "b": "Agree the retention period for order PII." }
+  ],
+  "specs": {
+    "bff": { "host": "App Service, .NET 10", "trigger": "SPA calls", "ops": ["Validates the cart", "Orchestrates payment then order", "Issues short-lived download links"], "data": "Session only", "nfr": "p95 below 300 ms" },
+    "order": { "host": "Container App", "trigger": "Checkout API", "ops": ["Create, amend, cancel", "Publishes OrderPlaced"], "data": "Orders DB", "nfr": "Idempotent writes" },
+    "pay": { "host": "Container App", "trigger": "Checkout API", "ops": ["Authorize and capture", "Refunds"], "data": "No card data", "nfr": "PCI scope minimized" }
+  },
+  "sections": [
+    {
+      "type": "personas",
+      "title": "Who does what",
+      "items": [
+        { "title": "Customer", "tone": "frontend", "flow": "checkout", "tags": ["Identity: social or email login"],
+          "rows": [["Where", "Web storefront"], ["Can", ["Place and track orders", "Update address"]], ["Data", ["Order [[pii]]", "Payment token [[restr]]"]]] },
+        { "title": "Support agent", "tone": "security", "flow": "support", "tags": ["Employee SSO + MFA"],
+          "rows": [["Where", "Back-office screens"], ["Can", ["Look up and amend orders"]], ["Cannot", "See card data"]] }
+      ]
+    },
+    {
+      "type": "table",
+      "title": "Permission matrix",
+      "matrix": true,
+      "columns": ["Capability", "Customer", "Agent"],
+      "rows": [["Place order", "✓", "–"], ["Amend order", "own, before ship", "✓"], ["Refund", "–", "up to $200"]]
+    },
+    { "type": "notes", "title": "Design notes" },
+    { "type": "catalogue", "title": "Component catalogue" }
+  ]
+}

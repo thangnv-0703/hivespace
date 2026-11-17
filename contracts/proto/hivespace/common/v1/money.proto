@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package hivespace.common.v1;
+
+option csharp_namespace = "HiveSpace.Contracts.Common.V1";
+
+// Money is an amount in minor units plus an ISO 4217 code (ADR-0010).
+message Money {
+  int64 amount = 1;
+  string currency = 2;
+}

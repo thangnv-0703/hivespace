@@ -1,0 +1,27 @@
+# Python service template (ADR-0020). Render from the repository root:
+#   uvx copier@9.19.1 copy templates/python-service . -a services/<name>/.copier-answers.yml --data name=<name>
+_subdirectory: template
+_templates_suffix: .jinja
+_answers_file: .copier-answers.yml
+
+name:
+  type: str
+  help: Service folder name (lowercase, hyphens allowed), e.g. search-ai
+  validator: "{% if name != name | lower or ' ' in name or name == '' %}lowercase, no spaces{% endif %}"
+
+shape:
+  type: str
+  help: lean (features/) is used by every Python service today; rich (domain/, application/, adapters/) is reserved
+  choices: [lean, rich]
+  default: lean
+
+module:
+  type: str
+  default: "{{ name | replace('-', '_') }}"
+  when: false
+
+_message_after_copy: |
+  Generated services/{{ name }}. Shared files are not edited by the template; add these by hand:
+    1. apphost/HiveSpace.AppHost/Resources/PythonServices.cs: builder.AddUvicornApp("{{ name }}", "../../services/{{ name }}", "{{ module }}.main:app").WithUv()
+    2. gateway/src/Gateway/appsettings.json: a route /v1/{{ name }}/{**rest} and a cluster http://{{ name }}
+  Then run `uv sync` in services/{{ name }}.

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivespace.dev/events/envelope.schema.json",
+  "title": "Event envelope (ADR-0002)",
+  "type": "object",
+  "required": ["eventId", "eventType", "eventVersion", "occurredAt", "producer", "correlationId", "data"],
+  "properties": {
+    "eventId": { "type": "string", "format": "uuid", "description": "UUID v7; consumers dedupe on it (NFR-REL-005)." },
+    "eventType": { "type": "string" },
+    "eventVersion": { "type": "integer", "minimum": 1 },
+    "occurredAt": { "type": "string", "format": "date-time", "description": "UTC, ISO-8601 with Z." },
+    "producer": { "type": "string" },
+    "correlationId": { "type": "string" },
+    "traceparent": { "type": "string", "description": "W3C trace context so one flow is one trace (NFR-OBS-001)." },
+    "data": { "type": "object" }
+  },
+  "additionalProperties": false
+}

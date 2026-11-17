@@ -1,0 +1,20 @@
+name: i18n
+
+on:
+  push:
+    branches: [main]
+    paths: ["contracts/errors/**", "web/**/locales/**", "tools/scripts/i18n_parity.py", ".github/workflows/i18n.yml"]
+  pull_request:
+    paths: ["contracts/errors/**", "web/**/locales/**", "tools/scripts/i18n_parity.py", ".github/workflows/i18n.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  parity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: vi/en key parity (NFR-L10N-004)
+        run: uv run --no-project --with pyyaml python -I tools/scripts/i18n_parity.py .

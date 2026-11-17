@@ -1,0 +1,26 @@
+{
+  "name": "@hivespace/core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "vue-i18n": "11.4.21"
+  },
+  "peerDependencies": {
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@vue/tsconfig": "^0.9.1",
+    "typescript": "~6.0.0",
+    "vitest": "^4.1.11",
+    "vue": "^3.5.42",
+    "vue-tsc": "^3.3.11"
+  }
+}

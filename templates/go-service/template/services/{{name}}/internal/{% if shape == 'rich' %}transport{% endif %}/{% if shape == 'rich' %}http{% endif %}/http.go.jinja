@@ -1,0 +1,15 @@
+// Package http adapts HTTP requests to the app layer. Thin: no rules here.
+package http
+
+import (
+	"encoding/json"
+	"net/http"
+)
+
+// Register mounts the routes. STUB: the template sample, replaced by the first feature slice.
+func Register(mux *http.ServeMux) {
+	mux.HandleFunc("GET /v1/{{ name }}/ping", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(map[string]string{"service": "{{ name }}"})
+	})
+}

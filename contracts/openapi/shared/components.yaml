@@ -1,0 +1,56 @@
+openapi: 3.1.0
+info:
+  title: HiveSpace shared components
+  version: 1.0.0
+paths: {}
+components:
+  schemas:
+    Id:
+      type: string
+      format: uuid
+      description: Opaque public identifier, UUID v7 (ADR-0009).
+    Money:
+      type: object
+      description: Amount in minor units plus ISO 4217 currency code (ADR-0010). Never a bare number.
+      required: [amount, currency]
+      properties:
+        amount:
+          type: integer
+          format: int64
+        currency:
+          type: string
+          pattern: '^[A-Z]{3}$'
+    Error:
+      type: object
+      description: Every rejection uses this shape; `code` is stable, `message` is localized (FR-LOC-004).
+      required: [code, message]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: object
+            required: [field, code]
+            properties:
+              field:
+                type: string
+              code:
+                type: string
+              message:
+                type: string
+    PageMeta:
+      type: object
+      required: [page, pageSize, total]
+      properties:
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0

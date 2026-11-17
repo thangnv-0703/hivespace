@@ -1,0 +1,12 @@
+"""Template sample slice. STUB: replaced by the service's first feature slice."""
+
+from __future__ import annotations
+
+from fastapi import APIRouter
+
+router = APIRouter()
+
+
+@router.get("/v1/search-ai/ping")
+async def ping() -> dict[str, str]:
+    return {"service": "search-ai"}

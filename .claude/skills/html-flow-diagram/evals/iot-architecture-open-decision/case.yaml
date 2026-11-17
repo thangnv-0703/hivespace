@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: iot-architecture-open-decision
+expected_outcome: |
+  An interactive HTML architecture flow of the IoT platform with separate ingestion and alerting flows, all named components, the key numbers, and the undecided time-series database clearly marked as an open decision.

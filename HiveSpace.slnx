@@ -1,0 +1,74 @@
+<Solution>
+  <Folder Name="/apphost/">
+    <Project Path="apphost/HiveSpace.AppHost/HiveSpace.AppHost.csproj" />
+    <Project Path="apphost/HiveSpace.ServiceDefaults/HiveSpace.ServiceDefaults.csproj" />
+  </Folder>
+  <Folder Name="/gateway/" />
+  <Folder Name="/gateway/src/">
+    <Project Path="gateway/src/Gateway/Gateway.csproj" />
+  </Folder>
+  <Folder Name="/gateway/tests/">
+    <Project Path="gateway/tests/Gateway.Tests/Gateway.Tests.csproj" />
+  </Folder>
+  <Folder Name="/libs/" />
+  <Folder Name="/libs/dotnet/">
+    <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Errors/HiveSpace.BuildingBlocks.Errors.csproj" />
+    <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Messaging/HiveSpace.BuildingBlocks.Messaging.csproj" />
+    <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Money/HiveSpace.BuildingBlocks.Money.csproj" />
+  </Folder>
+  <Folder Name="/services/" />
+  <Folder Name="/services/catalog/" />
+  <Folder Name="/services/catalog/src/">
+    <Project Path="services/catalog/src/Catalog.Api/Catalog.Api.csproj" />
+    <Project Path="services/catalog/src/Catalog.Application/Catalog.Application.csproj" />
+    <Project Path="services/catalog/src/Catalog.Domain/Catalog.Domain.csproj" />
+    <Project Path="services/catalog/src/Catalog.Infrastructure/Catalog.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/services/catalog/tests/">
+    <Project Path="services/catalog/tests/Catalog.ArchitectureTests/Catalog.ArchitectureTests.csproj" />
+    <Project Path="services/catalog/tests/Catalog.ContractTests/Catalog.ContractTests.csproj" />
+    <Project Path="services/catalog/tests/Catalog.IntegrationTests/Catalog.IntegrationTests.csproj" />
+    <Project Path="services/catalog/tests/Catalog.UnitTests/Catalog.UnitTests.csproj" />
+  </Folder>
+  <Folder Name="/services/identity/" />
+  <Folder Name="/services/identity/src/">
+    <Project Path="services/identity/src/Identity.Api/Identity.Api.csproj" />
+    <Project Path="services/identity/src/Identity.Application/Identity.Application.csproj" />
+    <Project Path="services/identity/src/Identity.Domain/Identity.Domain.csproj" />
+    <Project Path="services/identity/src/Identity.Infrastructure/Identity.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/services/identity/tests/">
+    <Project Path="services/identity/tests/Identity.Tests/Identity.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/media/" />
+  <Folder Name="/services/media/src/">
+    <Project Path="services/media/src/Media.Api/Media.Api.csproj" />
+  </Folder>
+  <Folder Name="/services/media/tests/">
+    <Project Path="services/media/tests/Media.Tests/Media.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/order/" />
+  <Folder Name="/services/order/src/">
+    <Project Path="services/order/src/Order.Api/Order.Api.csproj" />
+    <Project Path="services/order/src/Order.Application/Order.Application.csproj" />
+    <Project Path="services/order/src/Order.Domain/Order.Domain.csproj" />
+    <Project Path="services/order/src/Order.Infrastructure/Order.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/services/order/tests/">
+    <Project Path="services/order/tests/Order.Tests/Order.Tests.csproj" />
+  </Folder>
+  <Folder Name="/services/payment/" />
+  <Folder Name="/services/payment/src/">
+    <Project Path="services/payment/src/Payment.Api/Payment.Api.csproj" />
+    <Project Path="services/payment/src/Payment.Application/Payment.Application.csproj" />
+    <Project Path="services/payment/src/Payment.Domain/Payment.Domain.csproj" />
+    <Project Path="services/payment/src/Payment.Infrastructure/Payment.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/services/payment/tests/">
+    <Project Path="services/payment/tests/Payment.Tests/Payment.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tests/" />
+  <Folder Name="/tests/system/">
+    <Project Path="tests/system/HiveSpace.SystemTests/HiveSpace.SystemTests.csproj" />
+  </Folder>
+</Solution>

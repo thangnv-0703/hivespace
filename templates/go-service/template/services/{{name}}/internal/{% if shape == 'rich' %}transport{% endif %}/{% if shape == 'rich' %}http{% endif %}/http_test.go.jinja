@@ -1,0 +1,17 @@
+package http
+
+import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+)
+
+func TestPing(t *testing.T) {
+	mux := http.NewServeMux()
+	Register(mux)
+	rec := httptest.NewRecorder()
+	mux.ServeHTTP(rec, httptest.NewRequest(http.MethodGet, "/v1/{{ name }}/ping", nil))
+	if rec.Code != http.StatusOK {
+		t.Fatalf("got %d, want 200", rec.Code)
+	}
+}

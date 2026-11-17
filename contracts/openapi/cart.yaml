@@ -1,0 +1,27 @@
+openapi: 3.1.0
+info:
+  title: HiveSpace Cart API
+  version: 1.0.0
+  description: Template sample only. The first feature slice replaces the ping operation.
+servers:
+  - url: /
+tags:
+  - name: cart
+paths:
+  /v1/cart/ping:
+    get:
+      operationId: pingCart
+      summary: Template sample operation.
+      tags: [cart]
+      security: []
+      responses:
+        '200':
+          description: The service answers.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [service]
+                properties:
+                  service:
+                    type: string

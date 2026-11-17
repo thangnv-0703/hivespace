@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: password-reset-security-review
+expected_outcome: |
+  A shareable, self-contained HTML diagram of both halves of the password-reset process, with every component named in the prompt, the data on each sensitive hop and the security controls visible.

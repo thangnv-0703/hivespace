@@ -1,0 +1,26 @@
+{
+  "common": {
+    "language": "Language",
+    "toggleTheme": "Switch light/dark theme"
+  },
+  "nav": {
+    "label": "Seller centre navigation",
+    "title": "Seller centre",
+    "storefront": "Go to storefront",
+    "dashboard": "Dashboard",
+    "products": "Products",
+    "orders": "Orders",
+    "settings": "Shop settings"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "subtitle": "Register a shop to start selling."
+  },
+  "errors": {
+    "backDashboard": "Back to dashboard",
+    "notFound": {
+      "title": "Page not found",
+      "message": "The page you are looking for does not exist or has moved."
+    }
+  }
+}

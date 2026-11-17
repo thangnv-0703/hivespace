@@ -1,0 +1,42 @@
+# Local-only reference code (not part of this repo)
+references/
+
+# Claude Code per-user settings
+.claude/settings.local.json
+
+# .NET
+bin/
+obj/
+*.user
+TestResults/
+
+# Node / web
+node_modules/
+dist/
+.turbo/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Python
+.venv/
+__pycache__/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+*.egg-info/
+
+# Go
+*.exe
+coverage.out
+
+# Local config (generated per unit; templates are committed)
+.env
+.env.local
+appsettings.Local.json
+
+# azd
+.azure/
+
+# Scaffolding working file
+docs/.scaffold-progress.md

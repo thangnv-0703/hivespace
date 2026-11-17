@@ -1,0 +1,26 @@
+{
+  "common": {
+    "language": "Ngôn ngữ",
+    "toggleTheme": "Đổi giao diện sáng/tối"
+  },
+  "nav": {
+    "label": "Điều hướng kênh người bán",
+    "title": "Kênh người bán",
+    "storefront": "Về trang mua sắm",
+    "dashboard": "Tổng quan",
+    "products": "Sản phẩm",
+    "orders": "Đơn hàng",
+    "settings": "Thiết lập cửa hàng"
+  },
+  "dashboard": {
+    "title": "Tổng quan",
+    "subtitle": "Đăng ký cửa hàng để bắt đầu bán hàng."
+  },
+  "errors": {
+    "backDashboard": "Về trang tổng quan",
+    "notFound": {
+      "title": "Không tìm thấy trang",
+      "message": "Trang bạn tìm không tồn tại hoặc đã được chuyển đi."
+    }
+  }
+}

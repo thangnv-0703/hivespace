@@ -1,0 +1,6 @@
+common.validation_failed: "Some fields are not valid. Check the highlighted fields."
+common.unauthenticated: "Please sign in to continue."
+common.forbidden: "You do not have permission to do this."
+common.not_found: "We could not find what you asked for."
+common.internal: "Something went wrong. Please try again later."
+common.dependency_unavailable: "A service is temporarily unavailable. Please try again in a few minutes."

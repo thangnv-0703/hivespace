@@ -1,0 +1,43 @@
+name: smoke
+
+# Starts the whole AppHost headless and checks every service, the categories round trip and the event path,
+# then runs the Playwright skeleton test (dev-standards §3 and §12). Runs on main and on demand: it pulls
+# every container image and is slow.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/inventory/go.mod
+      - uses: astral-sh/setup-uv@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Install web workspace
+        run: pnpm install --frozen-lockfile
+        working-directory: web
+      - name: System tests (AppHost via Aspire.Hosting.Testing)
+        run: dotnet test --project tests/system/HiveSpace.SystemTests
+      - name: Install Playwright
+        working-directory: tests/e2e
+        run: pnpm install --frozen-lockfile && pnpm exec playwright install --with-deps chromium
+      - name: Playwright skeleton test (starts the AppHost itself)
+        working-directory: tests/e2e
+        run: pnpm test

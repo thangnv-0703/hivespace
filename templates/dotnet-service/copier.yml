@@ -1,0 +1,28 @@
+# .NET service template (ADR-0020). Render from the repository root:
+#   uvx copier@9.19.1 copy templates/dotnet-service . -a services/<name>/.copier-answers.yml --data name=<name> --data shape=rich
+_subdirectory: template
+_templates_suffix: .jinja
+_answers_file: .copier-answers.yml
+
+name:
+  type: str
+  help: Service folder name (lowercase, one word), e.g. order
+  validator: "{% if name != name | lower or '-' in name or ' ' in name or name == '' %}lowercase letters only, one word{% endif %}"
+
+shape:
+  type: str
+  help: rich (ports and adapters, pure domain) or lean (vertical feature slices)
+  choices: [rich, lean]
+  default: rich
+
+pascal:
+  type: str
+  default: "{{ name | capitalize }}"
+  when: false
+
+_message_after_copy: |
+  Generated services/{{ name }}. Shared files are not edited by the template; add these by hand:
+    1. HiveSpace.slnx: the projects under services/{{ name }}/
+    2. apphost/HiveSpace.AppHost/HiveSpace.AppHost.csproj: <ProjectReference Include="..\..\services\{{ name }}\src\{{ pascal }}.Api\{{ pascal }}.Api.csproj" />
+    3. apphost/HiveSpace.AppHost/Resources/DotnetServices.cs: builder.AddProject<Projects.{{ pascal }}_Api>("{{ name }}").WithHttpEndpoint()   (the template ships no launchSettings.json)
+    4. gateway/src/Gateway/appsettings.json: a route /v1/{{ name }}/{**rest} and a cluster http://{{ name }}

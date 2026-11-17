@@ -1,0 +1,9 @@
+# Stable error codes (FR-LOC-004). Tests assert the code, never the message.
+# Messages live in messages.vi.yaml and messages.en.yaml with identical keys (NFR-L10N-004).
+codes:
+  common.validation_failed: { http: 400 }
+  common.unauthenticated: { http: 401 }
+  common.forbidden: { http: 403 }
+  common.not_found: { http: 404 }
+  common.internal: { http: 500 }
+  common.dependency_unavailable: { http: 503 }

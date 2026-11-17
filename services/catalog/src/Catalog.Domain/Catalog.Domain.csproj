@@ -1,0 +1,3 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Pure domain: no framework or vendor references (dev-standards §8.1; enforced by Catalog.ArchitectureTests). -->
+</Project>

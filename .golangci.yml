@@ -1,0 +1,42 @@
+version: "2"
+
+# dev-standards §8.2, repo-structure §4.3. Run per module, e.g. from services/inventory:
+#   go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.6.2 run --config ../../.golangci.yml ./...
+linters:
+  enable:
+    - depguard
+    - cyclop
+  settings:
+    cyclop:
+      max-complexity: 15
+    depguard:
+      rules:
+        domain-is-pure:
+          files:
+            - "**/internal/domain/**"
+          deny:
+            - pkg: "hivespace.dev/services"
+              desc: "internal/domain imports nothing from internal/ (rich shape)"
+            - pkg: "hivespace.dev/libs/go/gen"
+              desc: "domain does not see transport stubs"
+        drivers-only-in-store:
+          files:
+            - "!**/internal/store/**"
+          deny:
+            - pkg: "github.com/jackc/pgx"
+              desc: "only internal/store imports a database driver"
+            - pkg: "go.mongodb.org/mongo-driver"
+              desc: "only internal/store imports a database driver"
+        stubs-only-at-the-edge:
+          files:
+            - "!**/internal/transport/grpc/**"
+            - "!**/internal/clients/**"
+            - "!**/cmd/**"
+          deny:
+            - pkg: "hivespace.dev/libs/go/gen"
+              desc: "only clients/ and transport/grpc import generated stubs"
+
+formatters:
+  enable:
+    - gofmt
+    - goimports

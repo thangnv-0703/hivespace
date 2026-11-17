@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Catalog.Infrastructure\Catalog.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\apphost\HiveSpace.ServiceDefaults\HiveSpace.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\..\libs\dotnet\HiveSpace.BuildingBlocks.Errors\HiveSpace.BuildingBlocks.Errors.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Catalog.ContractTests" />
+  </ItemGroup>
+</Project>

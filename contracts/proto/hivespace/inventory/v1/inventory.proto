@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package hivespace.inventory.v1;
+
+option csharp_namespace = "HiveSpace.Contracts.Inventory.V1";
+
+// InventoryService is called by Catalog, Cart and Order (architecture §5.3).
+service InventoryService {
+  // GetAvailability returns available quantity per variant.
+  // Walking skeleton: returns a fixed stub value; FEAT-012 and FEAT-015 make it real.
+  rpc GetAvailability(GetAvailabilityRequest) returns (GetAvailabilityResponse);
+}
+
+message GetAvailabilityRequest {
+  repeated string variant_ids = 1;
+}
+
+message GetAvailabilityResponse {
+  repeated VariantAvailability items = 1;
+  // Skeleton probe so the end-to-end path can show the call happened.
+  string probe = 2;
+}
+
+message VariantAvailability {
+  string variant_id = 1;
+  int64 available = 2;
+}

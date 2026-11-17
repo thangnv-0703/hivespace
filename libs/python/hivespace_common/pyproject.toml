@@ -1,0 +1,19 @@
+[project]
+name = "hivespace-common"
+version = "0.1.0"
+description = "Cross-cutting Python code for HiveSpace services: event envelope, broker receiver, inbox, OpenTelemetry, Money. No service domain concepts (repo-structure §6)."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "azure-servicebus>=7.15,<8",
+    "opentelemetry-sdk>=1.45,<2",
+    "opentelemetry-exporter-otlp-proto-grpc>=1.45,<2",
+    "pydantic>=2.11,<3",
+    "sqlalchemy>=2.1,<3",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hivespace_common"]

@@ -1,0 +1,4 @@
+schema_version: "1.1"
+name: delivery-pipeline-onboarding
+expected_outcome: |
+  An interactive onboarding-quality HTML diagram of the delivery pipeline showing repos, CI, registry, GitOps deployment to staging and prod with the approval gate, the separate Terraform path and the Datadog-driven rollback.

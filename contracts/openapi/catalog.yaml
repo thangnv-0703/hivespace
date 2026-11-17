@@ -1,0 +1,85 @@
+openapi: 3.1.0
+info:
+  title: HiveSpace Catalog API
+  version: 1.0.0
+  description: Walking-skeleton surface only. Feature slices extend this spec first (dev-standards §6).
+servers:
+  - url: /
+tags:
+  - name: catalog
+paths:
+  /v1/categories:
+    get:
+      operationId: listCategories
+      summary: List top-level categories (skeleton round trip through gateway, Catalog and Postgres).
+      tags: [catalog]
+      security: []
+      responses:
+        '200':
+          description: Categories with vi and en names (FR-LOC-007).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryList'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/catalog/ping:
+    post:
+      operationId: publishPing
+      summary: Publish a Ping event through the outbox (skeleton event path).
+      tags: [catalog]
+      security: []
+      responses:
+        '202':
+          description: Event written to the outbox.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PingAccepted'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+components:
+  schemas:
+    CategoryList:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Category'
+        availabilityProbe:
+          type: string
+          description: Skeleton only. Value returned by Inventory over gRPC; removed when FEAT-015 lands.
+    Category:
+      type: object
+      required: [id, slug, name]
+      properties:
+        id:
+          $ref: './shared/components.yaml#/components/schemas/Id'
+        slug:
+          type: string
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+    LocalizedText:
+      type: object
+      required: [vi, en]
+      properties:
+        vi:
+          type: string
+        en:
+          type: string
+    PingAccepted:
+      type: object
+      required: [eventId]
+      properties:
+        eventId:
+          $ref: './shared/components.yaml#/components/schemas/Id'

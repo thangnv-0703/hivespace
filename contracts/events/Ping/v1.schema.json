@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivespace.dev/events/Ping/v1.schema.json",
+  "title": "Ping v1 (walking skeleton only; proves outbox to broker to inbox)",
+  "type": "object",
+  "required": ["message"],
+  "properties": {
+    "message": { "type": "string" }
+  },
+  "additionalProperties": false
+}

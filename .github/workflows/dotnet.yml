@@ -1,0 +1,37 @@
+name: dotnet
+
+on:
+  push:
+    branches: [main]
+    paths: ["apphost/**", "gateway/**", "services/catalog/**", "services/identity/**", "services/order/**",
+            "services/payment/**", "services/media/**", "libs/dotnet/**", "contracts/**", "*.props", "global.json",
+            "HiveSpace.slnx", ".github/workflows/dotnet.yml"]
+  pull_request:
+    paths: ["apphost/**", "gateway/**", "services/catalog/**", "services/identity/**", "services/order/**",
+            "services/payment/**", "services/media/**", "libs/dotnet/**", "contracts/**", "*.props", "global.json",
+            "HiveSpace.slnx", ".github/workflows/dotnet.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+      - name: Restore
+        run: dotnet restore HiveSpace.slnx
+      - name: Format
+        run: dotnet format HiveSpace.slnx --verify-no-changes --no-restore
+      - name: Build (warnings as errors)
+        run: dotnet build HiveSpace.slnx --no-restore -c Release
+      - name: Vulnerable packages (NFR-SEC-012)
+        run: |
+          dotnet list HiveSpace.slnx package --vulnerable --include-transitive 2>&1 | tee vuln.txt
+          ! grep -E "High|Critical" vuln.txt
+      # Integration and contract tests use Testcontainers; GitHub's ubuntu runners have Docker.
+      - name: Test
+        run: dotnet test --solution HiveSpace.slnx --no-build -c Release

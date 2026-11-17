@@ -1,0 +1,5 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_src_path: templates/go-service
+name: cart
+shape: lean
+store: mongo

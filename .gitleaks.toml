@@ -1,0 +1,16 @@
+# gitleaks config (NFR-SEC-007). Default rules plus allowlists for known non-secrets.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Placeholders and generated files"
+paths = [
+  '''(^|/)\.env\.example$''',
+  '''(^|/)libs/go/gen/''',
+  '''(^|/)libs/python/hivespace_contracts/''',
+  '''(^|/)pnpm-lock\.yaml$''',
+  '''(^|/)uv\.lock$''',
+  '''(^|/)go\.sum$''',
+]
+# The Service Bus emulator's documented fixed key appears in a test fixture only.
+regexes = ['''SharedAccessKey=test;''']

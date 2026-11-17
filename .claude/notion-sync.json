@@ -1,0 +1,153 @@
+{
+  "files": {
+    ".scaffold-progress.md": {
+      "page_id": "41b948f0-e39b-81fc-9dcd-cc20ef9e5ae7",
+      "sha256": "85eebb1dc948fb70e99c7d31b8fafad66c29c12c77783cfafc56bade9e7c7551"
+    },
+    "adr/0001-separate-services-database-per-service.md": {
+      "page_id": "41a948f0-e39b-8186-bf25-f614615eb4be",
+      "sha256": "739fb1b712d8dc2e5cde4d091161d1f8d2a8268e1449a4cbe605e0a52fcd9379"
+    },
+    "adr/0002-event-bus-abstraction-outbox-inbox.md": {
+      "page_id": "41a948f0-e39b-8134-bfc7-e5a9184eca48",
+      "sha256": "0b66db2d54e1186d8bb13169c9c4a980ffb366c3e4c4675c384664477501c4fb"
+    },
+    "adr/0003-search-store-postgres-fts-pgvector.md": {
+      "page_id": "41a948f0-e39b-816a-80c5-e779ef3d0be8",
+      "sha256": "90f4d56015d77d126e2fbb8ddb8fbca9433fc76bc0d68e58ad105e3d8a750003"
+    },
+    "adr/0004-payment-idempotency.md": {
+      "page_id": "41a948f0-e39b-8195-a3a8-eae042e972ae",
+      "sha256": "0585711a08d326007e4c95ac43c1941a788a1a7486155437057e7121ed24722a"
+    },
+    "adr/0005-hosting-azure-container-apps-neon.md": {
+      "page_id": "41a948f0-e39b-8160-b01f-eefed29cdb87",
+      "sha256": "80d9bf6dc9cdaa0156fb84b3ab086fc06ac47b0d0fe06e4a5ee03fc4256fd275"
+    },
+    "adr/0006-checkout-saga.md": {
+      "page_id": "41a948f0-e39b-8127-9822-c74ae9ce0845",
+      "sha256": "6f523b433641c080a09205b49a76dee3588a455145d065827fac14d111707c83"
+    },
+    "adr/0007-inventory-atomic-reservation.md": {
+      "page_id": "41a948f0-e39b-81b1-9ae5-d60e62fda063",
+      "sha256": "7435ef4a395694870b0bdd53d987ce28fcddb7638a302585a90c21b75d85d06c"
+    },
+    "adr/0008-oidc-identity-and-bff-gateway.md": {
+      "page_id": "41a948f0-e39b-81ec-9a29-cfca2592cc38",
+      "sha256": "f0e0b3f56eb67b55f7b209cc87d2eaae13ead16c5c87c90e324adf3ce9bc6d6c"
+    },
+    "adr/0009-public-ids-uuid-v7.md": {
+      "page_id": "41a948f0-e39b-8148-a60c-f3f8fd6db9d4",
+      "sha256": "f5999bd2131b528c62763a1cad236f0553485417fc0b257726f096921e662b5b"
+    },
+    "adr/0010-money-model-and-pricing-pipeline.md": {
+      "page_id": "41a948f0-e39b-81dd-b157-dd049d7f9c7f",
+      "sha256": "56959103067e313c44c59d09767b26ed66f5a41a775665b70b124999384c5550"
+    },
+    "adr/0011-media-service-presigned-upload-function.md": {
+      "page_id": "41a948f0-e39b-81d7-a7ee-d80835def081",
+      "sha256": "d7e170bde9d56a594b5f821ace467927d0cc65158233fdd24f19266ed9116a74"
+    },
+    "adr/0012-timers-under-scale-to-zero.md": {
+      "page_id": "41a948f0-e39b-8138-a540-f726a553996b",
+      "sha256": "2d66a963db10537bff155d3a478bdda9e62297698a81770e87903bfe48f58458"
+    },
+    "adr/0013-observability-opentelemetry.md": {
+      "page_id": "41a948f0-e39b-814b-9e6d-fd95c6a5e11a",
+      "sha256": "775bcfe1f36b0d997cc21e8a3166bd01c76eccb8b838a5b7363c1d222416064c"
+    },
+    "adr/0014-ai-provider-interfaces.md": {
+      "page_id": "41a948f0-e39b-8155-8bfa-f9e5ef5dfb98",
+      "sha256": "1c242fcc69320764965ecd7c78e310d1747862e00d8a8838514b42b65bb605fa"
+    },
+    "adr/0015-aspire-and-azure-emulators.md": {
+      "page_id": "41a948f0-e39b-81bf-8f55-e9eb3f392062",
+      "sha256": "552f94d2125d5af7f76ee66862e53245802745a69aaf1ba56ca81cd29bfe3d71"
+    },
+    "adr/0016-notification-in-python.md": {
+      "page_id": "41a948f0-e39b-815c-85f2-d660643b406a",
+      "sha256": "deb733db09c6cd6ce7f913ffa1e77e8da676ea1d29e0e5060a917135f7c7bb41"
+    },
+    "adr/0017-cart-service-in-go.md": {
+      "page_id": "41a948f0-e39b-81ef-93dd-f528b74f6233",
+      "sha256": "7e1c6489923fd40b4dae2b1d24764e676b3779f1720a9db9ba5f07b15d836e5b"
+    },
+    "adr/0018-per-service-data-stores.md": {
+      "page_id": "41a948f0-e39b-81af-ac76-d188efc444fb",
+      "sha256": "8adb19d14cdcc4bd46664d292d02bf0ccc73cd446bb983d1257dc88a2e6ccfa7"
+    },
+    "adr/0019-grpc-for-internal-calls.md": {
+      "page_id": "41a948f0-e39b-8175-91e5-fe5f6524584f",
+      "sha256": "752b59a6bc9b611af7eb9bb82207e2fe4f5157e94d8fe44f11ce0cca6352eb7d"
+    },
+    "adr/0020-service-shapes-and-copier-templates.md": {
+      "page_id": "41a948f0-e39b-811a-9f12-cd0755838cd8",
+      "sha256": "84134fe0aa22c7c2e4650ec79d0ff1915ad3d7d1eee37d91f9e7a638a5cea5bb"
+    },
+    "adr/0021-design-tokens-and-theming.md": {
+      "page_id": "41b948f0-e39b-8187-b309-c10f36162e12",
+      "sha256": "65d85c82b8d23cbac81499832bc013df6ceddc310ea8266c5214c7563f1dac1c"
+    },
+    "architecture.md": {
+      "page_id": "41a948f0-e39b-8159-8074-ee898b7dad29",
+      "sha256": ""
+    },
+    "design.md": {
+      "page_id": "41b948f0-e39b-81d1-af40-e657a3ae9dad",
+      "sha256": ""
+    },
+    "dev-standards.md": {
+      "page_id": "41a948f0-e39b-8124-8f54-c9765d24421c",
+      "sha256": ""
+    },
+    "implementation-plan.md": {
+      "page_id": "41b948f0-e39b-8154-9f6a-ef05ec5fdcfa",
+      "sha256": ""
+    },
+    "product/brainstorm-notes.md": {
+      "page_id": "41a948f0-e39b-8167-aecc-c360bd86abf6",
+      "sha256": "de3242add483ffbe320e55b05ba342346bc986dc8a3ef43c97e5b2b8e281e6f7"
+    },
+    "product/competitive-brief.md": {
+      "page_id": "41a948f0-e39b-816f-a1b8-ccf3fba4f362",
+      "sha256": ""
+    },
+    "product/prd.md": {
+      "page_id": "41a948f0-e39b-8144-94da-fe7ae4127e31",
+      "sha256": "481084365718d584d089e9a5a0631b85acdbb09a7731dd7e1215ffebbd3079a1"
+    },
+    "product/roadmap.md": {
+      "page_id": "41a948f0-e39b-8142-afce-ef5eea35abf1",
+      "sha256": "cbe75b6c0ce36629e873bb422fd633085e1213713eefbf7afab0ce1e15b0a5e0"
+    },
+    "repo-structure.md": {
+      "page_id": "41a948f0-e39b-8112-b6f5-ea8297582c32",
+      "sha256": ""
+    },
+    "rtm.md": {
+      "page_id": "41a948f0-e39b-81f9-9fa9-fc2a61a1aca6",
+      "sha256": ""
+    },
+    "scaffold-notes.md": {
+      "page_id": "41b948f0-e39b-8141-a63c-e5c6e17a8282",
+      "sha256": "721814ed88c65c76cb61e0b3fecccd701964e630f83d70bb882df598060d9b90"
+    },
+    "srs.md": {
+      "page_id": "41a948f0-e39b-81de-853a-c3c97bc1c499",
+      "sha256": ""
+    },
+    "use-cases.md": {
+      "page_id": "41a948f0-e39b-819c-b3d2-dd74460a0382",
+      "sha256": ""
+    },
+    "ux-foundations.md": {
+      "page_id": "41b948f0-e39b-8182-ba6a-e4e9b8c47e32",
+      "sha256": "806ab4ba63bc748ebcdcd6b6f919ee668964df7cd6603cba088c8d7c86f93d5e"
+    }
+  },
+  "pages": {
+    "adr": "41a948f0-e39b-81bc-ba66-f8de68b2e6d2",
+    "product": "41a948f0-e39b-819f-bcaf-c411030b8b65",
+    "root": "41a948f0-e39b-814e-9e72-ff684a5e353a"
+  }
+}

@@ -1,0 +1,37 @@
+name: web
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", "docs/tokens.json", "docs/design.md", "contracts/openapi/**", ".github/workflows/web.yml"]
+  pull_request:
+    paths: ["web/**", "docs/tokens.json", "docs/design.md", "contracts/openapi/**", ".github/workflows/web.yml"]
+
+permissions:
+  contents: read
+
+jobs:
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          package_json_file: web/package.json
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+      - name: Generated API client is fresh
+        run: pnpm generate:api && git diff --exit-code -- packages/api-client
+      # ui:lint checks theme.css and the docs/design.md CSS block against docs/tokens.json (ADR-0021).
+      - name: Lint (ESLint + Sheriff boundaries), typecheck, test, build
+        run: pnpm turbo run lint typecheck test build
+      - name: Dependency audit (NFR-SEC-012)
+        run: pnpm audit --audit-level high

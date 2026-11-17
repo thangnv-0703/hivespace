@@ -1,0 +1,6 @@
+common.validation_failed: "Dữ liệu chưa hợp lệ. Vui lòng kiểm tra các trường được đánh dấu."
+common.unauthenticated: "Vui lòng đăng nhập để tiếp tục."
+common.forbidden: "Bạn không có quyền thực hiện thao tác này."
+common.not_found: "Không tìm thấy nội dung bạn yêu cầu."
+common.internal: "Đã có lỗi xảy ra. Vui lòng thử lại sau."
+common.dependency_unavailable: "Dịch vụ tạm thời gián đoạn. Vui lòng thử lại sau ít phút."

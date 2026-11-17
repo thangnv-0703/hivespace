@@ -1,0 +1,18 @@
+{
+  "name": "@hivespace/api-client",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Generated from contracts/openapi by @hey-api/openapi-ts. Never edited by hand (dev-standards §6).",
+  "exports": {
+    "./catalog": "./src/catalog/index.ts",
+    "./catalog/client": "./src/catalog/client.gen.ts"
+  },
+  "scripts": {
+    "generate": "openapi-ts"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "typescript": "~6.0.0"
+  }
+}

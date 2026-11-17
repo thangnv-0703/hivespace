@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <ProjectReference Include="..\Order.Infrastructure\Order.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\apphost\HiveSpace.ServiceDefaults\HiveSpace.ServiceDefaults.csproj" />
+    <ProjectReference Include="..\..\..\..\libs\dotnet\HiveSpace.BuildingBlocks.Errors\HiveSpace.BuildingBlocks.Errors.csproj" />
+  </ItemGroup>
+</Project>

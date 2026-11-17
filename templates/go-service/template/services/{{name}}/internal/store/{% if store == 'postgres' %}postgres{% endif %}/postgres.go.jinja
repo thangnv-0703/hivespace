@@ -1,0 +1,26 @@
+// Package postgres is the only package that imports a database driver (depguard).
+package postgres
+
+import (
+	"context"
+
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+// DB wraps the pool for the service's own database. Migrations (golang-migrate) arrive with the first slice.
+type DB struct{ pool *pgxpool.Pool }
+
+// Open creates the pool.
+func Open(ctx context.Context, url string) (*DB, error) {
+	pool, err := pgxpool.New(ctx, url)
+	if err != nil {
+		return nil, err
+	}
+	return &DB{pool: pool}, nil
+}
+
+// Ping checks the connection.
+func (d *DB) Ping(ctx context.Context) error { return d.pool.Ping(ctx) }
+
+// Close closes the pool.
+func (d *DB) Close() { d.pool.Close() }

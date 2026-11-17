@@ -1,0 +1,14 @@
+<Project>
+  <!-- dev-standards §8.1: nullable on, warnings as errors, analyzers on. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Protos live in contracts/; .NET stubs are generated at compile time (repo-structure §2). -->
+    <ContractsProtoRoot>$(MSBuildThisFileDirectory)contracts/proto</ContractsProtoRoot>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,4 @@
+namespace Payment.Domain;
+
+/// <summary>Anchors the assembly for architecture tests until the first aggregate exists.</summary>
+public static class DomainMarker;

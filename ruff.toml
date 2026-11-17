@@ -1,0 +1,13 @@
+# Shared Ruff config for every Python package in the repo (dev-standards §8.3).
+target-version = "py312"
+line-length = 110
+
+[lint]
+select = ["E", "F", "W", "I", "B", "UP", "BLE", "S", "DTZ", "RUF"]
+ignore = ["S101"]  # assert is how pytest checks
+
+[lint.per-file-ignores]
+"**/migrations/**" = ["I"]
+
+[lint.isort]
+known-first-party = ["hivespace_common", "hivespace", "notification", "search_ai"]

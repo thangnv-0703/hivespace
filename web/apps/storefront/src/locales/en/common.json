@@ -1,0 +1,25 @@
+{
+  "common": {
+    "loading": "Loading…",
+    "retry": "Retry",
+    "language": "Language",
+    "toggleTheme": "Switch light/dark theme",
+    "sellerCentre": "Seller centre"
+  },
+  "home": {
+    "title": "Welcome to HiveSpace",
+    "subtitle": "Shop from many stores in one checkout."
+  },
+  "catalog": {
+    "categories": "Categories",
+    "empty": "No categories yet.",
+    "loadFailed": "Could not load categories."
+  },
+  "errors": {
+    "backHome": "Back to home",
+    "notFound": {
+      "title": "Page not found",
+      "message": "The page you are looking for does not exist or has moved."
+    }
+  }
+}

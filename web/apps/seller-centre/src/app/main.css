@@ -1,0 +1,14 @@
+@import 'tailwindcss';
+@import '@hivespace/ui/theme.css';
+
+/* Tailwind must see the class names used inside the shared package. */
+@source '../../../../packages/ui/src';
+
+/* Seller centre is denser: 14px body (ux-foundations B2, design.md §4.10). */
+body {
+  background-color: var(--hs-bg-canvas);
+  color: var(--hs-text-primary);
+  font-family: var(--font-sans);
+  font-size: var(--text-sm);
+  line-height: var(--text-sm--line-height);
+}

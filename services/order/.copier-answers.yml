@@ -1,0 +1,4 @@
+# Changes here will be overwritten by Copier; NEVER EDIT MANUALLY
+_src_path: templates/dotnet-service
+name: order
+shape: rich

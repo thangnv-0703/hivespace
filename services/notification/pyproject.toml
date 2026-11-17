@@ -1,0 +1,69 @@
+[project]
+name = "notification"
+version = "0.1.0"
+description = "HiveSpace Notification service (Python, lean): contact projection, templates, email send and retry (ADR-0016)."
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi>=0.163,<1",
+    "uvicorn[standard]>=0.54,<1",
+    "pydantic-settings>=2.16,<3",
+    "sqlalchemy[asyncio]>=2.1,<3",
+    "psycopg[binary]>=3.3,<4",
+    "alembic>=1.20,<2",
+    "opentelemetry-instrumentation-fastapi>=0.66b0",
+    "hivespace-common",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2",
+    "pytest-asyncio>=1.3",
+    "pytest-bdd>=9.0",
+    "httpx>=0.28",
+    "ruff>=0.17",
+    "mypy>=2.4",
+    "import-linter>=2.16",
+]
+
+[tool.uv.sources]
+hivespace-common = { path = "../../libs/python/hivespace_common", editable = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/notification"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = ["integration: needs Docker or the local stack"]
+
+[tool.mypy]
+strict = true
+packages = ["notification"]
+mypy_path = "src"
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["azure.*"]
+ignore_missing_imports = true
+
+[tool.importlinter]
+root_package = "notification"
+include_external_packages = true
+
+# Lean shape (repo-structure §4.4): features do not import each other; vendor SDKs only under providers/.
+[[tool.importlinter.contracts]]
+name = "Features are independent"
+type = "independence"
+modules = ["notification.features.*"]
+
+[[tool.importlinter.contracts]]
+name = "Vendor SDKs only under providers"
+type = "forbidden"
+source_modules = ["notification.features"]
+forbidden_modules = ["azure", "aiosmtplib", "resend"]
+allow_indirect_imports = true

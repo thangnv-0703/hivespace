@@ -1,0 +1,79 @@
+// Command {{ name }} runs the {{ name }} service.
+package main
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"hivespace.dev/libs/go/otelx"
+{%- if shape == 'rich' %}
+	httptransport "hivespace.dev/services/{{ name }}/internal/transport/http"
+{%- else %}
+	"hivespace.dev/services/{{ name }}/internal/{{ name }}"
+{%- endif %}
+	"hivespace.dev/services/{{ name }}/internal/platform"
+	"hivespace.dev/services/{{ name }}/internal/store/{{ store }}"
+)
+
+func main() {
+	if err := run(); err != nil {
+		slog.Error("{{ name }} stopped", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	shutdown, err := otelx.Setup(ctx, "{{ name }}")
+	if err != nil {
+		return err
+	}
+	defer func() { _ = shutdown(context.Background()) }()
+
+	cfg, err := platform.Load()
+	if err != nil {
+		return err
+	}
+
+	db, err := {{ store }}.Open(ctx, cfg.DatabaseURL)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /health", func(w http.ResponseWriter, _ *http.Request) { _, _ = w.Write([]byte("Healthy")) })
+	mux.HandleFunc("GET /ready", func(w http.ResponseWriter, r *http.Request) {
+		if err := db.Ping(r.Context()); err != nil {
+			http.Error(w, "Unhealthy", http.StatusServiceUnavailable)
+			return
+		}
+		_, _ = w.Write([]byte("Healthy"))
+	})
+{%- if shape == 'rich' %}
+	httptransport.Register(mux)
+{%- else %}
+	{{ name }}.Register(mux)
+{%- endif %}
+
+	server := &http.Server{Addr: ":" + cfg.HTTPPort, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
+	go func() {
+		if err := server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			slog.Error("http server", "error", err)
+		}
+	}()
+	slog.Info("{{ name }} started", "http", cfg.HTTPPort)
+	<-ctx.Done()
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return server.Shutdown(shutdownCtx)
+}
