@@ -4,7 +4,9 @@
     "retry": "Thử lại",
     "language": "Ngôn ngữ",
     "toggleTheme": "Đổi giao diện sáng/tối",
-    "sellerCentre": "Kênh người bán"
+    "sellerCentre": "Kênh người bán",
+    "search": "Tìm kiếm",
+    "searchPlaceholder": "Tìm sản phẩm, cửa hàng..."
   },
   "home": {
     "title": "Chào mừng đến HiveSpace",

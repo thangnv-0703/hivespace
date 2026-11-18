@@ -16,7 +16,7 @@ export default defineConfig({
     },
   },
   server: {
-    port: process.env.PORT ? Number(process.env.PORT) : 5174,
+    port: process.env.PORT ? Number(process.env.PORT) : 5181,
     strictPort: true,
     allowedHosts: true,
   },

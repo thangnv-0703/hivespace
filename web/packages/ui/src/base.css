@@ -1,0 +1,24 @@
+@import '@fontsource-variable/outfit';
+@import '@fontsource-variable/noto-sans';
+
+/* Base rules shared by both apps (imported after theme.css).
+   Tailwind v4's preflight resets buttons to `cursor: default`; clickable controls should show the pointer. */
+@layer base {
+  button:not(:disabled),
+  [role='button']:not([aria-disabled='true']),
+  [role='menuitem']:not([aria-disabled='true']),
+  [role='menuitemradio']:not([aria-disabled='true']),
+  [role='tab']:not([aria-disabled='true']),
+  summary,
+  select:not(:disabled),
+  input[type='checkbox']:not(:disabled),
+  input[type='radio']:not(:disabled),
+  label[for] {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [aria-disabled='true'] {
+    cursor: not-allowed;
+  }
+}

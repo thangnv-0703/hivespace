@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from sqlalchemy.engine import make_url
 
 
 class Settings(BaseSettings):
@@ -20,5 +21,11 @@ class Settings(BaseSettings):
         url = self.database_url
         for prefix in ("postgresql://", "postgres://"):
             if url.startswith(prefix):
-                return "postgresql+psycopg://" + url[len(prefix) :]
+                url = "postgresql+psycopg://" + url[len(prefix) :]
+                break
+        # psycopg's async connect tries only the first address "localhost" resolves to. On Windows with
+        # Docker Desktop that is ::1, which accepts and never answers, so startup hangs. Use IPv4 directly.
+        parsed = make_url(url)
+        if parsed.host == "localhost":
+            url = parsed.set(host="127.0.0.1").render_as_string(hide_password=False)
         return url

@@ -130,3 +130,19 @@ See `docs/.scaffold-progress.md` for the live tracker; results are recorded here
 | Workflow files (`@action-validator/cli`) | 8/8 valid |
 | AppHost cold start, system tests, Playwright skeleton test | **pending**: Docker Desktop's engine returns "Internal Server Error" since the Testcontainers runs; needs a Docker Desktop restart |
 | Deployed half of the done-when | pending initial deployment (not this step) |
+
+## 9. Shared UI ported from the reference (`references/hivespace.web/packages/shared`)
+
+Reviewed the copied reference package and ported a presentational subset into `web/packages/ui`, re-styled to the design tokens. It is not a dependency of the apps.
+
+| Ported (adapted) | How it differs from the reference |
+| :-- | :-- |
+| Button, Input, Select, Spinner, Badge, Alert, Tabs, Pagination | Semantic role tokens instead of raw `gray`/`blue` utilities (dark mode comes from the tokens); Button variants per design.md §4.1 (no `success`/`warning`); labels and error text come in as props or slots; lucide icons |
+| AppShell, AppSidebar, AppHeader, `useSidebar` | No vue-router, auth or notification code: links render through a `linkAs` prop (RouterLink in the apps), labels come from the app's i18n; 290/90 px widths from the tokens; collapse, hover-expand, mobile drawer, Escape to close, skip link |
+| Language switcher, theme toggle | Flag + short code + chevron over a transparent native `<select>`; round icon button |
+
+Left out on purpose: `useAuth` (OIDC), `utils/api.ts` (axios), SignalR notifications, payments, user-profile, media-upload, charts, date pickers, Dropzone, Modal and DropdownMenu (a focus trap is required by design.md §5, so they are rebuilt with the first screen that needs them). Reasons: our API client is generated and imported only in `api.ts`; the SRS has no in-app notification centre; the reference targets pinia 3, vue-router 4, TypeScript 5.7 and Vite 6 (ours: 4, 5, 6, 8).
+
+Icons use `@lucide/vue`: `lucide-vue-next` named in design.md §4.9 is deprecated in its favour. `packages/ui` now has its own Vitest setup.
+
+A full component-by-component review of the reference package (ported, needs adapting, skipped, with reasons) is in [shared-ui-review.md](shared-ui-review.md).

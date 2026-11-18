@@ -13,7 +13,7 @@ Two web apps, the storefront and the seller centre (repo-structure §8), must lo
 - **Brand:** the indigo scale (`#465fff`) is the only brand colour. Red is reserved for prices, errors and destructive actions.
 - **Themes:** light and dark from the start, class-based (`.dark` on `<html>`), defaulting to `prefers-color-scheme`.
 - **Accessibility:** every role pairing is checked by script against WCAG 2.1 contrast (4.5:1 for text, 3:1 for UI). Control borders were darkened from the reference gray-300 to gray-500 to pass 3:1.
-- **Font:** a single family, Inter with the Vietnamese subset.
+- **Font:** Outfit as the primary family, self-hosted, with Noto Sans as the fallback for Vietnamese diacritics (Outfit has no Vietnamese subset). Changed from Inter on 2026-11-18; see the review note below.
 
 ## Options considered
 - **DTCG tokens with semantic roles and a Tailwind v4 theme (chosen).** One source of truth, theme switching by swapping the role layer, and a standard format that design tools and Style Dictionary can read.
@@ -31,6 +31,7 @@ Two web apps, the storefront and the seller centre (repo-structure §8), must lo
   - Two themes double visual QA, so visual checks are limited to hero-flow screens (R-1).
   - tokens.json, the CSS block and `theme.css` must be regenerated together. Do not edit the CSS by hand.
 - **Revisit** if a design tool becomes the source of truth. Its variables can then feed tokens.json.
+- **Review 2026-11-18:** the font was changed from Inter to the reference's Outfit, to match the reference look. Trade-off: Outfit has no Vietnamese subset, so letters with diacritics render in Noto Sans and the two faces mix within a word. Revisit if that looks poor in review (for example Be Vietnam Pro or Inter, which both cover Vietnamese). The expanded sidebar is 260 px (measured from the reference app) instead of the 290 px template default.
 
 ## What it teaches
 Design tokens as a contract between design and code; the W3C DTCG format and alias resolution; primitive vs. semantic token layers; Tailwind v4 CSS-first theming (`@theme`, `@theme inline`, custom variants); class-based dark mode; and measuring WCAG contrast instead of eyeballing it.

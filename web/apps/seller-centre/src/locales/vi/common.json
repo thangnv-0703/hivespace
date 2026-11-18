@@ -1,7 +1,12 @@
 {
   "common": {
     "language": "Ngôn ngữ",
-    "toggleTheme": "Đổi giao diện sáng/tối"
+    "toggleTheme": "Đổi giao diện sáng/tối",
+    "search": "Tìm kiếm",
+    "searchPlaceholder": "Tìm kiếm...",
+    "breadcrumb": "Đường dẫn",
+    "home": "Trang chủ",
+    "skipToContent": "Chuyển đến nội dung chính"
   },
   "nav": {
     "label": "Điều hướng kênh người bán",
@@ -10,7 +15,13 @@
     "dashboard": "Tổng quan",
     "products": "Sản phẩm",
     "orders": "Đơn hàng",
-    "settings": "Thiết lập cửa hàng"
+    "settings": "Thiết lập cửa hàng",
+    "menu": "Menu",
+    "productList": "Danh sách sản phẩm",
+    "productNew": "Thêm sản phẩm mới",
+    "openMenu": "Mở menu",
+    "account": "Tài khoản",
+    "closeMenu": "Đóng menu"
   },
   "dashboard": {
     "title": "Tổng quan",

@@ -554,6 +554,9 @@ Each ADR is a file in `docs/adr/`.
 | [0019](adr/0019-grpc-for-internal-calls.md) | gRPC for internal service-to-service calls | Accepted |
 | [0020](adr/0020-service-shapes-and-copier-templates.md) | Service shapes (rich and lean) and Copier templates | Accepted |
 | [0021](adr/0021-design-tokens-and-theming.md) | Design tokens (DTCG) and Tailwind v4 theme, light and dark | Accepted |
+| [0022](adr/0022-modal-on-native-dialog.md) | Modals are built on the native `<dialog>` element | Accepted (review on trigger) |
+| [0023](adr/0023-native-date-and-time-inputs.md) | Date and time fields use native inputs first | Accepted (review on trigger) |
+| [0024](adr/0024-port-ui-subset-from-reference.md) | Port a UI subset from the reference shared package instead of consuming it | Accepted |
 
 ## 10. Quality scenarios
 

@@ -4,7 +4,9 @@
     "retry": "Retry",
     "language": "Language",
     "toggleTheme": "Switch light/dark theme",
-    "sellerCentre": "Seller centre"
+    "sellerCentre": "Seller centre",
+    "search": "Search",
+    "searchPlaceholder": "Search products, shops..."
   },
   "home": {
     "title": "Welcome to HiveSpace",

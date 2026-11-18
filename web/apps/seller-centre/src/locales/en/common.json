@@ -1,7 +1,12 @@
 {
   "common": {
     "language": "Language",
-    "toggleTheme": "Switch light/dark theme"
+    "toggleTheme": "Switch light/dark theme",
+    "search": "Search",
+    "searchPlaceholder": "Search...",
+    "breadcrumb": "Breadcrumb",
+    "home": "Home",
+    "skipToContent": "Skip to main content"
   },
   "nav": {
     "label": "Seller centre navigation",
@@ -10,7 +15,13 @@
     "dashboard": "Dashboard",
     "products": "Products",
     "orders": "Orders",
-    "settings": "Shop settings"
+    "settings": "Shop settings",
+    "menu": "Menu",
+    "productList": "Product list",
+    "productNew": "Add new product",
+    "openMenu": "Open menu",
+    "account": "Account",
+    "closeMenu": "Close menu"
   },
   "dashboard": {
     "title": "Dashboard",

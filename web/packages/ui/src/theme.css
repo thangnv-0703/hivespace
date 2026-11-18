@@ -49,7 +49,7 @@
   --color-info-500: #0ba5ec;
   --color-info-600: #0086c9;
   --color-info-700: #026aa2;
-  --font-sans: Inter, "Noto Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-sans: "Outfit Variable", "Noto Sans Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
@@ -85,7 +85,7 @@
   --size-container: 1440px;
   --size-header-stf: 120px;
   --size-header-sel: 72px;
-  --size-sidebar-sel: 290px;
+  --size-sidebar-sel: 260px;
   --size-sidebar-sel-collapsed: 90px;
   --shadow-xs: 0px 1px 2px 0px #1018280d;
   --shadow-sm: 0px 1px 3px 0px #1018281a, 0px 1px 2px 0px #1018280f;

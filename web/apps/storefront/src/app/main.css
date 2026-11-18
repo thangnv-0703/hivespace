@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import '@hivespace/ui/theme.css';
+@import '@hivespace/ui/base.css';
 
 /* Tailwind must see the class names used inside the shared package. */
 @source '../../../../packages/ui/src';

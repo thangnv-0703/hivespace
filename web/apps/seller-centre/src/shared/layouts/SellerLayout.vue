@@ -1,12 +1,43 @@
 <script setup lang="ts">
-// Seller centre shell (ux-foundations B2): left sidebar with four sections, top header.
+// Seller centre shell (ux-foundations B2, design.md §4) built on the shared AppShell.
 // Section pages arrive with their slices (FEAT-009 onward); the links show the IA only.
 import { setLocale, type Locale } from '@hivespace/core'
-import { LanguageSwitcher, ThemeToggle } from '@hivespace/ui'
+import { AppShell, LanguageSwitcher, ThemeToggle, type SidebarMenuGroup } from '@hivespace/ui'
+import { ClipboardList, LayoutGrid, Package, Settings, UserRound } from '@lucide/vue'
+import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RouterLink, useRoute } from 'vue-router'
 
 const i18n = useI18n()
-const sections = ['dashboard', 'products', 'orders', 'settings'] as const
+const route = useRoute()
+
+const menuGroups = computed<SidebarMenuGroup[]>(() => [
+  {
+    title: i18n.t('nav.menu'),
+    items: [
+      { name: i18n.t('nav.dashboard'), icon: LayoutGrid, path: '/' },
+      {
+        name: i18n.t('nav.products'),
+        icon: Package,
+        subItems: [
+          { name: i18n.t('nav.productList'), path: '/products' },
+          { name: i18n.t('nav.productNew'), path: '/products/new' },
+        ],
+      },
+      { name: i18n.t('nav.orders'), icon: ClipboardList, path: '/orders' },
+      { name: i18n.t('nav.settings'), icon: Settings, path: '/settings' },
+    ],
+  },
+])
+
+const labels = computed(() => ({
+  nav: i18n.t('nav.label'),
+  search: i18n.t('common.search'),
+  searchPlaceholder: i18n.t('common.searchPlaceholder'),
+  openMenu: i18n.t('nav.openMenu'),
+  closeMenu: i18n.t('nav.closeMenu'),
+  skipToContent: i18n.t('common.skipToContent'),
+}))
 
 function changeLocale(value: string) {
   setLocale(i18n.locale, value as Locale)
@@ -14,43 +45,19 @@ function changeLocale(value: string) {
 </script>
 
 <template>
-  <div class="flex min-h-screen bg-bg-canvas text-text-primary">
-    <aside
-      class="hidden w-[var(--size-sidebar-sel)] shrink-0 border-r border-border-default bg-bg-surface lg:block"
-      data-testid="sidebar"
-    >
-      <div class="px-6 py-5 text-xl font-bold text-action-primary-bg">HiveSpace</div>
-      <nav :aria-label="$t('nav.label')">
-        <ul class="flex flex-col gap-1 px-3">
-          <li v-for="section in sections" :key="section">
-            <span
-              class="flex min-h-11 items-center rounded-lg px-3 text-text-secondary"
-              :class="section === 'dashboard' ? 'bg-brand-50 font-medium text-action-primary-bg dark:bg-bg-subtle' : ''"
-            >
-              {{ $t(`nav.${section}`) }}
-            </span>
-          </li>
-        </ul>
-      </nav>
-    </aside>
-    <div class="flex min-w-0 flex-1 flex-col">
-      <header
-        class="flex h-[var(--size-header-sel)] items-center justify-between gap-4 border-b border-border-default bg-bg-surface px-4"
-      >
-        <span class="font-semibold">{{ $t('nav.title') }}</span>
-        <div class="flex items-center gap-2">
-          <a href="/" class="text-text-link hover:text-text-link-hover">{{ $t('nav.storefront') }}</a>
-          <LanguageSwitcher
-            :model-value="i18n.locale.value"
-            :label="$t('common.language')"
-            @update:model-value="changeLocale"
-          />
-          <ThemeToggle :label="$t('common.toggleTheme')" />
-        </div>
-      </header>
-      <main class="p-4 lg:p-6">
-        <slot />
-      </main>
-    </div>
-  </div>
+  <AppShell :menu-groups="menuGroups" :active-path="route.path" :link-as="RouterLink" :labels="labels">
+    <template #actions>
+      <ThemeToggle :label="$t('common.toggleTheme')" />
+      <LanguageSwitcher :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
+      <a href="/" class="hidden px-2 text-sm text-text-link hover:text-text-link-hover md:inline">{{ $t('nav.storefront') }}</a>
+      <!-- STUB: account menu arrives with sign-in (FEAT-001). -->
+      <span class="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-text-secondary">
+        <span class="inline-flex size-9 items-center justify-center rounded-full bg-bg-subtle">
+          <UserRound class="size-5" aria-hidden="true" />
+        </span>
+        <span class="hidden md:inline">{{ $t('nav.account') }}</span>
+      </span>
+    </template>
+    <slot />
+  </AppShell>
 </template>

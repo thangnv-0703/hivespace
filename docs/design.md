@@ -55,7 +55,7 @@ All values come from `tokens.json` (W3C DTCG). Semantic role tokens alias primit
 
 ### 2.2 Typography
 
-- **Family:** `--font-sans`: Inter, then Noto Sans, Segoe UI, system-ui, sans-serif. Load Inter 400/500/600/700 from Google Fonts **with the `vietnamese` subset**; Vietnamese diacritics must render in the primary face (NFR-L10N-003). Use `--font-mono` only for order numbers and codes.
+- **Family:** `--font-sans`: Outfit, then Noto Sans, Segoe UI, system-ui, sans-serif. Both are self-hosted variable fonts (`@fontsource-variable/outfit` and `@fontsource-variable/noto-sans`, loaded in `web/packages/ui/src/base.css`). **Outfit has no Vietnamese subset**, so Vietnamese letters with diacritics render in Noto Sans (browsers fall back per glyph); the two faces mix inside one word. Text stays fully supported (NFR-L10N-003 is about storing, searching and emailing diacritics). Use `--font-mono` only for order numbers and codes.
 - **Base:** 16 px body on STF, 14 px body on SEL (see §4.10 per-surface variants).
 
 | Step | Size / line height | Weight | Usage |
@@ -151,7 +151,7 @@ This block lives in `web/packages/ui/src/theme.css`. Both apps import it right a
   --color-info-500: #0ba5ec;
   --color-info-600: #0086c9;
   --color-info-700: #026aa2;
-  --font-sans: Inter, "Noto Sans", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-sans: "Outfit Variable", "Noto Sans Variable", "Segoe UI", system-ui, -apple-system, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   --font-weight-regular: 400;
   --font-weight-medium: 500;
@@ -187,7 +187,7 @@ This block lives in `web/packages/ui/src/theme.css`. Both apps import it right a
   --size-container: 1440px;
   --size-header-stf: 120px;
   --size-header-sel: 72px;
-  --size-sidebar-sel: 290px;
+  --size-sidebar-sel: 260px;
   --size-sidebar-sel-collapsed: 90px;
   --shadow-xs: 0px 1px 2px 0px #1018280d;
   --shadow-sm: 0px 1px 3px 0px #1018281a, 0px 1px 2px 0px #1018280f;
@@ -355,7 +355,7 @@ This block lives in `web/packages/ui/src/theme.css`. Both apps import it right a
   - **Footer:** links, language switch, copyright.
   - **Cart and checkout:** use a reduced header (logo plus step title, no search) to limit distraction.
 - **SEL page shell:**
-  - **Sidebar:** fixed left, 290 px expanded and 90 px collapsed (icon only, with tooltips), hidden below `lg` behind a menu button as an off-canvas drawer with a scrim.
+  - **Sidebar:** fixed left, 260 px expanded and 90 px collapsed (icon only, with tooltips), hidden below `lg` behind a menu button as an off-canvas drawer with a scrim.
   - **Header:** 72 px (menu toggle, page title, "Go to storefront" link, language, theme, user menu).
   - **Content:** `bg-bg-canvas` with `p-4 md:p-6`. Each page starts with a breadcrumb and title row with primary actions on the right; below `sm` those actions stack under the title.
 - **Touch targets:** at least 44 × 44 px on touch layouts (STF everywhere, SEL below `lg`). The 36 px `control-sm` height is allowed only in SEL desktop tables and filters.
@@ -610,7 +610,7 @@ Target: **WCAG 2.1 AA**. NFR-USE-003 requires it for the buyer hero flow (search
 | Status | `<Badge tone="success\|warning\|error\|info\|neutral">` |
 | Loading list / action | Skeleton / `<Spinner>` (never `animate-spin` divs) |
 | Focus | `focus-visible:ring-2 ring-focus-ring ring-offset-2` |
-| Font | Inter (vietnamese subset); STF body `text-md`, SEL body `text-sm` |
+| Font | Outfit with Noto Sans fallback for Vietnamese diacritics; STF body `text-md`, SEL body `text-sm` |
 | Icons | lucide, 20 px, stroke 1.5 |
 
 **Layout recipe:** mobile-first from 360 px → container `max-w-[1440px] px-4 md:px-6` → STF sticky header with product grid 2/3/4/5/6 columns, or SEL sidebar AppShell with a breadcrumb and title row → cards on canvas → sticky bottom CTA bar on mobile commerce pages.
@@ -624,7 +624,7 @@ Target: **WCAG 2.1 AA**. NFR-USE-003 requires it for the buyer hero flow (search
   - Light and dark themes.
   - Two surfaces, STF and SEL. The reference admin app is out of scope.
 - **Adjustments made here:**
-  - Inter is the single family. The seller app's Outfit and Noto Sans are dropped for consistency.
+  - Outfit is the primary family (as in the reference seller app) with Noto Sans as the Vietnamese fallback; changed from Inter on 2026-11-18.
   - Card radius is unified to xl. The storefront used `rounded-sm`.
   - Control borders are darkened from gray-300 to **gray-500** so that input boundaries reach 3:1 (WCAG 1.4.11, NFR-USE-003).
   - Button variants `success` and `warning` are dropped, and `ghost` is added.

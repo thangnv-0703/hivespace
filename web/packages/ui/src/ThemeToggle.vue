@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Moon, Sun } from '@lucide/vue'
 import { ref } from 'vue'
 import { setTheme } from './theme'
 
@@ -17,9 +18,10 @@ function toggle() {
     type="button"
     :aria-pressed="dark"
     :aria-label="label"
-    class="inline-flex min-h-11 min-w-11 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-subtle focus-visible:outline-2 focus-visible:outline-focus-ring"
+    class="inline-flex size-11 items-center justify-center rounded-full border border-border-default text-text-secondary hover:bg-bg-subtle focus-visible:outline-2 focus-visible:outline-focus-ring"
     @click="toggle"
   >
-    <span aria-hidden="true">{{ dark ? '☾' : '☀' }}</span>
+    <Sun v-if="dark" class="size-5" aria-hidden="true" />
+    <Moon v-else class="size-5" aria-hidden="true" />
   </button>
 </template>

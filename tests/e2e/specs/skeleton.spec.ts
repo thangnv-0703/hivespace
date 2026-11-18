@@ -8,10 +8,11 @@ test('storefront shows the seeded category from the database, in vi and en', asy
   await page.addInitScript(() => localStorage.setItem('hs-locale', 'vi'))
   await page.goto('/')
 
-  await expect(page.getByTestId('brand')).toHaveText('HiveSpace')
+  await expect(page.getByTestId('brand').getByRole('img', { name: 'HiveSpace' }).first()).toBeVisible()
   await expect(page.getByTestId('category')).toHaveText('Thời trang')
 
-  await page.getByTestId('language-switcher').selectOption('en')
+  await page.getByTestId('language-switcher').click()
+  await page.getByRole('menuitemradio', { name: 'English' }).click()
   await expect(page.getByTestId('category')).toHaveText('Fashion')
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')
 })
@@ -19,8 +20,9 @@ test('storefront shows the seeded category from the database, in vi and en', asy
 test('the shell uses the design tokens (brand colour from tokens.json)', async ({ page }) => {
   await page.goto('/')
 
-  // theme.light action.primary.bg = brand.500 = #465fff = rgb(70, 95, 255)
-  await expect(page.getByTestId('brand')).toHaveCSS('color', 'rgb(70, 95, 255)')
+  // tokens.json color.brand.500 = #465fff reaches the page as a CSS variable
+  const brand500 = await page.evaluate(() => getComputedStyle(document.documentElement).getPropertyValue('--color-brand-500').trim())
+  expect(brand500).toBe('#465fff')
 })
 
 test('seller centre loads under /seller with its sidebar', async ({ page, viewport }) => {

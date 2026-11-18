@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Button from './Button.vue'
+
 /** Shared error page (SCR-STF-019, SCR-SEL-009): 404, 500 and maintenance. Text comes from the app's i18n. */
 defineProps<{ code: '404' | '500' | 'maintenance'; title: string; message: string; actionLabel: string; actionHref: string }>()
 </script>
@@ -8,11 +10,6 @@ defineProps<{ code: '404' | '500' | 'maintenance'; title: string; message: strin
     <p class="text-title-sm font-semibold text-action-primary-bg">{{ code === 'maintenance' ? '…' : code }}</p>
     <h1 class="text-xl font-semibold text-text-primary">{{ title }}</h1>
     <p class="text-md text-text-muted">{{ message }}</p>
-    <a
-      :href="actionHref"
-      class="inline-flex min-h-11 items-center rounded-lg bg-action-primary-bg px-4 font-medium text-action-primary-fg hover:bg-action-primary-bg-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring"
-    >
-      {{ actionLabel }}
-    </a>
+    <Button :href="actionHref">{{ actionLabel }}</Button>
   </section>
 </template>
