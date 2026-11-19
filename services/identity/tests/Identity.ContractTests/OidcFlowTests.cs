@@ -43,7 +43,10 @@ public sealed class OidcFlowTests : IAsyncLifetime
         var code = await AuthorizeAsync(client, challenge);
         var first = await TokenAsync(client, new()
         {
-            ["grant_type"] = "authorization_code", ["code"] = code, ["code_verifier"] = verifier, ["redirect_uri"] = RedirectUri,
+            ["grant_type"] = "authorization_code",
+            ["code"] = code,
+            ["code_verifier"] = verifier,
+            ["redirect_uri"] = RedirectUri,
         });
 
         // Claims and lifetime of the access token (design §3.2).
@@ -131,8 +134,11 @@ public sealed class OidcFlowTests : IAsyncLifetime
 
         var form = Form(new()
         {
-            ["grant_type"] = "authorization_code", ["code"] = code, ["code_verifier"] = verifier,
-            ["redirect_uri"] = RedirectUri, ["client_secret"] = "wrong",
+            ["grant_type"] = "authorization_code",
+            ["code"] = code,
+            ["code_verifier"] = verifier,
+            ["redirect_uri"] = RedirectUri,
+            ["client_secret"] = "wrong",
         }, withSecret: false);
         using var response = await client.PostAsync("/connect/token", form, Ct);
 

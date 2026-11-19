@@ -31,5 +31,5 @@ Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-desig
       Done when: each screen renders and conforms to its ui-design spec in states default/error/loading; `pnpm turbo run lint typecheck test build` passes including Sheriff and the vi/en parity check.
 - [x] T13 — E2E for UC-001 (hero flow named in the architecture's Testing entry): extend the Playwright suite with register → Mailpit → verify → sign in → refresh → sign out, plus replay of the old cookie fails (design §6 AC-12, AC-15, AC-19).
       Done when: `tests/e2e` spec passes against the local AppHost stack (needs a healthy Docker Desktop).
-- [ ] T14 — Verify: all acceptance criteria AC-1..AC-19 demonstrably pass; `dotnet build/test`, Notification and web checks, `dotnet format`, boundary rules, Spectral and buf green; scaffold-notes §8 stub table updated (dev-user and ping removed).
+- [x] T14 — Verify: all acceptance criteria AC-1..AC-19 demonstrably pass; `dotnet build/test`, Notification and web checks, `dotnet format`, boundary rules, Spectral and buf green; scaffold-notes §8 stub table updated (dev-user and ping removed).
       Done when: the commands in AGENTS.md all pass and each AC maps to a passing test or recorded demonstration.

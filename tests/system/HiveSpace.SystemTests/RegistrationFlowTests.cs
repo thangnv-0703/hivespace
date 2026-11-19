@@ -46,6 +46,10 @@ public sealed partial class RegistrationFlowTests(StackFixture stack)
         // The link in the email works.
         var token = Uri.UnescapeDataString(LinkPattern().Match(message.GetProperty("Text").GetString()!).Groups["token"].Value);
         Assert.NotEmpty(token);
+
+        // The browser first loads the page from the link: the token is in the URL the gateway serves.
+        using var page = await gateway.GetAsync($"/verify-email?token={Uri.EscapeDataString(token)}", Ct);
+        Assert.True(page.IsSuccessStatusCode, $"GET /verify-email returned {page.StatusCode}");
         using var verify = new HttpRequestMessage(HttpMethod.Post, "/v1/users/verify-email")
         {
             Content = JsonContent.Create(new { token }),
@@ -60,6 +64,14 @@ public sealed partial class RegistrationFlowTests(StackFixture stack)
         var evaluation = schema.Evaluate(envelope.GetProperty("data"));
         Assert.True(evaluation.IsValid, "UserRegistered data does not match contracts/events/UserRegistered/v1.schema.json");
         Assert.Matches(@"^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$", envelope.GetProperty("traceparent").GetString());
+
+        // AC-8 / R-6: the token appears in no service's console log.
+        foreach (var service in new[] { "gateway", "identity", "notification" })
+        {
+            var lines = stack.LogsOf(service);
+            Assert.NotEmpty(lines);
+            Assert.DoesNotContain(lines, line => line.Contains(token, StringComparison.Ordinal));
+        }
     }
 
     private static async Task<JsonElement> WaitForEmailAsync(HttpClient mailpit, string email)
