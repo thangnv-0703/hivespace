@@ -220,10 +220,15 @@ async function goBack() {
     </p>
   </AuthPage>
 
-  <AuthPage v-else :title="$t('auth.register.noticeTitle')">
-    <div class="space-y-4 rounded-xl border border-border-default bg-bg-surface p-4 md:p-6" data-testid="register-notice">
-      <Mail class="size-12 text-text-muted" aria-hidden="true" />
-      <p class="text-md text-text-primary">{{ $t('auth.register.noticeBody', { email: values.email.trim() }) }}</p>
+  <AuthPage v-else :title="$t('auth.register.noticeTitle')" :subtitle="$t('auth.register.noticeSubtitle')">
+    <div
+      class="flex flex-col items-center gap-3 rounded-xl border border-border-default bg-bg-surface p-6 text-center shadow-sm"
+      data-testid="register-notice"
+    >
+      <div class="flex size-16 items-center justify-center rounded-full bg-brand-50 text-brand-600">
+        <Mail class="size-8" aria-hidden="true" />
+      </div>
+      <p class="text-md text-text-secondary">{{ $t('auth.register.noticeBody', { email: values.email.trim() }) }}</p>
       <p class="text-sm text-text-muted">{{ $t('auth.register.noticeValid') }}</p>
       <ResendControl :email="values.email.trim()" />
     </div>

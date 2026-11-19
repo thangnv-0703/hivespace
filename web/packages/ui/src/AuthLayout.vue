@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BrandLogo from './BrandLogo.vue'
-import authBrand from './assets/auth/auth-brand.svg'
+import authBrand from './assets/auth/auth-hex.svg'
 import gridShape from './assets/shape/grid-01.svg'
 
 /**
@@ -59,9 +59,9 @@ withDefaults(
         </div>
       </main>
       <aside class="relative hidden w-1/2 items-center justify-center overflow-hidden bg-brand-950 lg:flex" data-testid="auth-panel">
-        <img :src="gridShape" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 size-full object-cover opacity-60" />
+        <img :src="gridShape" alt="" aria-hidden="true" class="pointer-events-none absolute inset-0 size-full object-cover opacity-35" />
         <div class="relative z-[var(--z-raised)] flex max-w-md flex-col items-center px-12 py-16 text-center">
-          <img :src="imageSrc" :alt="imageAlt" class="mb-8 w-72" />
+          <img :src="imageSrc" :alt="imageAlt" class="mb-8 w-65" />
           <h2 v-if="imageHeading" class="mb-3 text-title-sm font-semibold text-text-on-brand">{{ imageHeading }}</h2>
           <p v-if="imageBody" class="text-md text-text-on-brand opacity-70">{{ imageBody }}</p>
         </div>
