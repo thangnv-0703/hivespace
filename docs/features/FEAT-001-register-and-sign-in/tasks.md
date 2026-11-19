@@ -9,7 +9,7 @@ Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-desig
       Done when: Spectral shows 0 errors, vi/en key-parity check passes, the client regenerates with no manual edits, and the features are discovered (red) by Reqnroll.
 - [x] T2 — Shared errors: `ApiException`, `MessageCatalog` (embedded vi/en YAML, vi fallback), language resolver, `UseApiErrors` mapping to 4xx with localized messages (design §5.4; FR-LOC-004; AC-5).
       Done when: unit tests for AC-5 pass (every code in `error-codes.yaml` has both messages; status and language mapping correct; 500 catch-all kept).
-- [ ] T3 — Identity domain: `User`, `Credential`, `VerificationToken`, value objects, `PasswordPolicy` returning all unmet rules, roles (design §5.2; FR-AUTH-001..004, FR-ROLE-001).
+- [x] T3 — Identity domain: `User`, `Credential`, `VerificationToken`, value objects, `PasswordPolicy` returning all unmet rules, roles (design §5.2; FR-AUTH-001..004, FR-ROLE-001).
       Done when: unit tests for AC-3, AC-4 (policy and field rules) and token expiry/use/invalidate rules pass; Architecture tests (Domain has no framework reference) stay green.
 - [ ] T4 — Identity persistence: `IdentityDbContext`, migration `0001_InitialIdentity` incl. OpenIddict and outbox/inbox tables, `Database:MigrateOnStartup`, AppHost `identitydb` + messaging references (design §4, §5.7).
       Done when: the migration applies clean up and down on Testcontainers Postgres and Identity starts under the AppHost with its database.

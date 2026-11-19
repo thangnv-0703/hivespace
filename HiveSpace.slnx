@@ -40,6 +40,7 @@
   </Folder>
   <Folder Name="/services/identity/tests/">
     <Project Path="services/identity/tests/Identity.ContractTests/Identity.ContractTests.csproj" />
+    <Project Path="services/identity/tests/Identity.UnitTests/Identity.UnitTests.csproj" />
     <Project Path="services/identity/tests/Identity.Tests/Identity.Tests.csproj" />
   </Folder>
   <Folder Name="/services/media/" />
