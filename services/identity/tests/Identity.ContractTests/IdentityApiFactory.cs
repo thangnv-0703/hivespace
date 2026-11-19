@@ -1,3 +1,4 @@
+using System.Security.Cryptography;
 using HiveSpace.BuildingBlocks.Messaging;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -11,6 +12,9 @@ namespace Identity.ContractTests;
 /// <summary>Boots Identity.Api against a real Postgres container; the broker is faked (the relay is removed).</summary>
 public sealed class IdentityApiFactory : WebApplicationFactory<Program>
 {
+    public const string Issuer = "http://localhost:5080";
+    public const string ClientSecret = "test-client-secret";
+
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("pgvector/pgvector:pg17").Build();
 
     public async Task StartAsync() => await _postgres.StartAsync();
@@ -22,6 +26,12 @@ public sealed class IdentityApiFactory : WebApplicationFactory<Program>
         builder.UseSetting(
             "ConnectionStrings:messaging",
             "Endpoint=sb://localhost;SharedAccessKeyName=test;SharedAccessKey=test;UseDevelopmentEmulator=true;");
+        // Fresh keys per run; production reads them from configuration (D-7).
+        builder.UseSetting("Identity:Issuer", Issuer);
+        builder.UseSetting("Identity:PublicBaseUrl", Issuer);
+        builder.UseSetting("Identity:SigningKeyPem", ECDsa.Create(ECCurve.NamedCurves.nistP256).ExportPkcs8PrivateKeyPem());
+        builder.UseSetting("Identity:EncryptionKeyPem", RSA.Create(2048).ExportPkcs8PrivateKeyPem());
+        builder.UseSetting("Identity:Gateway:ClientSecret", ClientSecret);
         builder.ConfigureServices(services =>
         {
             var relay = services.Single(d => d.ImplementationType?.Name.StartsWith("OutboxRelay", StringComparison.Ordinal) == true);

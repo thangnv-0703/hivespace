@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Errors;
 using Identity.Api.Endpoints;
+using Identity.Api.Oidc;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -25,6 +26,7 @@ builder.Services.AddAuthentication(UsersEndpoints.CookieScheme)
         o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
     });
 builder.Services.AddAuthorization();
+builder.Services.AddIdentityOpenIddict(builder.Configuration);
 
 var app = builder.Build();
 
@@ -41,6 +43,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", defaultValue: true))
 }
 
 app.MapUsersEndpoints();
+app.MapConnectEndpoints();
 
 await app.RunAsync();
 

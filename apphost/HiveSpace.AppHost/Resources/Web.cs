@@ -59,6 +59,7 @@ internal static class WebExtensions
         var gateway = builder.AddProject<Projects.Gateway>("gateway")
             .WithExternalHttpEndpoints()
             .WithReference(dotnet.Catalog)
+            .WithReference(dotnet.Identity)
             .WithReference(go.Cart)
             .WithReference(python.SearchAi)
             .WithReference(web.Storefront)

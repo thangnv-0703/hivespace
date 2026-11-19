@@ -1,0 +1,110 @@
+using System.Collections.Immutable;
+using System.Security.Claims;
+using Identity.Api.Endpoints;
+using Identity.Application.Abstractions;
+using Identity.Domain;
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Authentication;
+using OpenIddict.Abstractions;
+using OpenIddict.Server.AspNetCore;
+using static OpenIddict.Abstractions.OpenIddictConstants;
+
+namespace Identity.Api.Oidc;
+
+/// <summary>OpenIddict pass-through handlers (design §3.2). Token and revoke bookkeeping stays inside OpenIddict.</summary>
+public static class ConnectEndpoints
+{
+    public static IEndpointRouteBuilder MapConnectEndpoints(this IEndpointRouteBuilder app)
+    {
+        app.MapMethods("/connect/authorize", [HttpMethods.Get, HttpMethods.Post],
+            (HttpContext http, IUserRepository users) => AuthorizeAsync(http, users));
+        app.MapPost("/connect/token", (HttpContext http, IUserRepository users) => ExchangeAsync(http, users));
+        app.MapMethods("/connect/logout", [HttpMethods.Get, HttpMethods.Post],
+            (Delegate)LogoutAsync);
+        return app;
+    }
+
+    private static async Task<IResult> AuthorizeAsync(HttpContext http, IUserRepository users)
+    {
+        var request = http.GetOpenIddictServerRequest()
+            ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+
+        var session = await http.AuthenticateAsync(UsersEndpoints.CookieScheme);
+        var userId = session.Succeeded ? session.Principal?.FindFirstValue(Claims.Subject) : null;
+        if (userId is null || !Guid.TryParse(userId, out var id) || await users.FindByIdAsync(id, http.RequestAborted) is not { } user)
+        {
+            // No Identity session: the storefront sign-in screen takes over and comes back here (D-1).
+            var back = http.Request.PathBase + http.Request.Path + http.Request.QueryString;
+            return Results.Redirect("/signin?returnUrl=" + Uri.EscapeDataString(back));
+        }
+
+        return Results.SignIn(
+            BuildPrincipal(user, request.GetScopes()),
+            authenticationScheme: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    private static async Task<IResult> ExchangeAsync(HttpContext http, IUserRepository users)
+    {
+        var request = http.GetOpenIddictServerRequest()
+            ?? throw new InvalidOperationException("The OpenID Connect request cannot be retrieved.");
+        if (!request.IsAuthorizationCodeGrantType() && !request.IsRefreshTokenGrantType())
+        {
+            return Fail(Errors.UnsupportedGrantType, "The specified grant type is not supported.");
+        }
+
+        var result = await http.AuthenticateAsync(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+        var subject = result.Principal?.GetClaim(Claims.Subject);
+
+        // Claims come from the database on every exchange, so a verified email shows up on the next token (AC-9).
+        if (!Guid.TryParse(subject, out var id) || await users.FindByIdAsync(id, http.RequestAborted) is not { } user)
+        {
+            return Fail(Errors.InvalidGrant, "The user no longer exists.");
+        }
+
+        return Results.SignIn(
+            BuildPrincipal(user, result.Principal!.GetScopes()),
+            authenticationScheme: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
+    }
+
+    private static async Task<IResult> LogoutAsync(HttpContext http)
+    {
+        // Clears hs.idp so the next /bff/login asks for credentials again (D-4, AC-15).
+        await http.SignOutAsync(UsersEndpoints.CookieScheme);
+        return Results.SignOut(
+            new AuthenticationProperties { RedirectUri = "/" },
+            [OpenIddictServerAspNetCoreDefaults.AuthenticationScheme]);
+    }
+
+    private static IResult Fail(string error, string description) =>
+        Results.Forbid(
+            new AuthenticationProperties(new Dictionary<string, string?>
+            {
+                [OpenIddictServerAspNetCoreConstants.Properties.Error] = error,
+                [OpenIddictServerAspNetCoreConstants.Properties.ErrorDescription] = description,
+            }),
+            [OpenIddictServerAspNetCoreDefaults.AuthenticationScheme]);
+
+    /// <summary>Claims in the access and identity tokens (design §3.2): sub, email, email_verified, name, role, lang.</summary>
+    internal static ClaimsPrincipal BuildPrincipal(User user, IEnumerable<string> scopes)
+    {
+        var identity = new ClaimsIdentity(OpenIddictServerAspNetCoreDefaults.AuthenticationScheme, Claims.Name, Claims.Role);
+        identity.AddClaim(new Claim(Claims.Subject, user.Id.ToString()));
+        identity.AddClaim(new Claim(Claims.Email, user.EmailAddress));
+        identity.AddClaim(new Claim("email_verified", user.IsEmailVerified ? "true" : "false", ClaimValueTypes.String));
+        identity.AddClaim(new Claim(Claims.Name, user.DisplayName));
+        identity.AddClaim(new Claim("lang", user.Language));
+        foreach (var role in user.Roles)
+        {
+            identity.AddClaim(new Claim(Claims.Role, role.Role.ToString()));
+        }
+
+        foreach (var claim in identity.Claims)
+        {
+            claim.SetDestinations(Destinations.AccessToken, Destinations.IdentityToken);
+        }
+
+        var principal = new ClaimsPrincipal(identity);
+        principal.SetScopes(scopes.ToImmutableArray());
+        return principal;
+    }
+}
