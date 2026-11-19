@@ -15,6 +15,11 @@ class Settings(BaseSettings):
     events_topic: str = Field(default="hivespace-events", alias="EVENTS_TOPIC")
     events_subscription: str = Field(default="notification", alias="EVENTS_SUBSCRIPTION")
 
+    mailpit_connection: str = Field(default="", alias="ConnectionStrings__mailpit")
+    # Origin the emailed links point at: the public gateway, where the storefront serves /verify-email.
+    public_base_url: str = Field(default="http://localhost:5080", alias="PUBLIC_BASE_URL")
+    mail_from: str = Field(default="HiveSpace <no-reply@hivespace.local>", alias="MAIL_FROM")
+
     @property
     def async_database_url(self) -> str:
         """The AppHost gives a plain postgresql:// URI; SQLAlchemy needs the psycopg async driver name."""

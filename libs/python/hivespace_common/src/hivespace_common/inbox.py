@@ -32,6 +32,7 @@ async def record(conn: AsyncConnection, event_id: str, consumer: str) -> bool:
         insert(inbox)
         .values(event_id=event_id, consumer=consumer, processed_at=datetime.now(UTC))
         .on_conflict_do_nothing()
+        .returning(inbox.c.event_id)
     )
-    result = await conn.execute(stmt)
-    return result.rowcount == 1
+    # RETURNING, not rowcount: psycopg reports -1 for an INSERT ... ON CONFLICT through SQLAlchemy.
+    return (await conn.execute(stmt)).scalar_one_or_none() is not None

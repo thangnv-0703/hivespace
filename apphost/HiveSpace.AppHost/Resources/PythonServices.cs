@@ -16,6 +16,7 @@ internal static class PythonServicesExtensions
             .WithReference(infra.Messaging)
             .WithEnvironment("EVENTS_TOPIC", InfrastructureExtensions.EventsTopic)
             .WithEnvironment("EVENTS_SUBSCRIPTION", "notification")
+            .WithEnvironment("PUBLIC_BASE_URL", DotnetServicesExtensions.PublicOrigin)
             .WithReference(infra.MailPit)
             .WithOtlpExporter()
             .WithHttpHealthCheck("/health")

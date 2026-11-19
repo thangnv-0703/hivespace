@@ -1,6 +1,6 @@
 # Notification (Python, lean)
 
-Contact projection, vi/en email templates, send and retry (architecture §5.2, ADR-0016). In the walking skeleton it consumes the `Ping` event once through its inbox. The verification email arrives with FEAT-001, order emails with FEAT-032.
+Contact projection, vi/en email templates, send and retry (architecture §5.2, ADR-0016). It consumes `UserRegistered` and `VerificationEmailRequested` once through its inbox, keeps the contact and sends the vi/en verification email (FEAT-001, Mailpit locally). Order emails arrive with FEAT-032.
 
 System-wide setup, the local stack and conventions are in the [root README](../../README.md).
 
