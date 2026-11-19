@@ -88,7 +88,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                 name: "users",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     email = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
                     normalized_email = table.Column<string>(type: "character varying(254)", maxLength: 254, nullable: false),
                     display_name = table.Column<string>(type: "character varying(60)", maxLength: 60, nullable: false),
@@ -99,7 +99,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_users", x => x.Id);
+                    table.PrimaryKey("PK_users", x => x.id);
                     table.CheckConstraint("ck_users_language", "language in ('vi', 'en')");
                 });
 
@@ -142,7 +142,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         name: "FK_credentials_users_user_id",
                         column: x => x.user_id,
                         principalTable: "users",
-                        principalColumn: "Id",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -162,7 +162,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         name: "FK_role_grants_users_user_id",
                         column: x => x.user_id,
                         principalTable: "users",
-                        principalColumn: "Id",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 
@@ -170,7 +170,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                 name: "verification_tokens",
                 columns: table => new
                 {
-                    Id = table.Column<Guid>(type: "uuid", nullable: false),
+                    id = table.Column<Guid>(type: "uuid", nullable: false),
                     user_id = table.Column<Guid>(type: "uuid", nullable: false),
                     token_hash = table.Column<byte[]>(type: "bytea", nullable: false),
                     expires_at = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
@@ -180,12 +180,12 @@ namespace Identity.Infrastructure.Persistence.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_verification_tokens", x => x.Id);
+                    table.PrimaryKey("PK_verification_tokens", x => x.id);
                     table.ForeignKey(
                         name: "FK_verification_tokens_users_user_id",
                         column: x => x.user_id,
                         principalTable: "users",
-                        principalColumn: "Id",
+                        principalColumn: "id",
                         onDelete: ReferentialAction.Cascade);
                 });
 

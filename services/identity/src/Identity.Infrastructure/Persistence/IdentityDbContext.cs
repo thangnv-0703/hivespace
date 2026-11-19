@@ -19,7 +19,7 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
         {
             e.ToTable("users", t => t.HasCheckConstraint("ck_users_language", "language in ('vi', 'en')"));
             e.HasKey(u => u.Id);
-            e.Property(u => u.Id).ValueGeneratedNever();
+            e.Property(u => u.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(u => u.EmailAddress).HasColumnName("email").HasMaxLength(254);
             e.Property(u => u.NormalizedEmail).HasColumnName("normalized_email").HasMaxLength(254);
             e.HasIndex(u => u.NormalizedEmail).IsUnique();
@@ -56,7 +56,7 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
         {
             e.ToTable("verification_tokens");
             e.HasKey(t => t.Id);
-            e.Property(t => t.Id).ValueGeneratedNever();
+            e.Property(t => t.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(t => t.UserId).HasColumnName("user_id");
             e.HasIndex(t => t.UserId);
             e.Property(t => t.TokenHash).HasColumnName("token_hash");

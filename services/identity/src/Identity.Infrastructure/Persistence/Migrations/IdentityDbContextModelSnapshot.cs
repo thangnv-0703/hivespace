@@ -113,7 +113,8 @@ namespace Identity.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Identity.Domain.User", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
@@ -167,7 +168,8 @@ namespace Identity.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("Identity.Domain.VerificationToken", b =>
                 {
                     b.Property<Guid>("Id")
-                        .HasColumnType("uuid");
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone")
