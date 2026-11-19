@@ -13,6 +13,7 @@
   <Folder Name="/libs/" />
   <Folder Name="/libs/dotnet/">
     <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Errors/HiveSpace.BuildingBlocks.Errors.csproj" />
+    <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Errors.Tests/HiveSpace.BuildingBlocks.Errors.Tests.csproj" />
     <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Messaging/HiveSpace.BuildingBlocks.Messaging.csproj" />
     <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Money/HiveSpace.BuildingBlocks.Money.csproj" />
   </Folder>

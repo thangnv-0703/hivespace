@@ -7,7 +7,7 @@ Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-desig
 
 - [x] T1 — Contracts first: add `identity.*` codes with vi/en messages, `UserRegistered/v1` and `VerificationEmailRequested/v1` schemas, the four operations in `openapi/identity.yaml`, `gateway.yaml` for `/bff/*`, the shared `Accept-Language` parameter; regenerate `web/packages/api-client`; replace `features/identity/ping.feature` with register, verify, resend and sign-in features (design §3.5–§3.7).
       Done when: Spectral shows 0 errors, vi/en key-parity check passes, the client regenerates with no manual edits, and the features are discovered (red) by Reqnroll.
-- [ ] T2 — Shared errors: `ApiException`, `MessageCatalog` (embedded vi/en YAML, vi fallback), language resolver, `UseApiErrors` mapping to 4xx with localized messages (design §5.4; FR-LOC-004; AC-5).
+- [x] T2 — Shared errors: `ApiException`, `MessageCatalog` (embedded vi/en YAML, vi fallback), language resolver, `UseApiErrors` mapping to 4xx with localized messages (design §5.4; FR-LOC-004; AC-5).
       Done when: unit tests for AC-5 pass (every code in `error-codes.yaml` has both messages; status and language mapping correct; 500 catch-all kept).
 - [ ] T3 — Identity domain: `User`, `Credential`, `VerificationToken`, value objects, `PasswordPolicy` returning all unmet rules, roles (design §5.2; FR-AUTH-001..004, FR-ROLE-001).
       Done when: unit tests for AC-3, AC-4 (policy and field rules) and token expiry/use/invalidate rules pass; Architecture tests (Domain has no framework reference) stay green.

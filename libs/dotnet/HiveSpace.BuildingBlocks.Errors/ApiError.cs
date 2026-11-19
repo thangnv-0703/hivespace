@@ -23,31 +23,71 @@ public static class ErrorCodes
     public const string DependencyUnavailable = "common.dependency_unavailable";
 }
 
-public static partial class ErrorHandlingExtensions
+/// <summary>Picks the response language from <c>Accept-Language</c>: <c>vi</c> (default) or <c>en</c> (D-2).</summary>
+public static class LanguageResolver
 {
-    /// <summary>
-    /// Turns unhandled exceptions into the error envelope. Messages are English placeholders in the skeleton;
-    /// localized messages from <c>contracts/errors/messages.*.yaml</c> arrive with FEAT-001.
-    /// </summary>
-    public static WebApplication UseApiErrors(this WebApplication app)
+    public static string Resolve(string? acceptLanguage)
     {
-        app.UseExceptionHandler(handler => handler.Run(async context =>
+        if (string.IsNullOrWhiteSpace(acceptLanguage))
         {
-            var feature = context.Features.Get<IExceptionHandlerFeature>();
-            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("ApiErrors");
-            if (feature?.Error is { } error)
+            return MessageCatalog.DefaultLanguage;
+        }
+
+        foreach (var part in acceptLanguage.Split(',', StringSplitOptions.TrimEntries))
+        {
+            var tag = part.Split(';')[0].Trim();
+            var primary = tag.Split('-')[0].ToLowerInvariant();
+            if (primary is "vi" or "en")
             {
-                LogUnhandled(logger, error);
+                return primary;
             }
+        }
 
-            context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        return MessageCatalog.DefaultLanguage;
+    }
+}
+
+/// <summary>Writes the error envelope: expected failures get their registered status and a localized message; anything else is a 500.</summary>
+public static partial class ApiErrorResponder
+{
+    public static async Task WriteAsync(HttpContext context, Exception? exception)
+    {
+        var language = LanguageResolver.Resolve(context.Request.Headers.AcceptLanguage.ToString());
+
+        if (exception is ApiException api)
+        {
+            var details = api.Details?
+                .Select(d => d with { Message = d.Message ?? MessageCatalog.MessageOf(d.Code, language) })
+                .ToList();
+            context.Response.StatusCode = MessageCatalog.StatusOf(api.Code);
             await context.Response.WriteAsJsonAsync(
-                new ApiError(ErrorCodes.Internal, "Something went wrong. Please try again later."));
-        }));
+                new ApiError(api.Code, MessageCatalog.MessageOf(api.Code, language), details));
+            return;
+        }
 
-        return app;
+        if (exception is not null)
+        {
+            var logger = context.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger("ApiErrors");
+            LogUnhandled(logger, exception);
+        }
+
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        await context.Response.WriteAsJsonAsync(
+            new ApiError(ErrorCodes.Internal, MessageCatalog.MessageOf(ErrorCodes.Internal, language)));
     }
 
     [LoggerMessage(Level = LogLevel.Error, Message = "Unhandled exception")]
     private static partial void LogUnhandled(ILogger logger, Exception exception);
+}
+
+public static class ErrorHandlingExtensions
+{
+    /// <summary>Turns <see cref="ApiException"/> into a localized 4xx envelope and unhandled exceptions into a 500 envelope.</summary>
+    public static WebApplication UseApiErrors(this WebApplication app)
+    {
+        app.UseExceptionHandler(handler => handler.Run(context =>
+            ApiErrorResponder.WriteAsync(context, context.Features.Get<IExceptionHandlerFeature>()?.Error)));
+
+        return app;
+    }
 }
