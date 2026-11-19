@@ -15,7 +15,7 @@ Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-desig
       Done when: the migration applies clean up and down on Testcontainers Postgres and Identity starts under the AppHost with its database.
 - [x] T5 — Identity application and infrastructure: handlers `RegisterUser`, `VerifyEmail`, `ResendVerificationEmail`, `SignIn`; `Argon2idPasswordHasher`; token generator (SHA-256 at rest); outbox adapter; `OutboxCleanup` (design §5.2; D-3, D-6; AC-1, AC-2, AC-6, AC-8..AC-11, AC-13).
       Done when: unit and integration tests (Testcontainers) for those criteria pass, including the concurrent-registration race and the transactional outbox write.
-- [ ] T6 — Identity API: `UsersEndpoints` (§3.1) replacing the ping stub, cookie scheme `hs.idp`, `returnUrl` validation (design §3.1; AC-1..AC-4, AC-13, AC-17).
+- [x] T6 — Identity API: `UsersEndpoints` (§3.1) replacing the ping stub, cookie scheme `hs.idp`, `returnUrl` validation (design §3.1; AC-1..AC-4, AC-13, AC-17).
       Done when: contract tests (Reqnroll register, verify, resend, sign-in features) pass for success and every designed error, in vi and en.
 - [ ] T7 — OpenIddict server: ES256 and encryption keys from config, `/connect/authorize` (redirect to `/signin`), `/connect/token`, `/connect/revoke`, `/connect/logout`, discovery and JWKS, client seeding, claims (`sub`, `email`, `email_verified`, `name`, `role`, `lang`), 15 min / 7 day lifetimes with rotation (design §3.2; D-7; AC-9, AC-12, AC-14).
       Done when: an integration test runs code + PKCE → token → refresh (rotation: the old refresh token fails) → revoke, and asserts the claims and lifetimes.

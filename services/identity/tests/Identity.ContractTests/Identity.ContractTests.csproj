@@ -18,4 +18,8 @@
   <ItemGroup>
     <ReqnrollFeatureFiles Include="..\..\..\..\contracts\features\identity\*.feature" Link="Features\%(Filename)%(Extension)" />
   </ItemGroup>
+  <!-- Scenarios share one database and reset it before each run, so they must not overlap. -->
+  <ItemGroup>
+    <Content Include="xunit.runner.json" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
 </Project>
