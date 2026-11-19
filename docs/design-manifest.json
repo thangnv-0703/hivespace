@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "policy": {
+    "fallback": "code-native",
+    "note": "No design tool connected. Screens missing from a design source are specified for code and adapted from references/hivespace.web (user decision 2026-11-17); overridable per screen."
+  },
+  "screens": {
+    "SCR-STF-012": {
+      "name": "Sign in",
+      "surface": "STF",
+      "feature": "FEAT-001",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-001-register-and-sign-in/ui-design.md#scr-stf-012--sign-in"
+      },
+      "reference": "references/hivespace.web/apps/buyer/src/pages/Auth/SignInPage.vue",
+      "states": {
+        "covered": [
+          "default",
+          "error",
+          "loading"
+        ],
+        "gaps": [
+          "locked out (FEAT-005)"
+        ],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "POST /v1/users/sign-in"
+      ],
+      "conformance": {
+        "result": "corrected",
+        "corrections": [
+          "gray/brand utilities -> role tokens",
+          "red alert box -> Alert error",
+          "custom password icons -> lucide Eye/EyeOff",
+          "text-brand-500 links -> text-text-link"
+        ],
+        "escalations": [
+          "E-1 AuthLayout shell (accepted 2026-11-19; design.md amendment to follow via ux-foundations)",
+          "E-3 inventory wording (unverified notice moves to header banner) (proposed)"
+        ]
+      },
+      "status": "designed",
+      "designed_at": "2026-11-19",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-001-register-and-sign-in/mockups/Main.dc.html",
+          "docs/features/FEAT-001-register-and-sign-in/mockups/SignInMobile.dc.html",
+          "docs/features/FEAT-001-register-and-sign-in/mockups/UnverifiedBanner.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/KtqAnGkhmfRHoBGsyhoUaP",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
+    },
+    "SCR-STF-013": {
+      "name": "Register",
+      "surface": "STF",
+      "feature": "FEAT-001",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-001-register-and-sign-in/ui-design.md#scr-stf-013--register"
+      },
+      "reference": "references/hivespace.web/apps/buyer/src/pages/Auth/SignUpPage.vue",
+      "states": {
+        "covered": [
+          "default",
+          "error",
+          "loading",
+          "notice (check your email)"
+        ],
+        "gaps": [],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "POST /v1/users",
+        "POST /v1/users/verification-email"
+      ],
+      "conformance": {
+        "result": "corrected",
+        "corrections": [
+          "terms checkbox and Google button removed (no requirement / FEAT-004)",
+          "gray/red utilities -> role tokens",
+          "confirmPassword kept client-side only"
+        ],
+        "escalations": [
+          "E-1 AuthLayout shell (accepted 2026-11-19; design.md amendment to follow via ux-foundations)",
+          "E-2 PasswordRules hint component (accepted 2026-11-19; design.md amendment to follow via ux-foundations)"
+        ]
+      },
+      "status": "designed",
+      "designed_at": "2026-11-19",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-001-register-and-sign-in/mockups/Register.dc.html",
+          "docs/features/FEAT-001-register-and-sign-in/mockups/RegisterNotice.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/KtqAnGkhmfRHoBGsyhoUaP",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
+    },
+    "SCR-STF-014": {
+      "name": "Verify email",
+      "surface": "STF",
+      "feature": "FEAT-001",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-001-register-and-sign-in/ui-design.md#scr-stf-014--verify-email"
+      },
+      "reference": "references/hivespace.web/apps/buyer/src/pages/VerifyEmailCallbackPage.vue; VerifyEmailPage.vue",
+      "states": {
+        "covered": [
+          "loading",
+          "verified",
+          "expired",
+          "invalid",
+          "already verified",
+          "missing token",
+          "network error"
+        ],
+        "gaps": [],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "POST /v1/users/verify-email",
+        "POST /v1/users/verification-email"
+      ],
+      "conformance": {
+        "result": "corrected",
+        "corrections": [
+          "green/red boxes -> Alert/result card tokens",
+          "userId query param dropped (API takes token only)"
+        ],
+        "escalations": [
+          "E-1 AuthLayout shell (accepted 2026-11-19; design.md amendment to follow via ux-foundations)"
+        ]
+      },
+      "status": "designed",
+      "designed_at": "2026-11-19",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-001-register-and-sign-in/mockups/VerifyExpired.dc.html",
+          "docs/features/FEAT-001-register-and-sign-in/mockups/VerifyVerified.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/KtqAnGkhmfRHoBGsyhoUaP",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
+    }
+  }
+}

@@ -5,22 +5,22 @@
 
 | Req ID | Requirement (short) | Priority | Status | Source | Use case(s) | Design ref | Plan ref | Test ref |
 | :----- | :------------------ | :------- | :----- | :----- | :---------- | :--------- | :------- | :------- |
-| FR-AUTH-001 | a visitor submits registration with a valid email address, a display name and a … | Must | Active | P0-1, US-17 | UC-001 | ADR-0008 | FEAT-001 | _TBD_ |
-| FR-AUTH-002 | the submitted email address is already registered, then reject the registration … | Must | Active | P0-1 | UC-001 | ADR-0008 | FEAT-001 | _TBD_ |
-| FR-AUTH-003 | the submitted password does not satisfy the password policy, then reject the reg… | Must | Active | P0-1 | UC-001, UC-026 | ADR-0008 | FEAT-001, FEAT-003 | _TBD_ |
-| FR-AUTH-004 | a registration field is missing or malformed, then reject the request and identi… | Must | Active | P0-1 | UC-001 | ADR-0008 | FEAT-001 | _TBD_ |
-| FR-AUTH-005 | a user opens a valid verification link, mark the account's email as verified. | Must | Active | P0-14, US-17 | UC-001 | ADR-0008, ADR-0012 | FEAT-001 | _TBD_ |
-| FR-AUTH-006 | a verification link is expired, already used, or invalid, then reject it and off… | Must | Active | P0-14 | UC-001 | ADR-0008 | FEAT-001 | _TBD_ |
-| FR-AUTH-007 | a user with an unverified account requests a new verification email, issue a new… | Should | Active | Inferred | UC-001 | ADR-0008 | FEAT-001 | _TBD_ |
-| FR-AUTH-008 | a user's account is unverified, allow browsing and search but reject order place… | Must | Active | P0-14 | UC-001, UC-011 | ADR-0008 | FEAT-001, FEAT-022 | _TBD_ |
-| FR-AUTH-009 | a user submits correct credentials, sign the user in and issue an access token a… | Must | Active | P0-1 | UC-002 | ADR-0008 | FEAT-001 | _TBD_ |
-| FR-AUTH-010 | the submitted credentials are incorrect, then reject the sign-in with a message … | Must | Active | P0-1 | UC-002 | ADR-0008 | FEAT-001 | _TBD_ |
+| FR-AUTH-001 | a visitor submits registration with a valid email address, a display name and a … | Must | Active | P0-1, US-17 | UC-001 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-002 | the submitted email address is already registered, then reject the registration … | Must | Active | P0-1 | UC-001 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-003 | the submitted password does not satisfy the password policy, then reject the reg… | Must | Active | P0-1 | UC-001, UC-026 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001, FEAT-003 | _TBD_ |
+| FR-AUTH-004 | a registration field is missing or malformed, then reject the request and identi… | Must | Active | P0-1 | UC-001 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-005 | a user opens a valid verification link, mark the account's email as verified. | Must | Active | P0-14, US-17 | UC-001 | ADR-0008, ADR-0012, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-006 | a verification link is expired, already used, or invalid, then reject it and off… | Must | Active | P0-14 | UC-001 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-007 | a user with an unverified account requests a new verification email, issue a new… | Should | Active | Inferred | UC-001 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-008 | a user's account is unverified, allow browsing and search but reject order place… | Must | Active | P0-14 | UC-001, UC-011 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001, FEAT-022 | _TBD_ |
+| FR-AUTH-009 | a user submits correct credentials, sign the user in and issue an access token a… | Must | Active | P0-1 | UC-002 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-010 | the submitted credentials are incorrect, then reject the sign-in with a message … | Must | Active | P0-1 | UC-002 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
 | FR-AUTH-011 | five consecutive sign-in attempts for one account fail within 15 minutes, then l… | Should | Active | Inferred | UC-002 | ADR-0008 | FEAT-005 | _TBD_ |
 | FR-AUTH-012 | an account is locked, reject sign-in attempts without evaluating the submitted p… | Should | Active | Inferred | UC-002 | ADR-0008 | FEAT-005 | _TBD_ |
-| FR-AUTH-013 | a signed-in user signs out, revoke that user's refresh token. | Should | Active | Inferred | UC-002 | ADR-0008 | FEAT-001 | _TBD_ |
-| FR-AUTH-014 | a valid, unexpired refresh token is presented, issue a new access token. | Should | Active | Inferred | UC-002 | ADR-0008 | FEAT-001 | _TBD_ |
-| FR-AUTH-015 | a request to a protected endpoint carries a missing, malformed, expired or invalid-signature access token… | Must | Active | P0-1, CR-3 | UC-002 | ADR-0008 | Foundations | _TBD_ |
-| FR-AUTH-016 | a request carries a valid token, the gateway shall forward the request with the … | Must | Active | P0-1 | UC-002 | ADR-0008 | Foundations | _TBD_ |
+| FR-AUTH-013 | a signed-in user signs out, revoke that user's refresh token. | Should | Active | Inferred | UC-002 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md, features/FEAT-001-register-and-sign-in/ui-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-014 | a valid, unexpired refresh token is presented, issue a new access token. | Should | Active | Inferred | UC-002 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md | FEAT-001 | _TBD_ |
+| FR-AUTH-015 | a request to a protected endpoint carries a missing, malformed, expired or invalid-signature access token… | Must | Active | P0-1, CR-3 | UC-002 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md | Foundations | _TBD_ |
+| FR-AUTH-016 | a request carries a valid token, the gateway shall forward the request with the … | Must | Active | P0-1 | UC-002 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md | Foundations | _TBD_ |
 | FR-AUTH-017 | a user requests a password reset for an email address, send a reset link if an a… | Could | Active | P1-6 | UC-022 | ADR-0008 | FEAT-007 | _TBD_ |
 | FR-AUTH-018 | a user submits a new compliant password through a valid reset link, update the p… | Could | Active | P1-6 | UC-022 | ADR-0008 | FEAT-007 | _TBD_ |
 | FR-AUTH-019 | a password-reset link is expired, already used, or invalid, then reject it and o… | Could | Active | P1-6 | UC-022 | ADR-0008 | FEAT-007 | _TBD_ |
@@ -41,7 +41,7 @@
 | FR-AUTH-034 | a new sign-in code is issued for an account, invalidate every earlier code for th… | Should | Active | CR-7 | UC-029 | ADR-0008 | FEAT-006 | _TBD_ |
 | FR-AUTH-035 | an account is locked, reject code sign-in without evaluating the submitted code. | Should | Active | CR-7 | UC-029 | ADR-0008 | FEAT-006 | _TBD_ |
 | FR-AUTH-036 | a user whose account is unverified signs in with a correct code, mark the email … | Should | Active | CR-7 | UC-029 | ADR-0008 | FEAT-006 | _TBD_ |
-| FR-ROLE-001 | support the roles Buyer and Seller, and every registered user shall hold the Buy… | Must | Active | P0-1 | UC-001 | ADR-0008 | FEAT-001 | _TBD_ |
+| FR-ROLE-001 | support the roles Buyer and Seller, and every registered user shall hold the Buy… | Must | Active | P0-1 | UC-001 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md | FEAT-001 | _TBD_ |
 | FR-ROLE-002 | a buyer completes shop registration, grant the Seller role while retaining the B… | Must | Active | P0-1, US-11 | UC-003 | ADR-0001, ADR-0008 | FEAT-009 | _TBD_ |
 | FR-ROLE-003 | a user without the Seller role requests a seller-only function, then reject the … | Must | Active | P0-1 | UC-003, UC-005, UC-014 | ADR-0008 | FEAT-009 | _TBD_ |
 | FR-ROLE-004 | a user requests to view or change a cart, order, address, shop or product owned … | Must | Active | Inferred | UC-004, UC-006, UC-013, UC-014, UC-028 | ADR-0008 | Foundations | _TBD_ |
@@ -182,8 +182,8 @@
 | FR-REV-008 | the review-summary batch job runs, generate a text summary of the reviews for ea… | Could | Active | P1-1 | UC-009 | ADR-0014 | FEAT-034 | _TBD_ |
 | FR-REV-009 | a review summary exists for a product, show it on the product page labelled as A… | Could | Active | P1-1 | UC-009 | _TBD_ | FEAT-034 | _TBD_ |
 | FR-REV-010 | summary generation fails for a product, then keep any previous summary and conti… | Could | Active | P1-1 | UC-009 | _TBD_ | FEAT-034 | _TBD_ |
-| FR-NOTIF-001 | an account-registered, order-placed, order-shipped or order-cancelled event occu… | Must | Active | P0-14 | UC-001, UC-018 | ADR-0016 | FEAT-001, FEAT-032 | _TBD_ |
-| FR-NOTIF-002 | an account is created, send the user a verification email containing the verific… | Must | Active | P0-14, US-17 | UC-001 | ADR-0016 | FEAT-001 | _TBD_ |
+| FR-NOTIF-001 | an account-registered, order-placed, order-shipped or order-cancelled event occu… | Must | Active | P0-14 | UC-001, UC-018 | ADR-0016, features/FEAT-001-register-and-sign-in/technical-design.md | FEAT-001, FEAT-032 | _TBD_ |
+| FR-NOTIF-002 | an account is created, send the user a verification email containing the verific… | Must | Active | P0-14, US-17 | UC-001 | ADR-0016, features/FEAT-001-register-and-sign-in/technical-design.md | FEAT-001 | _TBD_ |
 | FR-NOTIF-003 | an order enters the placed status, send the buyer an order-placed email for that… | Must | Active | P0-14, US-18 | UC-011 | ADR-0016 | FEAT-032 | _TBD_ |
 | FR-NOTIF-004 | an order enters the placed status, send the order's seller a new-order email. | Must | Active | P0-14, US-19 | UC-011 | ADR-0016 | FEAT-032 | _TBD_ |
 | FR-NOTIF-005 | an order is shipped, send the buyer an order-shipped email. | Must | Active | P0-14, US-18 | UC-013, UC-014 | ADR-0016 | FEAT-032 | _TBD_ |
@@ -224,8 +224,8 @@
 | FR-LOC-001 | provide the UI, system messages and emails in Vietnamese (vi) and English (en), … | Must | Active | CR-1 | UC-027 | _TBD_ | Foundations | _TBD_ |
 | FR-LOC-002 | a user selects a language, switch the UI at once and save the choice to the prof… | Must | Active | CR-1 | UC-027 | _TBD_ | FEAT-002 | _TBD_ |
 | FR-LOC-003 | a visitor with no saved language opens the site, use English if the browser pref… | Must | Active | CR-1 | UC-027 | _TBD_ | Foundations | _TBD_ |
-| FR-LOC-004 | the system rejects a request, it shall return a stable error code and a message … | Must | Active | CR-1 | UC-027 | ADR-0019 | Foundations | _TBD_ |
-| FR-LOC-005 | the system sends an email, it shall use the recipient's saved language, and for … | Must | Active | CR-1 | UC-001, UC-018 | ADR-0016 | FEAT-001, FEAT-032 | _TBD_ |
+| FR-LOC-004 | the system rejects a request, it shall return a stable error code and a message … | Must | Active | CR-1 | UC-027 | ADR-0019, features/FEAT-001-register-and-sign-in/technical-design.md | Foundations | _TBD_ |
+| FR-LOC-005 | the system sends an email, it shall use the recipient's saved language, and for … | Must | Active | CR-1 | UC-001, UC-018 | ADR-0016, features/FEAT-001-register-and-sign-in/technical-design.md | FEAT-001, FEAT-032 | _TBD_ |
 | FR-LOC-006 | format dates, numbers and money according to the active language. | Must | Active | CR-1 | UC-027 | ADR-0010 | Foundations | _TBD_ |
 | FR-LOC-007 | provide Vietnamese and English names for platform-owned content (categories, att… | Must | Active | CR-1 | UC-005, UC-007 | _TBD_ | FEAT-014, Foundations | _TBD_ |
 | FR-LOC-008 | a translation is missing for the active language, then show the Vietnamese text. | Must | Active | CR-1 | UC-027 | _TBD_ | Foundations | _TBD_ |

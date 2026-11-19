@@ -1,0 +1,29 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-19T09:00:00Z" },
+  "title": "FEAT-001 Auth Screens",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 780, "title": "SCR-STF-012 Sign in", "expand": "fill" },
+    "Register.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 900, "title": "SCR-STF-013 Register (with rule errors)", "expand": "fill" },
+    "RegisterNotice.dc.html": { "x": 0, "y": 1020, "w": 1280, "h": 780, "title": "SCR-STF-013 Check your email", "expand": "fill" },
+    "VerifyExpired.dc.html": { "x": 1360, "y": 1020, "w": 1280, "h": 780, "title": "SCR-STF-014 Link expired", "expand": "fill" },
+    "VerifyVerified.dc.html": { "x": 0, "y": 1920, "w": 1280, "h": 780, "title": "SCR-STF-014 Email verified", "expand": "fill" },
+    "SignInMobile.dc.html": { "x": 1360, "y": 1920, "w": 390, "h": 844, "title": "SCR-STF-012 Mobile, invalid credentials", "expand": "fill" },
+    "UnverifiedBanner.dc.html": { "x": 1830, "y": 1920, "w": 810, "h": 300, "title": "Storefront header with unverified banner" }
+  },
+  "order": [
+    "Main.dc.html",
+    "Register.dc.html",
+    "RegisterNotice.dc.html",
+    "VerifyExpired.dc.html",
+    "VerifyVerified.dc.html",
+    "SignInMobile.dc.html",
+    "UnverifiedBanner.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "FEAT-001: register, verify email, sign in", "kind": "title1", "maxW": 2640 }
+  },
+  "designSystems": []
+}
