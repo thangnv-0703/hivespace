@@ -27,7 +27,7 @@ Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-desig
       Done when: a system or integration test registers a user and finds exactly one email in Mailpit with a working link, and one trace spans identity, broker and notification.
 - [x] T11 — Authorization suite seed: add the first cross-user and unauthenticated cases to the shared authorization test suite (gateway 401 on a protected test route).
       Done when: the suite runs in CI with the cases from AC-16.
-- [ ] T12 — UI integration (after ui-design): storefront `features/auth/` (`api.ts`, pages, session store, header account menu, sign-out form POST), CSRF and `Accept-Language` headers in one client place, shared `AuthLayout` ported into `web/packages/ui` (with its grid shape) and used by the three pages (design §5.6; D-1).
+- [x] T12 — UI integration (after ui-design): storefront `features/auth/` (`api.ts`, pages, session store, header account menu, sign-out form POST), CSRF and `Accept-Language` headers in one client place, shared `AuthLayout` ported into `web/packages/ui` (with its grid shape) and used by the three pages (design §5.6; D-1).
       Done when: each screen renders and conforms to its ui-design spec in states default/error/loading; `pnpm turbo run lint typecheck test build` passes including Sheriff and the vi/en parity check.
 - [ ] T13 — E2E for UC-001 (hero flow named in the architecture's Testing entry): extend the Playwright suite with register → Mailpit → verify → sign in → refresh → sign out, plus replay of the old cookie fails (design §6 AC-12, AC-15, AC-19).
       Done when: `tests/e2e` spec passes against the local AppHost stack (needs a healthy Docker Desktop).

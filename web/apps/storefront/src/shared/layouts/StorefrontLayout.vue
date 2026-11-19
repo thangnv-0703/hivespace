@@ -1,8 +1,9 @@
 <script setup lang="ts">
 // Storefront shell (ux-foundations B1): sticky header with logo, search slot and utility bar.
-// Search, cart and account arrive with their slices (FEAT-018, FEAT-021, FEAT-001).
+// Search and cart arrive with their slices (FEAT-018, FEAT-021); the account area is FEAT-001.
 import { setLocale, type Locale } from '@hivespace/core'
 import { BrandLogo, Input, LanguageSwitcher, ThemeToggle } from '@hivespace/ui'
+import { AccountMenu, UnverifiedBanner } from '@/features/auth'
 import { CategoryBar } from '@/features/catalog'
 import { useI18n } from 'vue-i18n'
 
@@ -34,10 +35,12 @@ function changeLocale(value: string) {
             @update:model-value="changeLocale"
           />
           <ThemeToggle :label="$t('common.toggleTheme')" />
+          <AccountMenu />
         </div>
       </div>
       <CategoryBar />
     </header>
+    <UnverifiedBanner />
     <main class="mx-auto max-w-[var(--size-container)] px-4 py-6">
       <slot />
     </main>
