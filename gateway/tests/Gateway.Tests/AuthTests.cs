@@ -82,6 +82,23 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
     }
 
     [Fact]
+    public async Task Cross_user_a_session_cannot_act_as_another_user_by_sending_that_users_identity_headers()
+    {
+        using var alice = _host.NewClient();
+        using var bob = _host.NewClient();
+        await _host.SignInAsync(alice, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10), subject: "alice"), "good-refresh");
+        await _host.SignInAsync(bob, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10), subject: "bob"), "good-refresh");
+        using var attempt = Get("/v1/order/orders");
+        attempt.Headers.Add("X-User-Id", "bob");
+
+        var (_, asAlice) = await SendAsync(alice, attempt);
+        var (_, asBob) = await SendAsync(bob, Get("/v1/order/orders"));
+
+        Assert.Equal("alice", asAlice.GetProperty("userId").GetString());
+        Assert.Equal("bob", asBob.GetProperty("userId").GetString());
+    }
+
+    [Fact]
     public async Task Ac14_a_token_about_to_expire_is_refreshed_with_the_rotated_refresh_token()
     {
         using var client = _host.NewClient();

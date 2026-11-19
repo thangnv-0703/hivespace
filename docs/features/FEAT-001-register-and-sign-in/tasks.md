@@ -25,7 +25,7 @@ Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-desig
       Done when: `uv run pytest && uv run mypy && uv run lint-imports` pass, including a duplicate-delivery test (one email, one record) and a vi/en template test.
 - [ ] T10 — Cross-service event proof: Identity outbox → Service Bus emulator → Notification → Mailpit, with the UserRegistered schema validated on both ends (AC-6, AC-7).
       Done when: a system or integration test registers a user and finds exactly one email in Mailpit with a working link, and one trace spans identity, broker and notification.
-- [ ] T11 — Authorization suite seed: add the first cross-user and unauthenticated cases to the shared authorization test suite (gateway 401 on a protected test route).
+- [x] T11 — Authorization suite seed: add the first cross-user and unauthenticated cases to the shared authorization test suite (gateway 401 on a protected test route).
       Done when: the suite runs in CI with the cases from AC-16.
 - [ ] T12 — UI integration (after ui-design): storefront `features/auth/` (`api.ts`, pages, session store, header account menu, sign-out form POST), CSRF and `Accept-Language` headers in one client place, shared `AuthLayout` ported into `web/packages/ui` (with its grid shape) and used by the three pages (design §5.6; D-1).
       Done when: each screen renders and conforms to its ui-design spec in states default/error/loading; `pnpm turbo run lint typecheck test build` passes including Sheriff and the vi/en parity check.
