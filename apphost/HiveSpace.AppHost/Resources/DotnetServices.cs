@@ -15,12 +15,20 @@ internal static class DotnetServicesExtensions
             .WaitFor(catalogDb)
             .WaitFor(infra.Messaging);
 
+        var identityDb = infra.Postgres.AddDatabase("identitydb");
+        var identity = builder.AddProject<Projects.Identity_Api>("identity")
+            .WithHttpEndpoint()
+            .WithReference(identityDb)
+            .WithReference(infra.Messaging)
+            .WaitFor(identityDb)
+            .WaitFor(infra.Messaging);
+
         // Stubs generated from templates/dotnet-service; each grows its database and references in its slice.
         // They have no launchSettings.json, so they need an explicit endpoint: without one Aspire assigns none
         // and every stub falls back to Kestrel's default port 5000 and collides with the others.
         var others = new List<IResourceBuilder<ProjectResource>>
         {
-            builder.AddProject<Projects.Identity_Api>("identity").WithHttpEndpoint(),
+            identity,
             builder.AddProject<Projects.Order_Api>("order").WithHttpEndpoint(),
             builder.AddProject<Projects.Payment_Api>("payment").WithHttpEndpoint(),
             builder.AddProject<Projects.Media_Api>("media").WithHttpEndpoint().WithReference(infra.Blobs),
