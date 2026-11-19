@@ -23,7 +23,7 @@ Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-desig
       Done when: Gateway tests pass for AC-16 and AC-17 (missing, tampered, expired, wrong-signature token → 401; valid → headers relayed, inbound spoofed headers stripped; missing CSRF header → 403) and the `dev-user` branch no longer exists.
 - [x] T9 — Notification: Alembic `0002`, dispatcher by `eventType`, contacts feature, emails feature, `EmailSender` protocol with the SMTP provider (Mailpit), vi/en verification templates, `PUBLIC_BASE_URL` setting, no token in logs or tables (design §5.5, §4; FR-NOTIF-002, FR-LOC-005; AC-7, AC-8).
       Done when: `uv run pytest && uv run mypy && uv run lint-imports` pass, including a duplicate-delivery test (one email, one record) and a vi/en template test.
-- [ ] T10 — Cross-service event proof: Identity outbox → Service Bus emulator → Notification → Mailpit, with the UserRegistered schema validated on both ends (AC-6, AC-7).
+- [x] T10 — Cross-service event proof: Identity outbox → Service Bus emulator → Notification → Mailpit, with the UserRegistered schema validated on both ends (AC-6, AC-7).
       Done when: a system or integration test registers a user and finds exactly one email in Mailpit with a working link, and one trace spans identity, broker and notification.
 - [x] T11 — Authorization suite seed: add the first cross-user and unauthenticated cases to the shared authorization test suite (gateway 401 on a protected test route).
       Done when: the suite runs in CI with the cases from AC-16.
