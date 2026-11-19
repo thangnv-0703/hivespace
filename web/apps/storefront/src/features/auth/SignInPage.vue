@@ -97,6 +97,7 @@ async function submit() {
         ref="passwordRef"
         v-model="password"
         autocomplete="current-password"
+        :placeholder="$t('auth.signIn.passwordPlaceholder')"
         required
         :disabled="busy"
         :label="$t('auth.fields.password')"

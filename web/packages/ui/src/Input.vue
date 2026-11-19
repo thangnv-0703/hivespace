@@ -45,7 +45,7 @@ defineExpose({ focus: () => input.value?.focus() })
         :aria-invalid="error ? true : undefined"
         :aria-describedby="error ? errorId : hint ? hintId : undefined"
         :class="[
-          'min-h-11 w-full rounded-lg border bg-bg-surface px-4 text-sm text-text-primary placeholder:text-text-muted focus-visible:shadow-focus focus-visible:outline-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-50',
+          'min-h-11 w-full rounded-lg border bg-bg-surface px-4 text-base text-text-primary sm:text-sm placeholder:text-text-muted focus-visible:shadow-focus focus-visible:outline-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-50',
           error ? 'border-feedback-error-icon' : 'border-border-control',
           $slots.append ? 'pr-12' : '',
         ]"

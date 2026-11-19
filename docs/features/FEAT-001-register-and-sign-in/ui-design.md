@@ -13,12 +13,12 @@ User decisions applied (2026-11-19): Register keeps **Confirm password** (client
 
 Not an SCR; specified once here. Ported into `web/packages/ui` (technical-design §5.6, D-1).
 
-- **Layout (≥ `lg`):** full screen, two columns of equal width. Left: form column on `bg-bg-surface`, content vertically centred, `max-w-md`, page gutter `px-6`, `py-10`. Right: brand panel `bg-brand-950` with the decorative grid shape, centred image (`buyer-auth.svg`), heading `text-title-sm font-semibold text-text-on-brand`, body `text-md` in `text-text-on-brand` at 70 % opacity.
+- **Layout (≥ `lg`):** full screen, two columns of equal width. Left: form column on `bg-bg-surface`, content vertically centred, `max-w-md`, page gutter `px-6`, `py-10`. Right: brand panel `bg-brand-950` with the decorative grid shape, centred linked-hexagons illustration (`auth-hex.svg`, 260 px wide) over the grid shape at 35 % opacity, heading `text-title-sm font-semibold text-text-on-brand` ("Shop from many sellers, in one cart"), body `text-md` in `text-text-on-brand` at 70 % opacity ("Find what you need, pay once, and follow every order in one place.").
 - **Below `lg`:** brand panel hidden; single column, `px-4` (360 px minimum, no horizontal scroll). Title steps down one size (design.md §2.2).
-- **Corner:** `LanguageSwitcher` (existing `ui` component) top-right of the form column, 44 px target. `ThemeToggle` next to it (both themes first-class).
+- **Corner:** `LanguageSwitcher` (`bordered` variant: globe icon + code, 44 px boxed button, `rounded-lg`) top-right of the form column, then `ThemeToggle` (44 px bordered `rounded-lg` square). Both themes are first-class.
 - **Header block:** `h1` (one per page, `text-title-sm font-semibold text-text-primary`), subtitle `text-sm text-text-muted`, 32 px below. A small `BrandLogo` link to `/` above the title so the user can leave the flow (the reference has none; the layout has no storefront header).
 - **Props only** (no i18n, router, store inside): `title`, `subtitle`, `imageSrc`, `imageAlt`, `imageHeading`, `imageBody`, default slot.
-- **Conformance corrections vs reference:** `bg-white dark:bg-gray-900` → `bg-bg-surface`; `text-gray-*` → `text-text-primary/secondary/muted`; `bg-brand-950 dark:bg-white/5` → `bg-brand-950` in both themes (the dark form column is `gray-900`, the panel stays the deepest brand tone, so the two columns remain distinct). Brand image: `buyer-auth.svg` has 19 hard-coded hex fills; recolour to brand/gray tokens when it is copied (design.md §9 already flags the logo's off-palette purple).
+- **Conformance corrections vs reference:** `bg-white dark:bg-gray-900` → `bg-bg-surface`; `text-gray-*` → `text-text-primary/secondary/muted`; `bg-brand-950 dark:bg-white/5` → `bg-brand-950` in both themes (the dark form column is `gray-900`, the panel stays the deepest brand tone, so the two columns remain distinct). Brand image: the mockup's three-hexagon illustration (`auth-hex.svg`, brand blues) replaced `buyer-auth.svg` after the mockup review.
 - **Accessibility:** form column is `<main>`; panel is `aria-hidden` except the image alt; skip-link to the form.
 
 ### Form conventions for all three screens
@@ -39,7 +39,7 @@ Not an SCR; specified once here. Ported into `web/packages/ui` (technical-design
 - **Conformance:** corrected (reference red alert → `Alert` error; gray/brand utilities → role tokens; custom password icons → lucide). Escalation filed: see Escalations E-1.
 
 ### default
-Title "Sign in" / subtitle "Welcome back to HiveSpace". Fields empty, button enabled. Hidden until later features (not rendered, not disabled): Google button and "or" divider (FEAT-004), "Sign in with an email code" link (FEAT-006), "Forgot password?" link (FEAT-007). Layout leaves the password-row right side free for the future forgot link.
+Title "Sign in" / subtitle "Welcome back. Sign in to keep shopping on HiveSpace.". Fields empty (the password has the placeholder "Enter your password"), inputs are 16 px text below `sm`, button enabled. Hidden until later features (not rendered, not disabled): Google button and "or" divider (FEAT-004), "Sign in with an email code" link (FEAT-006), "Forgot password?" link (FEAT-007). Layout leaves the password-row right side free for the future forgot link.
 
 ### error
 - **Field (client):** email empty → `auth.errors.emailRequired`; malformed → `auth.errors.emailInvalid`; password empty → `auth.errors.passwordRequired`. Shown on blur and submit.
@@ -62,7 +62,7 @@ FR-AUTH-009 lets unverified users sign in, so there is no unverified result on t
 - **Strategy & source:** code-native. Adapts `Auth/SignUpPage.vue`; the check-your-email view adapts `VerifyEmailPage.vue`'s "sent" state, now living on this page.
 - **Route:** `/register` (one route, two views switched by local state; browser back from the notice returns to the form with the typed values kept except passwords).
 - **Composition (form view):** `AuthLayout` → `Alert` (error, summary) when ≥ 3 errors → form: `Input` display name, `Input` email, `Input` password (reveal) with `PasswordRules` hint, `Input` confirm password (reveal), primary `Button` "Create account" → footer "Already have an account? **Sign in**" (keeps `returnUrl`).
-- **Composition (notice view):** `AuthLayout` (title "Check your email") → `Alert variant="info"`-style card: `Mail` icon 48 px, "We sent a verification link to **a@b.com**", "The link works for 24 hours" → secondary `Button` "Resend email" with cooldown (below) → link "Wrong address? Go back" → link "Sign in".
+- **Composition (notice view):** `AuthLayout` (title "Check your email") → `Alert variant="info"`-style card: subtitle "Your account is created. One more step."; a centred card (`shadow-sm`, 24 px padding) with a 64 px `bg-brand-50` circle holding the `Mail` icon, "We sent a verification link to **a@b.com**", "The link works for 24 hours. Check your spam folder if you do not see it." → secondary `Button` "Resend email" with cooldown (below) → link "Wrong address? Go back" → link "Sign in".
 - **Content & data mapping:** submit → `POST /v1/users {email, displayName, password}` (`confirmPassword` stays client-side); header `Accept-Language` from the UI locale. `201 {userId}` → switch to the notice view with the submitted email. Resend → `POST /v1/users/verification-email {email}` (always `202`).
 - **Conformance:** corrected (Checkbox/terms and Google removed; gray/red utilities → roles). Escalation filed: E-1 (AuthLayout), E-2 (`PasswordRules`).
 
@@ -85,7 +85,7 @@ Submit button `loading`; all inputs disabled. Never blocks on email delivery (UC
 - **Resend cooldown:** 60 s client-side (reference `useCooldown`); button label "Resend email (42 s)" disabled during cooldown, `aria-live="polite"` countdown announced at most every 10 s. Server rate limits arrive with FEAT-005, so the cooldown is the only guard now.
 - **After resend:** inline `role="status"` text "Sent again to a@b.com" (not a toast: design.md §4.3 toasts are for completed actions, and this stays visible next to the button). Always shown on `202`, which is true even for unknown addresses.
 - **Failure of resend (network):** `Alert` error, cooldown not started.
-- **Email not arriving** (known gap, technical-design §8): help text "Check spam. If it still does not arrive, resend." No more.
+- **Email not arriving** (known gap, technical-design §8): help text "Check your spam folder if you do not see it." No more.
 - "Wrong address? Go back" returns to the form view with display name and email filled.
 
 - **Responsive notes:** buttons full width below `sm`; notice card padding `p-4` → `p-6` from `md`.
@@ -103,10 +103,10 @@ Submit button `loading`; all inputs disabled. Never blocks on email delivery (UC
 `Spinner` size lg centred, text "Verifying your email…", `role="status"`. Title "Verifying". (Skeleton not used: the region is under 120 px of content, design.md §4.4.)
 
 ### verified (`204`)
-`CircleCheck` in `text-feedback-success-icon`, title "Email verified", body "Your account is ready." Actions: primary "Sign in" (→ `/signin`), no secondary. If the user is already signed in (session probe), the primary is "Continue shopping" → `/`.
+Subtitle "Thanks for confirming your address."; a centred card (32 px/24 px padding, `shadow-sm`) with a 64 px `bg-feedback-success-bg` circle holding `CircleCheck` in `text-feedback-success-icon`, heading "Your account is ready", body "Sign in to start shopping." Actions: primary "Sign in" (→ `/signin`), no secondary. If the user is already signed in (session probe), the primary is "Continue shopping" → `/`.
 
 ### expired (`400 identity.verification_token_expired`)
-Also covers links invalidated by a newer resend (the API reports them as expired). `Clock` icon, `Alert` warning style: "This link has expired", body "Request a new one below. Only the newest link works." Block: email `Input` (prefilled from `sessionStorage` if the same tab just registered, else empty), primary "Send a new link" with the 60 s cooldown, then the same "Sent again" confirmation as the Register notice. Secondary "Sign in".
+Also covers links invalidated by a newer resend (the API reports them as expired). Title "This link has expired", subtitle "Request a new one below. Only the newest link works."; a warning `Alert` (`Clock`-style) "Verification link expired" / "Links work for 24 hours, or until you ask for a newer one." Block: email `Input` (prefilled from `sessionStorage` if the same tab just registered, else empty), primary "Send a new link" with the 60 s cooldown, then the same "Sent again" confirmation as the Register notice. Secondary "Sign in".
 
 ### invalid (`400 identity.verification_token_invalid`)
 `CircleAlert`, "This link is not valid", body "It may be incomplete. Copy the full link from the email, or request a new one." Same request block as expired.
@@ -126,13 +126,14 @@ Also covers links invalidated by a newer resend (the API reports them as expired
 These belong to the storefront shell (`StorefrontLayout`), specified here because FEAT-001 introduces them. They use only existing components.
 
 ### Header account area (design.md §3, top bar, right side)
-- **Signed out:** "Sign in" and "Register" as `text-sm` text links in the 40 px top bar (design.md §3); both keep the current path as `returnUrl`. Below `md` they move into the menu drawer.
-- **Signed in:** `Avatar` (initials fallback) + display name (truncate at 20 chars) → `DropdownMenu` with, for now, only "Sign out" (more items arrive with FEAT-002+). Sign out is a `<form method="post" action="/bff/logout">` button (technical-design D-4), same origin, no `fetch`.
+- **Layout:** two rows per design.md §3: a 40 px top bar (Seller centre link left; `LanguageSwitcher` plain variant, compact `ThemeToggle` and the account area right) above an 80 px row (logo, search, cart). Below `md` a 56 px row (logo, search icon, cart, menu button); the top-bar items move into a menu panel. The cart is a placeholder icon until FEAT-021.
+- **Signed out:** "Sign in" and "Register" as `text-sm` text links in the top bar; both keep the current path as `returnUrl`.
+- **Signed in:** a 28 px `bg-brand-100` initials circle (first letters of the first and last word) + display name (truncate at 20 chars) → `DropdownMenu` with, for now, only "Sign out" (more items arrive with FEAT-002+). Sign out is a `<form method="post" action="/bff/logout">` button (technical-design D-4), same origin, no `fetch`.
 - **Loading the session probe (`GET /bff/user`):** reserve the area (a 32 px skeleton circle) so the header does not jump; probe failure is treated as signed out.
 
 ### Unverified banner (user decision)
-- **Where:** a full-width strip directly under the sticky header, `Alert variant="warning"` styled as a strip (no radius, same colours), shown only for signed-in users with `emailVerified === false`.
-- **Content:** `MailWarning` icon, "Verify your email to place orders. We sent a link to a@b.com." with an `action` link "Resend email" (60 s cooldown, "Sent again" in place of the link for 5 s) and a dismiss `X` icon button (`aria-label` "Dismiss"; dismissal lasts for the browser session only, per-tab `sessionStorage`).
+- **Where:** a full-width strip directly under the sticky header, a single-row warning strip (`bg-feedback-warning-bg`, `border-b border-feedback-warning-icon`, text `text-feedback-warning-fg`), shown only for signed-in users with `emailVerified === false`.
+- **Content:** `TriangleAlert` icon, "Verify your email to place orders. We sent a link to **a@b.com**." (email in bold) then a bold underlined "Resend email" link (60 s cooldown, "Sent again" in place of the link for 5 s) and a 44 px dismiss `X` icon button (`aria-label` "Dismiss"; dismissal lasts for the browser session only, per-tab `sessionStorage`).
 - **Not shown** on the full-screen auth routes (they have no storefront layout) and not blocking: browsing and search work (FR-AUTH-008). The order-placement block itself is FEAT-022.
 - **Accessibility:** `role="status"`, announced once on load; dismiss button reachable before main content in tab order.
 
@@ -164,4 +165,5 @@ These belong to the storefront shell (`StorefrontLayout`), specified here becaus
 - **Open:** logo recolour for `BrandLogo` (design.md §9, existing item) and the brand image recolour; terms-of-service copy is out of scope since terms checkbox was dropped (no requirement).
 
 ## Mockup alignment (post-implementation)
-The committed mockups in [mockups/](mockups/) are authoritative for copy and the brand panel, where they differ from the text above: panel art is the linked-hexagons illustration (`web/packages/ui/src/assets/auth/auth-hex.svg`), panel heading and body are "Shop from many sellers, in one cart" / "Find what you need, pay once, and follow every order in one place.", and the sign-in, register, verified and notice subtitles and card layouts follow the mockups. `buyer-auth.svg` is no longer used by `AuthLayout`.
+The committed mockups in [mockups/](mockups/) are authoritative; the screen sections above were edited to match them. Decisions from the review: panel art is the linked-hexagons illustration (`auth-hex.svg`, replacing `buyer-auth.svg`); `LanguageSwitcher` is a globe icon + code (no flag or chevron in the trigger; the menu keeps flags), `bordered` variant in the auth corner and mobile menu, `plain` variant in the storefront top bar; `ThemeToggle` is a `rounded-lg` square (a `compact` 32 px size in the top bar); the storefront header is the two-row layout of design.md §3; the unverified banner is a single-row amber strip.
+Intentional deviations: the top-bar `ThemeToggle` is not drawn in the banner mockup but is kept because design.md §3 lists it; the cart is a non-interactive placeholder until FEAT-021; the `Alert` `strip` prop is no longer used by the banner.

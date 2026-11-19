@@ -323,6 +323,15 @@ describe('account area and unverified banner', () => {
     expect(form.attributes('action')).toBe('/bff/logout')
   })
 
+  it('shows the initials of the first and last word of the display name in the account menu', async () => {
+    mockApi({ 'GET /bff/user': () => json(200, { isAuthenticated: true, userId: 'u1', email: 'l@example.com', displayName: 'Linh Thi Nguyen', emailVerified: true, roles: ['Buyer'], language: 'en' }) })
+    const { wrapper } = await mountAt(AccountMenu, '/')
+    await useSessionStore().load()
+    await flushPromises()
+
+    expect(wrapper.get('button[aria-label=Account]').text()).toBe('LN')
+  })
+
   it('shows the banner only for an unverified signed-in user, and it can be dismissed for the session', async () => {
     sessionStorage.clear()
     mockApi({ 'GET /bff/user': () => session(false) })

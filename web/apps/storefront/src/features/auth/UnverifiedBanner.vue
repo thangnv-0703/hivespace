@@ -1,6 +1,5 @@
 <script setup lang="ts">
-import { X } from '@lucide/vue'
-import { Alert, Button } from '@hivespace/ui'
+import { TriangleAlert, X } from '@lucide/vue'
 import { computed, ref } from 'vue'
 
 import { resend } from './api'
@@ -43,23 +42,36 @@ async function resendLink() {
 </script>
 
 <template>
-  <div v-if="visible" class="relative" data-testid="unverified-banner">
-    <Alert variant="warning" strip :title="$t('auth.banner.message', { email: session.user?.email ?? '' })">
-      <template #action>
-        <span v-if="sent" class="font-medium text-text-secondary">{{ $t('auth.banner.sentAgain') }}</span>
-        <button
-          v-else
-          type="button"
-          class="font-medium text-text-link underline underline-offset-2 hover:text-text-link-hover disabled:cursor-not-allowed disabled:opacity-50"
-          :disabled="remaining > 0"
-          @click="resendLink"
-        >
-          {{ $t('auth.banner.resend') }}<template v-if="remaining > 0"> ({{ remaining }})</template>
-        </button>
+  <!-- Single-row warning strip (mockup UnverifiedBanner): icon, message with the email in bold, resend link, 44 px dismiss. -->
+  <div
+    v-if="visible"
+    role="status"
+    class="flex items-center gap-3 border-b border-feedback-warning-icon bg-feedback-warning-bg px-4 py-3 text-sm text-feedback-warning-fg md:px-6"
+    data-testid="unverified-banner"
+  >
+    <TriangleAlert class="size-5 shrink-0 text-feedback-warning-icon" aria-hidden="true" />
+    <i18n-t keypath="auth.banner.message" tag="p" class="min-w-0 flex-1">
+      <template #email>
+        <strong>{{ session.user?.email ?? '' }}</strong>
       </template>
-    </Alert>
-    <div class="absolute right-2 top-2">
-      <Button variant="ghost" size="sm" icon-only :aria-label="$t('auth.banner.dismiss')" :start-icon="X" @click="dismiss" />
-    </div>
+    </i18n-t>
+    <span v-if="sent" class="whitespace-nowrap font-semibold">{{ $t('auth.banner.sentAgain') }}</span>
+    <button
+      v-else
+      type="button"
+      class="whitespace-nowrap font-semibold underline underline-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+      :disabled="remaining > 0"
+      @click="resendLink"
+    >
+      {{ $t('auth.banner.resend') }}<template v-if="remaining > 0"> ({{ remaining }})</template>
+    </button>
+    <button
+      type="button"
+      class="-my-3 -mr-3 inline-flex size-11 shrink-0 items-center justify-center rounded-lg hover:bg-black/5 focus-visible:outline-2 focus-visible:outline-focus-ring"
+      :aria-label="$t('auth.banner.dismiss')"
+      @click="dismiss"
+    >
+      <X class="size-5" aria-hidden="true" />
+    </button>
   </div>
 </template>
