@@ -2,26 +2,146 @@ openapi: 3.1.0
 info:
   title: HiveSpace Identity API
   version: 1.0.0
-  description: Template sample only. The first feature slice replaces the ping operation.
+  description: Registration, email verification and password sign-in (FEAT-001). OpenIddict endpoints (`/connect/*`) follow the OIDC standard and are not listed here.
 servers:
   - url: /
 tags:
   - name: identity
 paths:
-  /v1/identity/ping:
-    get:
-      operationId: pingIdentity
-      summary: Template sample operation.
+  /v1/users:
+    post:
+      operationId: registerUser
+      summary: Register a buyer account (unverified) and queue the verification email.
       tags: [identity]
       security: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, displayName, password]
+              properties:
+                email: { type: string, maxLength: 254 }
+                displayName: { type: string }
+                password: { type: string, format: password }
       responses:
-        '200':
-          description: The service answers.
+        '201':
+          description: Account created.
           content:
             application/json:
               schema:
                 type: object
-                required: [service]
+                required: [userId]
                 properties:
-                  service:
-                    type: string
+                  userId:
+                    $ref: './shared/components.yaml#/components/schemas/Id'
+        '400':
+          description: "`common.validation_failed` with one details entry per failed rule."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '409':
+          description: "`identity.email_in_use`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/users/verify-email:
+    post:
+      operationId: verifyEmail
+      summary: Verify an email address with the token from the link.
+      tags: [identity]
+      security: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token: { type: string }
+      responses:
+        '204':
+          description: Email verified.
+        '400':
+          description: "`identity.verification_token_invalid` or `identity.verification_token_expired`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '409':
+          description: "`identity.email_already_verified`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/users/verification-email:
+    post:
+      operationId: resendVerificationEmail
+      summary: Request a new verification link. Always 202 for a well-formed email (no enumeration).
+      tags: [identity]
+      security: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email: { type: string, maxLength: 254 }
+      responses:
+        '202':
+          description: Accepted; a link is sent only if the account exists and is unverified.
+        '400':
+          description: "`common.validation_failed` for a malformed email."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/users/sign-in:
+    post:
+      operationId: signIn
+      summary: Check credentials and start the Identity session (cookie `hs.idp`).
+      tags: [identity]
+      security: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string, format: password }
+                returnUrl:
+                  type: string
+                  description: Honored only when it is a local path starting with `/connect/authorize`.
+      responses:
+        '200':
+          description: Signed in.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [redirectUrl]
+                properties:
+                  redirectUrl: { type: string }
+        '401':
+          description: "`identity.invalid_credentials` (same body for every failure cause)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'

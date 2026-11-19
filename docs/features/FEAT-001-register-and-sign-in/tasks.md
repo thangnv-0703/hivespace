@@ -5,7 +5,7 @@
 
 Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-design.md](ui-design.md), visual mockups in [mockups/](mockups/), registry in `docs/design-manifest.json`); T12 only wires them. T12 also builds the header account menu and the unverified banner from ui-design.md "Extras".
 
-- [ ] T1 — Contracts first: add `identity.*` codes with vi/en messages, `UserRegistered/v1` and `VerificationEmailRequested/v1` schemas, the four operations in `openapi/identity.yaml`, `gateway.yaml` for `/bff/*`, the shared `Accept-Language` parameter; regenerate `web/packages/api-client`; replace `features/identity/ping.feature` with register, verify, resend and sign-in features (design §3.5–§3.7).
+- [x] T1 — Contracts first: add `identity.*` codes with vi/en messages, `UserRegistered/v1` and `VerificationEmailRequested/v1` schemas, the four operations in `openapi/identity.yaml`, `gateway.yaml` for `/bff/*`, the shared `Accept-Language` parameter; regenerate `web/packages/api-client`; replace `features/identity/ping.feature` with register, verify, resend and sign-in features (design §3.5–§3.7).
       Done when: Spectral shows 0 errors, vi/en key-parity check passes, the client regenerates with no manual edits, and the features are discovered (red) by Reqnroll.
 - [ ] T2 — Shared errors: `ApiException`, `MessageCatalog` (embedded vi/en YAML, vi fallback), language resolver, `UseApiErrors` mapping to 4xx with localized messages (design §5.4; FR-LOC-004; AC-5).
       Done when: unit tests for AC-5 pass (every code in `error-codes.yaml` has both messages; status and language mapping correct; 500 catch-all kept).

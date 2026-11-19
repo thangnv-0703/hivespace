@@ -1,0 +1,59 @@
+openapi: 3.1.0
+info:
+  title: HiveSpace Gateway BFF
+  version: 1.0.0
+  description: Endpoints served by the gateway itself (ADR-0008). The browser never sees a token, only the encrypted `hs.bff` cookie.
+servers:
+  - url: /
+tags:
+  - name: bff
+paths:
+  /bff/user:
+    get:
+      operationId: getSession
+      summary: Session probe. Always 200; `isAuthenticated` is false without a session (D-9).
+      tags: [bff]
+      security: []
+      responses:
+        '200':
+          description: Current session.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [isAuthenticated]
+                properties:
+                  isAuthenticated: { type: boolean }
+                  userId:
+                    $ref: './shared/components.yaml#/components/schemas/Id'
+                  email: { type: string }
+                  displayName: { type: string }
+                  emailVerified: { type: boolean }
+                  roles:
+                    type: array
+                    items: { type: string }
+                  language: { type: string, enum: [vi, en] }
+  /bff/login:
+    get:
+      operationId: bffLogin
+      summary: Start the OIDC sign-in; browser navigation, not a fetch.
+      tags: [bff]
+      security: []
+      parameters:
+        - name: returnUrl
+          in: query
+          required: false
+          schema: { type: string }
+          description: Local path only; anything else becomes `/`.
+      responses:
+        '302':
+          description: Redirect to the authorize endpoint.
+  /bff/logout:
+    post:
+      operationId: bffLogout
+      summary: Same-origin form POST; revokes the refresh token and ends both sessions (D-4).
+      tags: [bff]
+      security: []
+      responses:
+        '302':
+          description: Redirect through Identity end-session back to `/`.

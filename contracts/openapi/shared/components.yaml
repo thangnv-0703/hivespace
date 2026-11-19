@@ -4,6 +4,16 @@ info:
   version: 1.0.0
 paths: {}
 components:
+  parameters:
+    AcceptLanguage:
+      name: Accept-Language
+      in: header
+      required: false
+      description: Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+      schema:
+        type: string
+        enum: [vi, en]
+        default: vi
   schemas:
     Id:
       type: string

@@ -6,7 +6,11 @@
   "description": "Generated from contracts/openapi by @hey-api/openapi-ts. Never edited by hand (dev-standards §6).",
   "exports": {
     "./catalog": "./src/catalog/index.ts",
-    "./catalog/client": "./src/catalog/client.gen.ts"
+    "./catalog/client": "./src/catalog/client.gen.ts",
+    "./identity": "./src/identity/index.ts",
+    "./identity/client": "./src/identity/client.gen.ts",
+    "./gateway": "./src/gateway/index.ts",
+    "./gateway/client": "./src/gateway/client.gen.ts"
   },
   "scripts": {
     "generate": "openapi-ts"
