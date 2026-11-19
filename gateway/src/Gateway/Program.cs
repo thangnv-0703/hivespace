@@ -1,3 +1,4 @@
+using Gateway.Auth;
 using Gateway.Proxy;
 using Gateway.Spa;
 using HiveSpace.BuildingBlocks.Errors;
@@ -5,6 +6,7 @@ using HiveSpace.BuildingBlocks.Errors;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.AddGatewayAuth();
 
 builder.Services.AddReverseProxy()
     .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
@@ -19,7 +21,9 @@ app.MapDefaultEndpoints();
 // Production: the built SPAs are copied into wwwroot by the Dockerfile and served from one origin (ADR-0008).
 // Development: the "spa-*" proxy routes forward to the Vite dev servers the AppHost starts.
 app.UseSpaStaticFiles();
+app.UseGatewayAuth();
 
+app.MapBffEndpoints();
 app.MapReverseProxy();
 
 app.MapSpaFallbacks();

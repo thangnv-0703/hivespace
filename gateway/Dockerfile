@@ -13,6 +13,7 @@ WORKDIR /src
 COPY global.json Directory.Build.props Directory.Packages.props ./
 COPY apphost/HiveSpace.ServiceDefaults ./apphost/HiveSpace.ServiceDefaults
 COPY libs/dotnet ./libs/dotnet
+COPY contracts/errors ./contracts/errors
 COPY gateway/src ./gateway/src
 RUN dotnet publish gateway/src/Gateway -c Release -o /out
 

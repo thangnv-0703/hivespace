@@ -51,6 +51,7 @@ internal static class WebExtensions
 
     public static IResourceBuilder<ProjectResource> AddGateway(
         this IDistributedApplicationBuilder builder,
+        InfrastructureResources infra,
         DotnetResources dotnet,
         GoResources go,
         PythonResources python,
@@ -60,11 +61,16 @@ internal static class WebExtensions
             .WithExternalHttpEndpoints()
             .WithReference(dotnet.Catalog)
             .WithReference(dotnet.Identity)
+            .WithReference(infra.Blobs)
+            .WithEnvironment("Identity__Issuer", DotnetServicesExtensions.PublicOrigin)
+            .WithEnvironment("Identity__Gateway__ClientSecret", dotnet.IdentitySecrets.GatewayClientSecret)
+            .WaitFor(infra.Blobs)
             .WithReference(go.Cart)
             .WithReference(python.SearchAi)
             .WithReference(web.Storefront)
             .WithReference(web.SellerCentre)
-            .WaitFor(dotnet.Catalog);
+            .WaitFor(dotnet.Catalog)
+            .WaitFor(dotnet.Identity);
 
         foreach (var service in dotnet.Others)
         {

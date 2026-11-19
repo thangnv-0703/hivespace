@@ -14,6 +14,9 @@ namespace Identity.Api.Oidc;
 /// <summary>OpenIddict pass-through handlers (design §3.2). Token and revoke bookkeeping stays inside OpenIddict.</summary>
 public static class ConnectEndpoints
 {
+    /// <summary>The <c>aud</c> of every access token; the gateway checks it (design §3.4).</summary>
+    public const string ApiAudience = "hivespace-api";
+
     public static IEndpointRouteBuilder MapConnectEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapMethods("/connect/authorize", [HttpMethods.Get, HttpMethods.Post],
@@ -105,6 +108,7 @@ public static class ConnectEndpoints
 
         var principal = new ClaimsPrincipal(identity);
         principal.SetScopes(scopes.ToImmutableArray());
+        principal.SetResources(ApiAudience);
         return principal;
     }
 }

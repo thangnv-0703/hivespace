@@ -50,6 +50,7 @@ public sealed class OidcFlowTests : IAsyncLifetime
         var access = first.GetProperty("access_token").GetString()!;
         var (header, claims) = DecodeJwt(access);
         Assert.Equal("ES256", header.GetProperty("alg").GetString());
+        Assert.Equal("hivespace-api", claims.GetProperty("aud").GetString());
         Assert.Equal(userId.ToString(), claims.GetProperty("sub").GetString());
         Assert.Equal(email, claims.GetProperty("email").GetString());
         Assert.Equal("false", claims.GetProperty("email_verified").GetString());
