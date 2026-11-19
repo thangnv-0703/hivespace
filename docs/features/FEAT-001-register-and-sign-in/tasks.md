@@ -13,7 +13,7 @@ Screens are owned by ui-design's output (SCR-STF-012/013/014, specs in [ui-desig
       Done when: unit tests for AC-3, AC-4 (policy and field rules) and token expiry/use/invalidate rules pass; Architecture tests (Domain has no framework reference) stay green.
 - [x] T4 — Identity persistence: `IdentityDbContext`, migration `0001_InitialIdentity` incl. OpenIddict and outbox/inbox tables, `Database:MigrateOnStartup`, AppHost `identitydb` + messaging references (design §4, §5.7).
       Done when: the migration applies clean up and down on Testcontainers Postgres and Identity starts under the AppHost with its database.
-- [ ] T5 — Identity application and infrastructure: handlers `RegisterUser`, `VerifyEmail`, `ResendVerificationEmail`, `SignIn`; `Argon2idPasswordHasher`; token generator (SHA-256 at rest); outbox adapter; `OutboxCleanup` (design §5.2; D-3, D-6; AC-1, AC-2, AC-6, AC-8..AC-11, AC-13).
+- [x] T5 — Identity application and infrastructure: handlers `RegisterUser`, `VerifyEmail`, `ResendVerificationEmail`, `SignIn`; `Argon2idPasswordHasher`; token generator (SHA-256 at rest); outbox adapter; `OutboxCleanup` (design §5.2; D-3, D-6; AC-1, AC-2, AC-6, AC-8..AC-11, AC-13).
       Done when: unit and integration tests (Testcontainers) for those criteria pass, including the concurrent-registration race and the transactional outbox write.
 - [ ] T6 — Identity API: `UsersEndpoints` (§3.1) replacing the ping stub, cookie scheme `hs.idp`, `returnUrl` validation (design §3.1; AC-1..AC-4, AC-13, AC-17).
       Done when: contract tests (Reqnroll register, verify, resend, sign-in features) pass for success and every designed error, in vi and en.

@@ -10,4 +10,8 @@
     <PackageReference Include="OpenIddict.EntityFrameworkCore" />
     <PackageReference Include="Konscious.Security.Cryptography.Argon2" />
   </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Identity.IntegrationTests" />
+  </ItemGroup>
 </Project>
