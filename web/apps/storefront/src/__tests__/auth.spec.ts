@@ -70,12 +70,21 @@ async function fill(wrapper: VueWrapper, values: string[]) {
 
 afterEach(() => vi.restoreAllMocks())
 
+const SIGNIN = '/signin?returnUrl=%2Fconnect%2Fauthorize%3Fx%3D1'
+
 describe('SignInPage (SCR-STF-012)', () => {
   beforeEach(() => vi.spyOn(navigation, 'goTo').mockImplementation(() => undefined))
 
+  it('starts the gateway login when opened without a returnUrl, instead of creating a half session', async () => {
+    const { wrapper } = await mountAt(SignInPage, '/signin')
+
+    expect(navigation.goTo).toHaveBeenCalledWith('/bff/login')
+    expect(wrapper.find('form').exists()).toBe(false)
+  })
+
   it('shows required errors and sends nothing when the form is empty', async () => {
     const fetchSpy = mockApi({})
-    const { wrapper } = await mountAt(SignInPage, '/signin')
+    const { wrapper } = await mountAt(SignInPage, SIGNIN)
 
     await wrapper.get('form').trigger('submit')
 
@@ -101,7 +110,7 @@ describe('SignInPage (SCR-STF-012)', () => {
 
   it('shows the API message for invalid credentials, clears the password and keeps the email', async () => {
     mockApi({ 'POST /v1/users/sign-in': () => json(401, { code: 'identity.invalid_credentials', message: 'Wrong email or password.', details: [] }) })
-    const { wrapper } = await mountAt(SignInPage, '/signin')
+    const { wrapper } = await mountAt(SignInPage, SIGNIN)
 
     await fill(wrapper, ['an@example.com', 'wrong-pass1'])
     await wrapper.get('form').trigger('submit')
@@ -115,7 +124,7 @@ describe('SignInPage (SCR-STF-012)', () => {
 
   it('reveals and hides the password with an accessible toggle', async () => {
     mockApi({})
-    const { wrapper } = await mountAt(SignInPage, '/signin')
+    const { wrapper } = await mountAt(SignInPage, SIGNIN)
     const toggle = wrapper.get('button[aria-label="Show password"]')
 
     expect(wrapper.findAll('input')[1]!.attributes('type')).toBe('password')

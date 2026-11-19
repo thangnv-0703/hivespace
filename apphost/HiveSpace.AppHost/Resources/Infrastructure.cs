@@ -15,6 +15,9 @@ internal static class InfrastructureExtensions
     /// <summary>One topic for every domain event; one subscription per consuming service (ADR-0002).</summary>
     public const string EventsTopic = "hivespace-events";
 
+    /// <summary>Mailpit web UI and API on the host; the Playwright suite reads the inbox here.</summary>
+    public const int MailpitHttpPort = 8025;
+
     public static InfrastructureResources AddInfrastructure(this IDistributedApplicationBuilder builder)
     {
         // pgvector on Postgres 17, matching the Neon major version planned for the demo (ADR-0003, ADR-0005).
@@ -38,7 +41,8 @@ internal static class InfrastructureExtensions
             .RunAsEmulator(azurite => azurite.WithDataVolume("hivespace-azurite"))
             .AddBlobs("blobs");
 
-        var mailpit = builder.AddMailPit("mailpit");
+        // Fixed HTTP port so the Playwright suite can read the inbox without asking the orchestrator (tests/e2e).
+        var mailpit = builder.AddMailPit("mailpit", httpPort: MailpitHttpPort);
 
         return new InfrastructureResources(postgres, messaging, cartDb, blobs, mailpit);
     }

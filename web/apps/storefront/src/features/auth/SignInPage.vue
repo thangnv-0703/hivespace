@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Alert, Button, Input } from '@hivespace/ui'
-import { computed, reactive, ref } from 'vue'
+import { Alert, Button, Input, Spinner } from '@hivespace/ui'
+import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
 
@@ -23,6 +23,12 @@ const emailRef = ref<{ focus: () => void } | null>(null)
 const passwordRef = ref<{ focus: () => void } | null>(null)
 
 const returnUrl = computed(() => returnUrlOf(route.query.returnUrl))
+// Without a returnUrl this page was opened directly (a typed address, "Sign in" after verifying). Signing in here would
+// create only the Identity cookie and no gateway session, so start the BFF login, which comes back with a returnUrl.
+const starting = !returnUrl.value
+onMounted(() => {
+  if (starting) goTo('/bff/login')
+})
 const registerTarget = computed(() => ({ path: '/register', query: returnUrl.value ? { returnUrl: returnUrl.value } : {} }))
 
 function checkEmail(): boolean {
@@ -71,7 +77,8 @@ async function submit() {
 
 <template>
   <AuthPage :title="$t('auth.signIn.title')" :subtitle="$t('auth.signIn.subtitle')">
-    <form class="space-y-4" novalidate :aria-busy="busy" @submit.prevent="submit">
+    <div v-if="starting" role="status" data-testid="signin-starting"><Spinner /></div>
+    <form v-else class="space-y-4" novalidate :aria-busy="busy" @submit.prevent="submit">
       <Alert v-if="formError" variant="error" :title="$t('auth.signIn.failedTitle')" :message="formError.message" />
       <p v-if="formError?.code" class="text-xs text-text-muted">{{ formError.code }}</p>
       <Input
