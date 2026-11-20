@@ -11,6 +11,8 @@ export interface RunningService {
   baseUrl: string
   /** Direct database access for the steps that seed or read state the API does not expose. */
   db: pg.Pool
+  /** PEM of the ES256 key Identity signs tokens with (only for identity), so a step can re-sign a token with another audience. */
+  signingKeyPem?: string
   stop(): Promise<void>
 }
 
@@ -90,6 +92,7 @@ async function start(name: string): Promise<RunningService> {
   const outDir = path.join(import.meta.dirname, '..', '.build', spec.dir)
   execFileSync('dotnet', ['build', path.join(projectDir, `${spec.project}.csproj`), '-o', outDir, '-v', 'q', '--nologo'], { stdio: 'inherit' })
 
+  const extraEnv = spec.extraEnv()
   const postgres = await new PostgreSqlContainer('pgvector/pgvector:pg17').start()
   const db = new pg.Pool({ connectionString: postgres.getConnectionUri() })
   const port = await freePort()
@@ -104,7 +107,7 @@ async function start(name: string): Promise<RunningService> {
       ASPNETCORE_URLS: baseUrl,
       [`ConnectionStrings__${spec.connectionName}`]: connectionString(postgres),
       ConnectionStrings__messaging: deadBroker,
-      ...spec.extraEnv(),
+      ...extraEnv,
     },
   })
   for (const stream of [child.stdout, child.stderr]) {
@@ -128,7 +131,7 @@ async function start(name: string): Promise<RunningService> {
     await stop()
     throw new Error(`${name} did not become ready: ${String(error)}\n${output.join('')}`)
   }
-  return { baseUrl, db, stop }
+  return { baseUrl, db, stop, signingKeyPem: extraEnv.Identity__SigningKeyPem }
 }
 
 async function waitReady(baseUrl: string, exited: Promise<number | null>): Promise<void> {

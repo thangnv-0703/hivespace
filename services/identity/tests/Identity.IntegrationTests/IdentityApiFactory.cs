@@ -15,6 +15,9 @@ public sealed class IdentityApiFactory : WebApplicationFactory<Program>
     public const string Issuer = "http://localhost:5080";
     public const string ClientSecret = "test-client-secret";
 
+    /// <summary>The server's signing key, so tests can mint a token with a changed claim (wrong audience).</summary>
+    public ECDsa SigningKey { get; } = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("pgvector/pgvector:pg17").Build();
 
     public async Task StartAsync() => await _postgres.StartAsync();
@@ -29,7 +32,7 @@ public sealed class IdentityApiFactory : WebApplicationFactory<Program>
         // Fresh keys per run; production reads them from configuration (D-7).
         builder.UseSetting("Identity:Issuer", Issuer);
         builder.UseSetting("Identity:PublicBaseUrl", Issuer);
-        builder.UseSetting("Identity:SigningKeyPem", ECDsa.Create(ECCurve.NamedCurves.nistP256).ExportPkcs8PrivateKeyPem());
+        builder.UseSetting("Identity:SigningKeyPem", SigningKey.ExportPkcs8PrivateKeyPem());
         builder.UseSetting("Identity:EncryptionKeyPem", RSA.Create(2048).ExportPkcs8PrivateKeyPem());
         builder.UseSetting("Identity:Gateway:ClientSecret", ClientSecret);
         builder.ConfigureServices(services =>
