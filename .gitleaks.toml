@@ -13,4 +13,8 @@ paths = [
   '''(^|/)go\.sum$''',
 ]
 # The Service Bus emulator's documented fixed key appears in a test fixture only.
-regexes = ['''SharedAccessKey=test;''']
+regexes = [
+  '''SharedAccessKey=test;''',
+  # A marker the Notification test searches for in logs and tables (R-6); not a credential.
+  '''tok-SECRET-9f8e7d''',
+]

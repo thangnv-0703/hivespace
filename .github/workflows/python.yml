@@ -33,4 +33,4 @@ jobs:
       - name: pytest
         run: uv run pytest
       - name: pip-audit (NFR-SEC-012)
-        run: uv export --no-dev --no-emit-project --format requirements-txt > req.txt && uvx pip-audit -r req.txt --no-deps
+        run: uv export --no-dev --no-emit-project --no-emit-local --format requirements-txt > req.txt && uvx pip-audit -r req.txt --no-deps
