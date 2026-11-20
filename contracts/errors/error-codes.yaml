@@ -20,3 +20,10 @@ codes:
   identity.verification_token_expired: { http: 400 }
   identity.email_already_verified: { http: 409 }
   identity.invalid_credentials: { http: 401 }
+  identity.phone_invalid: { http: 400 }
+  identity.gender_invalid: { http: 400 }
+  identity.date_of_birth_invalid: { http: 400 }
+  identity.date_of_birth_in_future: { http: 400 }
+  identity.date_of_birth_too_old: { http: 400 }
+  identity.language_unsupported: { http: 400 }
+  identity.email_read_only: { http: 400 }

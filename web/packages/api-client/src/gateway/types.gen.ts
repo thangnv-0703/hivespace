@@ -4,6 +4,29 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type SessionUser = {
+    isAuthenticated: boolean;
+    userId?: Id;
+    email?: string;
+    displayName?: string;
+    emailVerified?: boolean;
+    roles?: Array<string>;
+    language?: 'vi' | 'en';
+};
+
+/**
+ * Every rejection uses this shape; `code` is stable, `message` is localized (FR-LOC-004).
+ */
+export type Error = {
+    code: string;
+    message: string;
+    details?: Array<{
+        field: string;
+        code: string;
+        message?: string;
+    }>;
+};
+
 /**
  * Opaque public identifier, UUID v7 (ADR-0009).
  */
@@ -20,18 +43,38 @@ export type GetSessionResponses = {
     /**
      * Current session.
      */
-    200: {
-        isAuthenticated: boolean;
-        userId?: Id;
-        email?: string;
-        displayName?: string;
-        emailVerified?: boolean;
-        roles?: Array<string>;
-        language?: 'vi' | 'en';
-    };
+    200: SessionUser;
 };
 
 export type GetSessionResponse = GetSessionResponses[keyof GetSessionResponses];
+
+export type RefreshSessionData = {
+    body?: never;
+    headers: {
+        'X-HS-CSRF': '1';
+    };
+    path?: never;
+    query?: never;
+    url: '/bff/session/refresh';
+};
+
+export type RefreshSessionErrors = {
+    /**
+     * Missing CSRF header.
+     */
+    403: Error;
+};
+
+export type RefreshSessionError = RefreshSessionErrors[keyof RefreshSessionErrors];
+
+export type RefreshSessionResponses = {
+    /**
+     * Current session; `isAuthenticated` is false with no session or when the refresh failed (the cookie is cleared).
+     */
+    200: SessionUser;
+};
+
+export type RefreshSessionResponse = RefreshSessionResponses[keyof RefreshSessionResponses];
 
 export type BffLoginData = {
     body?: never;

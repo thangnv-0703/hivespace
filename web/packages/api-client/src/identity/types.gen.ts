@@ -4,6 +4,47 @@ export type ClientOptions = {
     baseUrl: `${string}://${string}` | (string & {});
 };
 
+export type Gender = 'male' | 'female' | 'other' | 'prefer_not_to_say';
+
+export type Language = 'vi' | 'en';
+
+export type LanguageUpdate = {
+    language: Language;
+};
+
+export type Profile = {
+    userId: Id;
+    /**
+     * Read-only (FR-PROF-004).
+     */
+    readonly email: string;
+    displayName: string;
+    /**
+     * E.164, `+84xxxxxxxxx`.
+     */
+    phone: string | null;
+    gender: Gender | null;
+    dateOfBirth: string | null;
+    /**
+     * Always null until FEAT-035; the UI shows initials.
+     */
+    avatarUrl: string | null;
+    language: Language;
+};
+
+/**
+ * The full editable representation (PUT, never PATCH). All four keys are required; the last three may be null.
+ */
+export type ProfileUpdate = {
+    displayName: string;
+    /**
+     * `0` or `+84` followed by 9 digits; spaces, dots and dashes are ignored.
+     */
+    phone: string | null;
+    gender: Gender | null;
+    dateOfBirth: string | null;
+};
+
 /**
  * Every rejection uses this shape; `code` is stable, `message` is localized (FR-LOC-004).
  */
@@ -21,6 +62,22 @@ export type Error = {
  * Opaque public identifier, UUID v7 (ADR-0009).
  */
 export type Id = string;
+
+export type ProfileWritable = {
+    userId: Id;
+    displayName: string;
+    /**
+     * E.164, `+84xxxxxxxxx`.
+     */
+    phone: string | null;
+    gender: Gender | null;
+    dateOfBirth: string | null;
+    /**
+     * Always null until FEAT-035; the UI shows initials.
+     */
+    avatarUrl: string | null;
+    language: Language;
+};
 
 /**
  * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
@@ -175,3 +232,104 @@ export type SignInResponses = {
 };
 
 export type SignInResponse = SignInResponses[keyof SignInResponses];
+
+export type GetMyProfileData = {
+    body?: never;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/me/profile';
+};
+
+export type GetMyProfileErrors = {
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+};
+
+export type GetMyProfileError = GetMyProfileErrors[keyof GetMyProfileErrors];
+
+export type GetMyProfileResponses = {
+    /**
+     * The profile.
+     */
+    200: Profile;
+};
+
+export type GetMyProfileResponse = GetMyProfileResponses[keyof GetMyProfileResponses];
+
+export type UpdateMyProfileData = {
+    body: ProfileUpdate;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/me/profile';
+};
+
+export type UpdateMyProfileErrors = {
+    /**
+     * `common.validation_failed` with one details entry per invalid field; an `email` key gives `identity.email_read_only`.
+     */
+    400: Error;
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+};
+
+export type UpdateMyProfileError = UpdateMyProfileErrors[keyof UpdateMyProfileErrors];
+
+export type UpdateMyProfileResponses = {
+    /**
+     * Saved. Unchanged values also return 200.
+     */
+    200: Profile;
+};
+
+export type UpdateMyProfileResponse = UpdateMyProfileResponses[keyof UpdateMyProfileResponses];
+
+export type UpdateMyLanguageData = {
+    body: LanguageUpdate;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/me/profile/language';
+};
+
+export type UpdateMyLanguageErrors = {
+    /**
+     * `common.validation_failed` with `identity.language_unsupported`.
+     */
+    400: Error;
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+};
+
+export type UpdateMyLanguageError = UpdateMyLanguageErrors[keyof UpdateMyLanguageErrors];
+
+export type UpdateMyLanguageResponses = {
+    /**
+     * Saved.
+     */
+    200: LanguageUpdate;
+};
+
+export type UpdateMyLanguageResponse = UpdateMyLanguageResponses[keyof UpdateMyLanguageResponses];

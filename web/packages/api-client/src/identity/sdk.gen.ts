@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { RegisterUserData, RegisterUserErrors, RegisterUserResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SignInData, SignInErrors, SignInResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
+import type { GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SignInData, SignInErrors, SignInResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -59,6 +59,41 @@ export const resendVerificationEmail = <ThrowOnError extends boolean = false>(op
  */
 export const signIn = <ThrowOnError extends boolean = false>(options: Options<SignInData, ThrowOnError>): RequestResult<SignInResponses, SignInErrors, ThrowOnError> => (options.client ?? client).post<SignInResponses, SignInErrors, ThrowOnError>({
     url: '/v1/users/sign-in',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The signed-in user's profile. The user is always the token's `sub`.
+ */
+export const getMyProfile = <ThrowOnError extends boolean = false>(options?: Options<GetMyProfileData, ThrowOnError>): RequestResult<GetMyProfileResponses, GetMyProfileErrors, ThrowOnError> => (options?.client ?? client).get<GetMyProfileResponses, GetMyProfileErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/me/profile',
+    ...options
+});
+
+/**
+ * Replace the four editable fields. `null` clears phone, gender and date of birth.
+ */
+export const updateMyProfile = <ThrowOnError extends boolean = false>(options: Options<UpdateMyProfileData, ThrowOnError>): RequestResult<UpdateMyProfileResponses, UpdateMyProfileErrors, ThrowOnError> => (options.client ?? client).put<UpdateMyProfileResponses, UpdateMyProfileErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/me/profile',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Save the preferred language. Same value again is 200 and queues no event.
+ */
+export const updateMyLanguage = <ThrowOnError extends boolean = false>(options: Options<UpdateMyLanguageData, ThrowOnError>): RequestResult<UpdateMyLanguageResponses, UpdateMyLanguageErrors, ThrowOnError> => (options.client ?? client).put<UpdateMyLanguageResponses, UpdateMyLanguageErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/me/profile/language',
     ...options,
     headers: {
         'Content-Type': 'application/json',

@@ -20,19 +20,31 @@ paths:
           content:
             application/json:
               schema:
-                type: object
-                required: [isAuthenticated]
-                properties:
-                  isAuthenticated: { type: boolean }
-                  userId:
-                    $ref: './shared/components.yaml#/components/schemas/Id'
-                  email: { type: string }
-                  displayName: { type: string }
-                  emailVerified: { type: boolean }
-                  roles:
-                    type: array
-                    items: { type: string }
-                  language: { type: string, enum: [vi, en] }
+                $ref: '#/components/schemas/SessionUser'
+  /bff/session/refresh:
+    post:
+      operationId: refreshSession
+      summary: Force a refresh-token exchange so the token claims (name, language) are current, and return the `/bff/user` body. Needs `X-HS-CSRF`.
+      tags: [bff]
+      security: []
+      parameters:
+        - name: X-HS-CSRF
+          in: header
+          required: true
+          schema: { type: string, enum: ['1'] }
+      responses:
+        '200':
+          description: Current session; `isAuthenticated` is false with no session or when the refresh failed (the cookie is cleared).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionUser'
+        '403':
+          description: Missing CSRF header.
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
   /bff/login:
     get:
       operationId: bffLogin
@@ -57,3 +69,19 @@ paths:
       responses:
         '302':
           description: Redirect through Identity end-session back to `/`.
+components:
+  schemas:
+    SessionUser:
+      type: object
+      required: [isAuthenticated]
+      properties:
+        isAuthenticated: { type: boolean }
+        userId:
+          $ref: './shared/components.yaml#/components/schemas/Id'
+        email: { type: string }
+        displayName: { type: string }
+        emailVerified: { type: boolean }
+        roles:
+          type: array
+          items: { type: string }
+        language: { type: string, enum: [vi, en] }
