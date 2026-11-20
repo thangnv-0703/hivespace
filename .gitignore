@@ -1,5 +1,5 @@
 # Local-only reference code (not part of this repo)
-references/
+/references/
 
 # Claude Code per-user settings
 .claude/settings.local.json
