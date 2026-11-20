@@ -61,7 +61,8 @@ public sealed class GatewayTestHost : IAsyncLifetime
             {
                 var form = await request.ReadFormAsync();
                 RefreshCalls++;
-                if (form["grant_type"] != "refresh_token" || form["refresh_token"] != "good-refresh" || form["client_secret"] != "test-secret")
+                if (form["grant_type"] != "refresh_token" || !form["refresh_token"].ToString().StartsWith("good-refresh", StringComparison.Ordinal) || form["client_secret"] != "test-secret"
+                    || RevokedTokens.Contains(form["refresh_token"].ToString()))
                 {
                     return Results.Json(new { error = "invalid_grant" }, statusCode: 400);
                 }

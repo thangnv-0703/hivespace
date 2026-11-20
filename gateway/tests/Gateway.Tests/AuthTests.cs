@@ -207,7 +207,7 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
     public async Task Ac15_sign_out_revokes_the_refresh_token_clears_the_cookie_and_goes_through_identity_end_session()
     {
         using var client = _host.NewClient();
-        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), "good-refresh");
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), "good-refresh-signout");
 
         // A cross-site form post is refused.
         using (var cross = new HttpRequestMessage(HttpMethod.Post, "/bff/logout"))
@@ -223,9 +223,40 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         Assert.StartsWith($"{GatewayTestHost.Issuer}/connect/logout?client_id=hivespace-gateway", response.Headers.Location!.OriginalString, StringComparison.Ordinal);
-        Assert.Contains("good-refresh", _host.RevokedTokens);
+        Assert.Contains("good-refresh-signout", _host.RevokedTokens);
         var (status, _) = await SendAsync(client, Get("/v1/order/orders"));
         Assert.Equal(HttpStatusCode.Unauthorized, status);
+    }
+
+    [Fact]
+    public async Task Ac15_replaying_the_pre_logout_cookie_cannot_refresh_and_is_401()
+    {
+        // No cookie jar: capture the session cookie exactly as the browser held it before sign-out.
+        using var client = _host.Gateway.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = false });
+        var access = _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10));
+        var query = $"?access={Uri.EscapeDataString(access)}&refresh=good-refresh-replay&expires=20";
+        using var planted = await client.PostAsync("/test/session" + query, null, Ct);
+        planted.EnsureSuccessStatusCode();
+        var cookie = string.Join("; ", planted.Headers.GetValues("Set-Cookie").Select(c => c.Split(';')[0]));
+
+        HttpRequestMessage WithCookie(HttpMethod method, string path)
+        {
+            var request = new HttpRequestMessage(method, path);
+            request.Headers.Add("Cookie", cookie);
+            return request;
+        }
+
+        using var logout = WithCookie(HttpMethod.Post, "/bff/logout");
+        logout.Headers.Add("Sec-Fetch-Site", "same-origin");
+        using var loggedOut = await client.SendAsync(logout, Ct);
+        Assert.Equal(HttpStatusCode.Redirect, loggedOut.StatusCode);
+        Assert.Contains("good-refresh-replay", _host.RevokedTokens);
+
+        // The old cookie's access token is about to expire, so the gateway must refresh, and the revoked refresh token fails.
+        var (status, body) = await SendAsync(client, WithCookie(HttpMethod.Get, "/v1/order/orders"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, status);
+        Assert.Equal("common.unauthenticated", body.GetProperty("code").GetString());
     }
 
     [Fact]
