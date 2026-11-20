@@ -65,10 +65,11 @@ public sealed class DomainTests
     }
 
     [Fact]
-    public void Ac4_empty_display_name_is_required_and_61_chars_is_too_long()
+    public void Ac4_empty_display_name_is_required_and_81_chars_is_too_long()
     {
         Assert.Equal("identity.display_name_required", DisplayName.Create("  ").Violation?.Code);
-        Assert.Equal("identity.display_name_too_long", DisplayName.Create(new string('n', 61)).Violation?.Code);
+        Assert.Equal("identity.display_name_too_long", DisplayName.Create(new string('n', 81)).Violation?.Code);
+        Assert.Null(DisplayName.Create(new string('n', 80)).Violation);
         Assert.Equal("An", DisplayName.Create(" An ").Name!.Value);
     }
 

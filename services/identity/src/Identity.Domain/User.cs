@@ -23,6 +23,14 @@ public sealed class User
 
     public string Language { get; private set; }
 
+    /// <summary>E.164 <c>+84xxxxxxxxx</c> or null (FR-PROF-002).</summary>
+    public string? Phone { get; private set; }
+
+    /// <summary>One of the <see cref="Domain.Gender"/> values, or null.</summary>
+    public string? Gender { get; private set; }
+
+    public DateOnly? DateOfBirth { get; private set; }
+
     public DateTimeOffset? EmailVerifiedAt { get; private set; }
 
     public DateTimeOffset CreatedAt { get; private set; }
@@ -54,5 +62,47 @@ public sealed class User
     {
         EmailVerifiedAt ??= now;
         UpdatedAt = now;
+    }
+
+    /// <summary>
+    /// Replaces the four editable fields (PUT semantics; null clears the optional ones). Returns the changed fields that
+    /// <c>UserProfileChanged</c> carries: only <c>displayName</c> can appear, phone, gender and date of birth never leave Identity (D-6).
+    /// </summary>
+    public IReadOnlyList<string> UpdateProfile(DisplayName displayName, PhoneNumber? phone, Gender? gender, DateOfBirth? dateOfBirth, DateTimeOffset now)
+    {
+        var changed = new List<string>();
+        var edited = DisplayName != displayName.Value
+            || Phone != phone?.Value
+            || Gender != gender?.Value
+            || DateOfBirth != dateOfBirth?.Value;
+
+        if (DisplayName != displayName.Value)
+        {
+            changed.Add("displayName");
+        }
+
+        DisplayName = displayName.Value;
+        Phone = phone?.Value;
+        Gender = gender?.Value;
+        DateOfBirth = dateOfBirth?.Value;
+        if (edited)
+        {
+            UpdatedAt = now;
+        }
+
+        return changed;
+    }
+
+    /// <summary>Saves the preferred language; returns <c>["language"]</c> when it changed, otherwise empty (idempotent).</summary>
+    public IReadOnlyList<string> ChangeLanguage(Language language, DateTimeOffset now)
+    {
+        if (Language == language.Value)
+        {
+            return [];
+        }
+
+        Language = language.Value;
+        UpdatedAt = now;
+        return ["language"];
     }
 }
