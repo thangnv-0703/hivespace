@@ -40,7 +40,10 @@ public sealed class SkeletonTests(StackFixture stack)
     public async Task Ping_event_reaches_go_and_python_inboxes_once()
     {
         using var gateway = stack.App.CreateHttpClient("gateway");
-        using var response = await gateway.PostAsync(new Uri("/v1/catalog/ping", UriKind.Relative), null, TestContext.Current.CancellationToken);
+        // Every non-GET under /v1/* carries the CSRF header since FEAT-001 (AC-17).
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/v1/catalog/ping");
+        request.Headers.Add("X-HS-CSRF", "1");
+        using var response = await gateway.SendAsync(request, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
         var eventId = (await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken))
             .GetProperty("eventId").GetGuid();

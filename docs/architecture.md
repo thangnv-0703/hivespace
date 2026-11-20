@@ -2,6 +2,7 @@
 
 > Status: Draft · Last updated: 2026-11-15 · Author: Software architecture (Claude)
 > Inputs: `docs/srs.md` v0.11, `docs/use-cases.md`, `docs/dev-standards.md` v0.1. Decisions are recorded in `docs/adr/` (index in section 9).
+> Interactive diagram: [architecture-flow.html](architecture-flow.html) (containers, data contracts, runtime flows, decisions and risks; source `architecture-flow.model.json`).
 
 ## 1. Introduction and goals
 
@@ -523,9 +524,9 @@ Risk-based, as defined in dev-standards §8 and §9; this document adds only the
 | Layer | Frameworks | Coverage stance |
 | :-- | :-- | :-- |
 | Unit and integration | xUnit with Testcontainers (.NET); `go test -race` with a real Postgres container (Go); pytest (Python); Vitest (Vue) | No coverage threshold. Test depth follows risk, and checkout, inventory and payment get the most. |
-| API contract | Reqnroll, godog and pytest-bdd over shared `.feature` files in `contracts/features/` | One feature per operation and per use-case exception flow |
+| API contract | cucumber-js (`tests/contract`, ADR-0025) over shared `.feature` files in `contracts/features/` | One feature per operation and per use-case exception flow |
 | Mandatory risk tests | Oversell with k6 (NFR-SCAL-001), saga failure injection (NFR-REL-002), triple callback (NFR-REL-003), duplicate event delivery (NFR-REL-005), authorization, dependency failure, upload | Run from the repo with documented commands (NFR-MNT-005) |
-| End to end | Playwright | Thin: the hero flow only (UC-001, UC-007, UC-009, UC-010, UC-011, UC-012, UC-014, UC-016, UC-017), plus one Google sign-in run against a fake IdP (UC-025) |
+| End to end | Playwright, journeys as Gherkin through playwright-bdd (ADR-0026) | Thin: the hero flow only (UC-001, UC-007, UC-009, UC-010, UC-011, UC-012, UC-014, UC-016, UC-017), plus one Google sign-in run against a fake IdP (UC-025) |
 
 ## 9. Architecture decisions
 

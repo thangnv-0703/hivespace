@@ -10,9 +10,10 @@ from fastapi import FastAPI, Response
 from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
 from sqlalchemy import text
 
-from hivespace_common import eventbus, inbox, otel
+from hivespace_common import eventbus, otel
 from notification.db import create_engine, migrate
-from notification.features.contacts.consumer import make_handler
+from notification.dispatch import make_handler
+from notification.providers.smtp import SmtpEmailSender
 from notification.settings import Settings
 
 
@@ -21,9 +22,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     cfg = settings or Settings()  # values come from the environment
     engine = create_engine(cfg.async_database_url)
 
-    async def record(event_id: str, consumer: str) -> bool:
-        async with engine.begin() as conn:
-            return await inbox.record(conn, event_id, consumer)
+    sender = SmtpEmailSender(cfg.mailpit_connection or "localhost:1025", cfg.mail_from)
 
     @contextlib.asynccontextmanager
     async def lifespan(_: FastAPI) -> AsyncIterator[None]:
@@ -32,7 +31,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if cfg.messaging_connection:
             consumer = asyncio.create_task(
                 eventbus.run_subscription(
-                    cfg.messaging_connection, cfg.events_topic, cfg.events_subscription, make_handler(record)
+                    cfg.messaging_connection,
+                    cfg.events_topic,
+                    cfg.events_subscription,
+                    make_handler(engine, sender, cfg.public_base_url),
                 )
             )
         yield

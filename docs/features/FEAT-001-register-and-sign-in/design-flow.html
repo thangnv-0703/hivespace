@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FEAT-001 · Register, verify, sign in, sign out</title>
+<script>
+// Resolve the theme before first paint so light-preference users don't see a dark flash.
+(function () {
+  var theme = null;
+  try { var p = new URLSearchParams(location.search).get('theme'); if (p === 'light' || p === 'dark') theme = p; } catch (_) {}
+  if (!theme) { try { theme = localStorage.getItem('flow-diagram-theme'); } catch (_) {} }
+  if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="dark"] {
+  --bg: #020617; --grid: #1e293b;
+  --text: #ffffff; --text-muted: #94a3b8; --text-dim: #475569; --text-faint: #7d8da1;
+  --panel: rgba(15, 23, 42, 0.5); --panel-border: #1e293b;
+  --lane-fill: rgba(15, 23, 42, 0.22); --lane-stroke: #334155;
+  --arrow: #94a3b8; --arrow-emphasis: #34d399; --mask: #0f172a;
+  --frontend-stroke: #22d3ee; --backend-stroke: #34d399; --database-stroke: #a78bfa;
+  --cloud-stroke: #fbbf24; --security-stroke: #fb7185; --external-stroke: #94a3b8;
+  --service-stroke: #fb923c; --ghost-stroke: #7d8da1;
+  --toolbar-bg: rgba(15, 23, 42, 0.8); --toolbar-border: #334155; --toolbar-text: #e2e8f0; --toolbar-hover: rgba(30, 41, 59, 0.95);
+}
+[data-theme="light"] {
+  --bg: #f4f5f7; --grid: #e9edf2;
+  --text: #111827; --text-muted: #5b6474; --text-dim: #9aa3b2; --text-faint: #6b7280;
+  --panel: #ffffff; --panel-border: #e5e7eb;
+  --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1;
+  --arrow: #64748b; --arrow-emphasis: #059669; --mask: #ffffff;
+  --frontend-stroke: #0891b2; --backend-stroke: #059669; --database-stroke: #7c3aed;
+  --cloud-stroke: #d97706; --security-stroke: #e11d48; --external-stroke: #64748b;
+  --service-stroke: #ea580c; --ghost-stroke: #6b7280;
+  --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 16px; transition: background .2s, color .2s; }
+.container { max-width: 1360px; margin: 0 auto; }
+body.wide .container { max-width: 2200px; }
+body.wide .stage { grid-template-columns: minmax(0, 1fr) 300px; }
+a { color: var(--frontend-stroke); }
+code { color: var(--frontend-stroke); font-family: inherit; }
+
+.header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.header-row { display: flex; align-items: center; gap: .75rem; }
+.pulse-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--backend-stroke); box-shadow: 0 0 0 4px color-mix(in srgb, var(--backend-stroke) 20%, transparent); animation: pulse 2s ease-in-out infinite; flex: none; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--backend-stroke) 0%, transparent); } }
+h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+.subtitle { color: var(--text-muted); font-size: .8125rem; margin-top: .4rem; padding-left: 1.6rem; line-height: 1.55; max-width: 1000px; }
+.subtitle b { color: var(--text); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.toolbar button, .toolbar a { font: inherit; font-size: .75rem; color: var(--toolbar-text); background: var(--toolbar-bg); border: 1px solid var(--toolbar-border); border-radius: 8px; padding: .45rem .75rem; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; text-decoration: none; }
+.toolbar button:hover, .toolbar a:hover { background: var(--toolbar-hover); }
+.toolbar button:focus-visible, .toolbar a:focus-visible { outline: 2px solid var(--frontend-stroke); outline-offset: 2px; }
+.toolbar button[aria-pressed="true"] { border-color: var(--arrow-emphasis); color: var(--text); box-shadow: inset 0 0 0 1px var(--arrow-emphasis); }
+.toolbar .sep { width: 1px; height: 22px; background: var(--toolbar-border); margin: 0 .15rem; }
+.chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1rem; }
+@media (max-width: 1150px) { .stage { grid-template-columns: 1fr; } }
+.diagram-container { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 1.25rem; overflow-x: auto; scroll-margin-top: 1rem; }
+.diagram-container svg { display: block; width: 100%; height: auto; }
+
+/* SVG */
+.c-grid { stroke: var(--grid); fill: none; }
+.c-region { fill: color-mix(in srgb, var(--cloud-stroke) 3%, transparent); stroke: color-mix(in srgb, var(--cloud-stroke) 42%, var(--lane-stroke)); }
+.c-frame { fill: var(--lane-fill); stroke: var(--lane-stroke); }
+.c-frame.dashed { fill: none; stroke-dasharray: 4 3; }
+.c-mask { fill: var(--mask); }
+.t-primary { fill: var(--text); } .t-muted { fill: var(--text-muted); } .t-cloud { fill: var(--cloud-stroke); } .t-lane { fill: var(--text-muted); }
+.node { cursor: pointer; outline: none; }
+.node rect.body, .lg rect.body { stroke-width: 1.25; transition: stroke-width .15s; }
+.sigil { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.node:hover rect.body, .node:focus-visible rect.body, .node.selected rect.body { stroke-width: 2.5; }
+.k-ghost rect.body { stroke-dasharray: 5 3; }
+.k-ghost text.t-primary { fill: var(--text-muted); }
+.edge path.line, .lg path.line { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.edge path.halo { fill: none; stroke: var(--mask); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.edge path.hit { fill: none; stroke: transparent; stroke-width: 12; pointer-events: stroke; cursor: pointer; }
+.edge.has-data:hover path.line { stroke-width: 2.6; }
+.s-default path.line { stroke: var(--arrow); }
+.s-emphasis path.line { stroke: var(--arrow-emphasis); stroke-width: 1.8; }
+.s-security path.line { stroke: var(--security-stroke); }
+.s-dashed path.line { stroke: var(--arrow); stroke-dasharray: 5 4; }
+.s-ghost path.line { stroke: var(--ghost-stroke); stroke-dasharray: 3 4; }
+.m-default { fill: var(--arrow); } .m-emphasis { fill: var(--arrow-emphasis); } .m-security { fill: var(--security-stroke); } .m-ghost { fill: var(--ghost-stroke); }
+.edge .lbl-bg { fill: var(--mask); stroke: var(--lane-stroke); stroke-width: .75; }
+.edge .lbl { font-size: 8px; pointer-events: none; }
+.s-default .lbl, .s-dashed .lbl { fill: var(--text-muted); } .s-emphasis .lbl { fill: var(--arrow-emphasis); } .s-security .lbl { fill: var(--security-stroke); } .s-ghost .lbl { fill: var(--ghost-stroke); }
+svg:not(.show-ghost) .ghost { display: none; }
+.pin { cursor: pointer; }
+.pin circle { stroke: var(--mask); stroke-width: 1.5; }
+.pin text { fill: var(--mask); font-size: 8px; font-weight: 700; pointer-events: none; }
+.pin.confirmed circle, .pin.aligned circle { fill: var(--backend-stroke); } .pin.consider circle { fill: var(--cloud-stroke); } .pin.decision circle { fill: var(--security-stroke); } .pin.risk circle { fill: var(--service-stroke); }
+.pin:hover circle, .pin:focus-visible circle { stroke: var(--text); }
+svg.hide-pins #pins { display: none; }
+.step-badge circle { fill: var(--arrow-emphasis); }
+.step-badge text { fill: var(--mask); font-size: 9px; font-weight: 700; }
+svg.dim .node:not(.on), svg.dim #pins .pin { opacity: .22; }
+svg.dim .edge:not(.on) { opacity: .1; }
+svg.dim .edge.on path.line { stroke-width: 2.4; stroke-dasharray: 7 5; animation: flow 1s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -24; } }
+@media (prefers-reduced-motion: reduce) { svg.dim .edge.on path.line { animation: none; } .pulse-dot { animation: none; } }
+
+/* Side panel */
+.side { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 1.1rem; font-size: .78rem; line-height: 1.55; align-self: start; max-height: 1000px; overflow-y: auto; }
+.side .eyebrow { font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+.side h2 { font-size: .95rem; margin: .2rem 0 .5rem; }
+.side p { color: var(--text-muted); margin-bottom: .6rem; }
+.side ol { list-style: none; counter-reset: s; }
+.side ol li { counter-increment: s; position: relative; padding-left: 1.75rem; margin-bottom: .55rem; color: var(--text-muted); }
+.side ol li::before { content: counter(s); position: absolute; left: 0; top: .05rem; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: var(--arrow-emphasis); color: var(--mask); font-weight: 700; font-size: .68rem; display: grid; place-items: center; }
+.side strong, .side b, .side .tag { color: var(--text); }
+.side .links { margin-top: .6rem; padding-top: .6rem; border-top: 1px solid var(--panel-border); color: var(--text-muted); }
+.side .links button { all: unset; cursor: pointer; display: block; padding: .1rem 0; }
+.side .links button:hover { color: var(--text); text-decoration: underline; }
+.side .kv { display: grid; grid-template-columns: auto 1fr; gap: .3rem .7rem; margin-top: .4rem; color: var(--text-muted); }
+.side .kv > span:nth-child(odd) { color: var(--text-faint); }
+.side .note-box { border: 1px solid var(--panel-border); border-radius: 10px; padding: .6rem .7rem; margin-top: .6rem; color: var(--text-muted); }
+.hint { color: var(--text-faint); font-size: .7rem; margin-top: .75rem; }
+.linkish { color: var(--frontend-stroke); background: none; border: 0; font: inherit; font-size: .72rem; cursor: pointer; text-decoration: underline; padding: 0; }
+.refs { color: var(--text-faint); font-size: .68rem; margin-top: .35rem; }
+.chip, .note-chip, .cls { display: inline-flex; align-items: center; font-size: .63rem; padding: .12rem .5rem; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.note-chip.confirmed, .note-chip.aligned { color: var(--backend-stroke); background: color-mix(in srgb, var(--backend-stroke) 15%, transparent); }
+.note-chip.consider { color: var(--cloud-stroke); background: color-mix(in srgb, var(--cloud-stroke) 15%, transparent); }
+.note-chip.decision { color: var(--security-stroke); background: color-mix(in srgb, var(--security-stroke) 15%, transparent); }
+.note-chip.risk { color: var(--service-stroke); background: color-mix(in srgb, var(--service-stroke) 15%, transparent); }
+.tagp { font-size: .65rem; padding: .12rem .5rem; border-radius: 999px; border: 1px solid var(--toolbar-border); color: var(--text-muted); white-space: nowrap; display: inline-block; margin: 0 .2rem .2rem 0; }
+
+/* Sections */
+.section-title { font-size: 1.05rem; font-weight: 650; margin: 1.9rem 0 .35rem; }
+.section-lead { color: var(--text-muted); font-size: .78rem; margin-bottom: .9rem; line-height: 1.55; max-width: 1080px; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(390px, 1fr)); gap: .9rem; }
+.grid-cards.narrow { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+@media (max-width: 520px) { .grid-cards { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 1rem 1.1rem; scroll-margin-top: 1rem; }
+.card.toned { border-top: 3px solid var(--tone); }
+.card.lefty { border-left: 3px solid var(--tone); }
+.card.flash { box-shadow: 0 0 0 2px var(--cloud-stroke); }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; margin-bottom: .55rem; flex-wrap: wrap; }
+.card h3 { font-size: .9rem; display: flex; align-items: center; gap: .55rem; }
+.card .kind { font-size: .65rem; color: var(--tone); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+.card ul.b { list-style: none; }
+.card ul.b li { font-size: .77rem; color: var(--text-muted); line-height: 1.55; padding-left: 1rem; position: relative; margin-bottom: .42rem; }
+.card ul.b li::before { content: ''; position: absolute; left: 0; top: .55em; width: 5px; height: 5px; border-radius: 50%; background: var(--text-dim); }
+.card b { color: var(--text); font-weight: 600; }
+.card-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--tone); }
+.spec { display: grid; grid-template-columns: 6.2rem 1fr; gap: .38rem .75rem; font-size: .74rem; line-height: 1.5; }
+.side .spec { grid-template-columns: 5.6rem 1fr; font-size: .72rem; margin-top: .5rem; }
+.spec dt { color: var(--text-faint); }
+.spec dd { color: var(--text-muted); }
+.spec dd ul { list-style: none; }
+.spec dd li { position: relative; padding-left: .8rem; }
+.spec dd li::before { content: '·'; position: absolute; left: 0; color: var(--text-dim); }
+.card-notes { margin-top: .6rem; display: flex; flex-wrap: wrap; gap: .35rem; }
+.note-body { font-size: .75rem; line-height: 1.55; color: var(--text-muted); }
+.tbl { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: .5rem .75rem; overflow-x: auto; }
+table.grid { width: 100%; border-collapse: collapse; font-size: .73rem; }
+table.grid th { text-align: left; color: var(--text-faint); font-weight: 500; padding: .45rem .5rem; border-bottom: 1px solid var(--panel-border); white-space: nowrap; }
+table.grid td { padding: .5rem; border-bottom: 1px solid var(--panel-border); color: var(--text-muted); vertical-align: top; line-height: 1.5; }
+table.grid td:first-child { color: var(--text); font-weight: 600; }
+table.grid tr:last-child td { border-bottom: 0; }
+table.matrix td:not(:first-child), table.matrix th:not(:first-child) { text-align: center; }
+.y { color: var(--backend-stroke); font-weight: 700; } .n { color: var(--text-dim); } .p { color: var(--cloud-stroke); }
+.footnote { color: var(--text-faint); font-size: .7rem; margin-top: 1.25rem; line-height: 1.6; }
+@media print { body { background: #fff; padding: 0; } .toolbar, .hint { display: none; } .stage { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-row"><div class="pulse-dot"></div><h1 id="title"></h1></div>
+      <p class="subtitle" id="subtitle"></p>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Diagram actions" id="toolbar"></div>
+  </div>
+  <div class="stage">
+    <div class="diagram-container" id="diagram">
+      <svg id="dia" role="img" aria-labelledby="dia-title dia-desc">
+        <title id="dia-title"></title>
+        <desc id="dia-desc"></desc>
+        <defs>
+          <marker id="ah-default" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-default"/></marker>
+          <marker id="ah-emphasis" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-emphasis"/></marker>
+          <marker id="ah-security" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-security"/></marker>
+          <marker id="ah-ghost" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-ghost"/></marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" class="c-grid" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+        <g id="frames"></g><g id="edges"></g><g id="nodes"></g><g id="pins"></g><g id="badges"></g><g id="legend"></g>
+      </svg>
+    </div>
+    <aside class="side" id="side" aria-live="polite"></aside>
+  </div>
+  <div id="sections"></div>
+  <p class="footnote" id="footnote"></p>
+</div>
+
+<script>
+/* The model is injected by scripts/build_diagram.py (edges already carry routed `d`, `lx`, `ly`). */
+var MODEL = {"meta": {"title": "FEAT-001 · Register, verify, sign in, sign out", "subtitle": "Design solution from <code>technical-design.md<\/code>: the components this slice builds or changes, the contract on every arrow, and the decisions behind them. Pick a flow to follow one use-case path; click any arrow for its data contract.", "description": "A browser uses the storefront SPA, which calls the gateway BFF. The gateway routes /v1/users to Identity, proxies OIDC endpoints and exchanges tokens server to server, keeps tokens in an encrypted cookie whose keys live in Azurite blob, and relays a bearer token to protected APIs. Identity writes users and an outbox in identitydb and publishes events to Service Bus; Notification consumes them, records emails in notificationdb and sends through Mailpit. The email link brings the browser back to the verify page.", "viewBox": [1450, 720], "links": [{"href": "technical-design.md", "label": "technical-design.md"}, {"href": "../../architecture-flow.html", "label": "Architecture"}], "kindLabels": {"security": "Gateway / BFF", "backend": "Event bus"}, "edgeLabels": {"dashed": "Event / email link", "security": "Auth / tokens"}, "overview": [["Implements", "FR-AUTH-001..010, 013..016, FR-ROLE-001, FR-NOTIF-002"], ["Realizes", "UC-001, UC-002"], ["Screens", "SCR-STF-012, 013, 014"], ["Builds", "Identity (OIDC server), BFF, Notification email path"], ["Tokens", "Access 15 min, refresh 7 d with rotation"]], "footnote": "Source: <code>docs/features/FEAT-001-register-and-sign-in/technical-design.md<\/code> (§3 contracts, §4 schema, §5 components, §7 decisions, §8 open items). Protected APIs are a placeholder for FEAT-002 onward. Generated with html-flow-diagram; edit <code>design-flow.model.json<\/code> and rebuild."}, "frames": [{"x": 740, "y": 90, "w": 470, "h": 230, "label": "Identity service", "style": "frame", "tone": "service", "labelPos": "bottom", "labelX": 1080}, {"x": 740, "y": 360, "w": 470, "h": 210, "label": "Async email path", "style": "frame", "tone": "backend", "labelPos": "bottom", "labelX": 760}, {"x": 1255, "y": 360, "w": 180, "h": 100, "label": "External", "style": "dashed", "labelPos": "bottom"}], "nodes": [{"id": "browser", "kind": "external", "x": 20, "y": 230, "w": 150, "h": 50, "label": "Browser", "sub": "visitor · buyer", "flow": "register", "desc": "The visitor registering and signing in. Holds only the encrypted <code>hs.bff<\/code> cookie and the Identity session cookie <code>hs.idp<\/code>; never a token."}, {"id": "spa", "kind": "frontend", "x": 220, "y": 110, "w": 180, "h": 56, "label": "Storefront SPA", "sub": "/signin /register /verify", "desc": "Auth pages on the shared <code>AuthLayout<\/code> (D-1). <code>features/auth/api.ts<\/code> is the only API-client import; sends <code>X-HS-CSRF: 1<\/code> and <code>Accept-Language<\/code> on every call; session store fed by <code>GET /bff/user<\/code>."}, {"id": "gw", "kind": "security", "x": 480, "y": 110, "w": 200, "h": 190, "label": "Gateway + BFF", "sub": "hs.bff cookie · CSRF", "sub2": "/bff/* · route policy", "desc": "Confidential OIDC client. Serves <code>/bff/login<\/code>, <code>/bff/callback<\/code>, <code>POST /bff/logout<\/code>, <code>/bff/user<\/code>; refreshes tokens near expiry; validates the JWT on authenticated routes and relays it; rejects non-GET <code>/v1/*<\/code> without the CSRF header."}, {"id": "identity", "kind": "service", "x": 760, "y": 110, "w": 200, "h": 190, "label": "Identity", "sub": "OpenIddict · rich .NET", "sub2": "/v1/users · /connect/*", "desc": "Handlers RegisterUser, VerifyEmail, ResendVerificationEmail, SignIn; OpenIddict authorize, token, revoke, logout, discovery. Argon2id hashes (D-3), SHA-256 token hashes, ES256 keys from configuration (D-7)."}, {"id": "idb", "kind": "database", "x": 1040, "y": 110, "w": 160, "h": 56, "label": "identitydb", "sub": "users · tokens · outbox", "desc": "Migration <code>0001_InitialIdentity<\/code>: users, credentials, role_grants, verification_tokens, outbox, inbox, OpenIddict tables."}, {"id": "bus", "kind": "backend", "x": 760, "y": 380, "w": 200, "h": 50, "label": "Service Bus", "sub": "topic hivespace-events", "sigil": "service", "desc": "Outbox relay (1 s poll, at least once). Notification's subscription has no filter; it dispatches by <code>eventType<\/code>."}, {"id": "notif", "kind": "service", "x": 1040, "y": 380, "w": 160, "h": 56, "label": "Notification", "sub": "Python · inbox", "desc": "Event dispatcher → <code>contacts<\/code> (upsert contact) and <code>emails<\/code> (record + send). Jinja2 templates in vi and en; link <code>{PUBLIC_BASE_URL}/verify-email?token=…<\/code>."}, {"id": "ndb", "kind": "database", "x": 1040, "y": 490, "w": 160, "h": 56, "label": "notificationdb", "sub": "contacts · email_records", "desc": "Alembic <code>0002_contacts_and_emails<\/code>; unique (<code>event_id<\/code>, <code>template<\/code>) gives one email per event. No token stored."}, {"id": "mail", "kind": "external", "x": 1270, "y": 380, "w": 150, "h": 50, "label": "Mailpit", "sub": "Resend in demo", "desc": "SMTP via <code>providers/smtp.py<\/code> (aiosmtplib) behind the <code>EmailSender<\/code> protocol."}, {"id": "keys", "kind": "database", "x": 220, "y": 380, "w": 180, "h": 56, "label": "Azurite blob", "sub": "data-protection keys", "desc": "ASP.NET Data Protection key ring for the <code>hs.bff<\/code> cookie (container <code>dataprotection<\/code>)."}, {"id": "apis", "kind": "service", "x": 480, "y": 380, "w": 200, "h": 56, "label": "Protected APIs", "sub": "/v1/* · FEAT-002 onward", "desc": "Any route with the <code>authenticated<\/code> policy. Receives <code>Authorization: Bearer<\/code>, <code>X-User-Id<\/code>, <code>X-User-Roles<\/code>; inbound copies are stripped."}], "edges": [{"id": "e1", "from": "browser", "to": "spa", "s": "emphasis", "data": {"p": "Form input (email, display name, password)", "f": "SPA routes", "c": "pii", "s": "Password never stored client-side"}, "d": "M95 230 L95 206 Q95 198 103 198 L302 198 Q310 198 310 190 L310 166"}, {"id": "e2", "from": "spa", "to": "gw", "s": "emphasis", "label": "REST", "fromAt": 0.5, "toAt": 0.15, "data": {"p": "POST /v1/users · /verify-email · /verification-email · /sign-in; GET /bff/user", "f": "REST/JSON · Accept-Language", "c": "pii", "s": "X-HS-CSRF: 1 on writes; hs.bff cookie; rate-limit hook on /v1/users/*"}, "d": "M400 138 L439.75 138 Q440 138 440 138.25 L440 138.25 Q440 138.5 440.25 138.5 L480 138.5", "lx": 420.0, "ly": 138.0}, {"id": "e3", "from": "browser", "to": "gw", "s": "security", "label": "navigations", "toAt": 0.76, "data": {"p": "GET /bff/login, /bff/callback?code, POST /bff/logout, /connect/* via proxy", "f": "HTTP redirects", "c": "conf", "s": "Local returnUrl only; logout checks Sec-Fetch-Site: same-origin (D-4)"}, "d": "M170 255 L324.7 255 Q325 255 325 254.7 L325 254.7 Q325 254.4 325.3 254.4 L480 254.4", "lx": 247.5, "ly": 255.0}, {"id": "e4", "from": "gw", "to": "identity", "s": "emphasis", "label": "REST", "fromAt": 0.15, "toAt": 0.15, "data": {"p": "/v1/users* requests", "f": "REST/JSON", "c": "pii", "s": "Anonymous route policy; errors localized by UseApiErrors"}, "d": "M680 138.5 L760 138.5", "lx": 720.0, "ly": 138.5}, {"id": "e5", "from": "gw", "to": "identity", "s": "security", "label": "proxy", "fromAt": 0.5, "toAt": 0.5, "data": {"p": "/connect/authorize, /connect/logout, /.well-known/*", "f": "OIDC · code + PKCE (S256)", "c": "conf", "s": "No hs.idp session → 302 /signin?returnUrl=…"}, "d": "M680 205 L760 205", "lx": 720.0, "ly": 205.0}, {"id": "e6", "from": "gw", "to": "identity", "s": "security", "label": "token", "fromAt": 0.85, "toAt": 0.85, "data": {"p": "Code + verifier → access (15 min) + refresh (7 d); refresh; revoke", "f": "POST /connect/token, /connect/revoke", "c": "restr", "s": "Confidential client secret; server to server; rotation on refresh"}, "d": "M680 271.5 L760 271.5", "lx": 720.0, "ly": 271.5}, {"id": "e7", "from": "identity", "to": "idb", "s": "default", "label": "1 tx", "fromAt": 0.15, "data": {"p": "User, credential, Buyer role, token hash, outbox row", "f": "EF Core · SQL", "c": "pii", "s": "Argon2id hash; SHA-256 token hash; unique normalized_email"}, "d": "M960 138.5 L999.75 138.5 Q1000 138.5 1000 138.25 L1000 138.25 Q1000 138 1000.25 138 L1040 138", "lx": 980.0, "ly": 138.5}, {"id": "e8", "from": "identity", "to": "bus", "s": "dashed", "label": "events", "data": {"p": "UserRegistered / VerificationEmailRequested {userId, email, displayName, language, verificationToken, expiresAt}", "f": "Event envelope · JSON schema v1", "c": "restr", "s": "Token never logged; sent outbox rows deleted after 24 h (R-6)", "w": "After commit, relayed at least once"}, "d": "M860 300 L860 380", "lx": 860.0, "ly": 340.0}, {"id": "e9", "from": "bus", "to": "notif", "s": "dashed", "data": {"p": "Same events", "f": "Service Bus subscription", "c": "restr", "s": "Inbox dedupe by eventId"}, "d": "M960 405 L1040 405"}, {"id": "e10", "from": "notif", "to": "ndb", "s": "default", "data": {"p": "Inbox row, contact upsert, email_record (pending)", "f": "SQL · one transaction", "c": "pii", "s": "No token stored"}, "d": "M1120 436 L1120 490"}, {"id": "e11", "from": "notif", "to": "mail", "s": "default", "label": "SMTP", "data": {"p": "Verification email (vi or en)", "f": "SMTP", "c": "restr", "s": "Link carries the token; failure marks failed, user can resend"}, "d": "M1200 405 L1270 405", "lx": 1235.0, "ly": 405.0}, {"id": "e12", "from": "mail", "to": "browser", "s": "dashed", "label": "verify link", "fromSide": "bottom", "toSide": "bottom", "via": [[1345, 600], [95, 600]], "data": {"p": "/verify-email?token=…", "f": "Link in email", "c": "restr", "s": "Valid 24 h; earlier tokens invalidated by resend"}, "d": "M1345 430 L1345 592 Q1345 600 1337 600 L103 600 Q95 600 95 592 L95 280", "lx": 720.0, "ly": 600.0}, {"id": "e13", "from": "gw", "to": "keys", "s": "security", "fromSide": "left", "toSide": "top", "fromAt": 0.9, "via": [[310, 281]], "data": {"p": "Data-protection key ring", "f": "Blob API", "c": "restr", "s": "Encrypts the hs.bff cookie"}, "d": "M480 281 L318 281 Q310 281 310 289 L310 380"}, {"id": "e14", "from": "gw", "to": "apis", "s": "security", "label": "bearer", "data": {"p": "Authorization: Bearer <jwt>, X-User-Id, X-User-Roles", "f": "HTTP headers", "c": "conf", "s": "JWT checked against Identity JWKS; 401 common.unauthenticated otherwise"}, "d": "M580 300 L580 380", "lx": 580.0, "ly": 340.0}], "flows": {"all": {"title": "FEAT-001 design solution", "intro": "Six paths: register, verify, resend, sign in, an authenticated call with refresh, and sign out."}, "register": {"title": "Register (UC-001 main)", "button": "Register", "color": "frontend", "tags": ["UC-001", "FR-AUTH-001..004", "AC-1..AC-7"], "steps": [{"e": ["e1", "e2"], "t": "<strong>Submit the form<\/strong>: <code>POST /v1/users<\/code> with CSRF and language headers."}, {"e": ["e4"], "t": "<strong>Validate<\/strong> every rule at once; 400 lists all failures, 409 <code>identity.email_in_use<\/code>."}, {"e": ["e7"], "t": "<strong>One transaction<\/strong>: unverified user, credential, Buyer role, token hash, outbox. Returns 201 without waiting for email."}, {"e": ["e8", "e9"], "t": "<strong>UserRegistered<\/strong> is relayed to Notification, at least once."}, {"e": ["e10", "e11"], "t": "<strong>Exactly one email<\/strong>: inbox + record in one transaction, then send in the registration language."}]}, "verify": {"title": "Verify email (UC-001)", "button": "Verify", "color": "external", "tags": ["FR-AUTH-005, 006", "AC-9, AC-10"], "steps": [{"e": ["e12", "e1"], "t": "<strong>Open the link<\/strong> on the storefront verify page."}, {"e": ["e2", "e4"], "t": "<strong>POST /v1/users/verify-email<\/strong> with the token."}, {"e": ["e7"], "t": "<strong>Hash and look up<\/strong>: 204 sets <code>email_verified_at<\/code>; invalid, expired or already-verified return their designed errors."}]}, "resend": {"title": "Resend verification email", "button": "Resend", "color": "backend", "tags": ["FR-AUTH-007", "AC-11", "D-6"], "steps": [{"e": ["e2", "e4"], "t": "<strong>POST /v1/users/verification-email<\/strong>; always 202 (no enumeration)."}, {"e": ["e7"], "t": "<strong>Unverified only<\/strong>: invalidate earlier tokens, issue a new one."}, {"e": ["e8", "e9", "e11"], "t": "<strong>VerificationEmailRequested<\/strong> → a new email."}]}, "signin": {"title": "Sign in through the BFF (UC-002)", "button": "Sign in", "color": "security", "tags": ["FR-AUTH-009, 010", "AC-12, AC-13", "ADR-0008"], "steps": [{"e": ["e3", "e5"], "t": "<strong>/bff/login<\/strong> → <code>/connect/authorize<\/code>; no session, so Identity redirects to <code>/signin<\/code>."}, {"e": ["e1", "e2", "e4"], "t": "<strong>POST /v1/users/sign-in<\/strong>: password checked (verified or not); sets <code>hs.idp<\/code>. Same 401 for every bad credential."}, {"e": ["e5"], "t": "<strong>Authorize again<\/strong> with the session; Identity issues a code to <code>/bff/callback<\/code>."}, {"e": ["e3", "e6"], "t": "<strong>Code exchange<\/strong> server to server: access 15 min, refresh 7 days."}, {"e": ["e13"], "t": "<strong>Encrypted hs.bff cookie<\/strong> set; the browser never sees a token."}]}, "call": {"title": "Authenticated call with silent refresh", "button": "API call", "color": "service", "tags": ["FR-AUTH-014..016", "AC-14, AC-16"], "steps": [{"e": ["e2"], "t": "<strong>Call a protected route<\/strong> with the cookie."}, {"e": ["e6"], "t": "<strong>Refresh<\/strong> if the access token expires within 60 s; rotated tokens replace the cookie. Failure → 401."}, {"e": ["e14"], "t": "<strong>Relay<\/strong> the validated bearer plus <code>X-User-Id<\/code> and <code>X-User-Roles<\/code>."}]}, "signout": {"title": "Sign out", "button": "Sign out", "color": "security", "tags": ["FR-AUTH-013", "AC-15", "D-4"], "steps": [{"e": ["e3"], "t": "<strong>Same-origin form POST<\/strong> to <code>/bff/logout<\/code>."}, {"e": ["e6"], "t": "<strong>Revoke<\/strong> the refresh token at Identity and delete <code>hs.bff<\/code>."}, {"e": ["e5"], "t": "<strong>/connect/logout<\/strong> clears <code>hs.idp<\/code> and returns to <code>/<\/code>."}]}}, "notes": [{"id": "N1", "on": "spa", "st": "confirmed", "t": "Auth screens are SPA pages", "b": "Storefront pages on a shared <code>AuthLayout<\/code> in <code>packages/ui<\/code>, not Identity-hosted Razor pages.", "r": "D-1"}, {"id": "N2", "on": "gw", "st": "confirmed", "t": "CSRF header on writes", "b": "Non-GET <code>/v1/*<\/code> without <code>X-HS-CSRF: 1<\/code> → 403.", "r": "D-5, AC-17"}, {"id": "N3", "on": "gw", "st": "confirmed", "t": "Sign-out ends in OIDC end-session", "b": "Otherwise <code>hs.idp<\/code> would sign the user straight back in.", "r": "D-4"}, {"id": "N4", "on": "identity", "st": "confirmed", "t": "Issuer is the public gateway origin", "b": "Keys load from configuration PEM so sessions survive restarts; discovery fetched via MetadataAddress.", "r": "D-7"}, {"id": "N5", "on": "idb", "st": "confirmed", "t": "Argon2id; credential in its own table", "b": "Google-only accounts (FEAT-004) simply have no credential row.", "r": "D-3, D-8"}, {"id": "N6", "on": "bus", "st": "confirmed", "t": "Separate resend event", "b": "Re-publishing <code>UserRegistered<\/code> would re-run account-creation consumers.", "r": "D-6"}, {"id": "N7", "on": "notif", "st": "risk", "t": "Token travels in the event", "b": "Never logged, never stored by Notification, outbox rows deleted after 24 h.", "r": "R-6, AC-8"}, {"id": "N8", "on": "mail", "st": "risk", "t": "No email retry until FEAT-032", "b": "A failed first email is not retried; the user recovers with resend.", "r": "§8 known gap"}, {"id": "G1", "st": "decision", "t": "Architecture edits owed", "b": "Add <code>VerificationEmailRequested<\/code> to the event catalog and amend ADR-0008's hosted-pages bullet.", "r": "§8 escalations"}, {"id": "G2", "st": "consider", "t": "Plan tag for FR-AUTH-015/016", "b": "Tagged Foundations in the RTM but proven here (AC-16); tag them FEAT-001 too.", "r": "§8 plan correction"}, {"id": "G3", "st": "aligned", "t": "Deferred on purpose", "b": "Lockout and real rate limits (FEAT-005), Google sign-in (FEAT-004), service-side JWT library (FEAT-002), seller-centre wiring (FEAT-009).", "r": "§8 deferred"}], "specs": {"gw": {"host": "Gateway (.NET, YARP)", "trigger": "Browser", "ops": ["BffEndpoints, TokenRefresh", "RoutePolicy, CsrfHeaderMiddleware", "Claims relay replaces dev-user stub"], "data": "hs.bff cookie (7 d absolute)", "nfr": "NFR-SEC-004, NFR-SEC-005"}, "identity": {"host": "Identity (rich .NET)", "trigger": "Gateway", "ops": ["registerUser, verifyEmail, resendVerificationEmail, signIn", "OpenIddict server, one client hivespace-gateway", "Replaces GET /v1/identity/ping"], "data": "identitydb", "nfr": "NFR-SEC-002, NFR-SEC-003"}, "notif": {"host": "Notification (lean Python)", "trigger": "Service Bus", "ops": ["Dispatcher by eventType", "contacts + emails features", "providers/smtp.py"], "data": "notificationdb", "nfr": "NFR-REL-005"}, "spa": {"host": "web/apps/storefront", "trigger": "User", "ops": ["SignInPage, RegisterPage, VerifyEmailPage", "Session store from /bff/user"], "data": "None persisted", "nfr": "FR-LOC-004"}}, "sections": [{"type": "table", "title": "Contracts", "columns": ["Endpoint", "Auth", "Success", "Errors"], "rows": [["POST /v1/users", "anonymous", "201 {userId}", "400 common.validation_failed · 409 identity.email_in_use"], ["POST /v1/users/verify-email", "anonymous", "204", "400 token_invalid · 400 token_expired · 409 email_already_verified"], ["POST /v1/users/verification-email", "anonymous", "202 always", "400 malformed email only"], ["POST /v1/users/sign-in", "anonymous", "200 {redirectUrl} + hs.idp", "401 identity.invalid_credentials"], ["GET /bff/user", "cookie", "200 {isAuthenticated, …}", "never 401 (D-9)"], ["POST /bff/logout", "cookie, same-origin", "302 → /connect/logout → /", "—"]]}, {"type": "notes", "title": "Decisions and open items"}, {"type": "catalogue", "title": "Components"}]};
+
+(function () {
+var M = MODEL, meta = M.meta || {}, NS = 'http://www.w3.org/2000/svg';
+var svg = document.getElementById('dia');
+var KINDS = {
+  frontend: { tone: '--frontend-stroke', label: 'Frontend / UI' },
+  backend: { tone: '--backend-stroke', label: 'App / processing' },
+  service: { tone: '--service-stroke', label: 'Service / function' },
+  database: { tone: '--database-stroke', label: 'Data store' },
+  security: { tone: '--security-stroke', label: 'Edge / identity / gateway' },
+  cloud: { tone: '--cloud-stroke', label: 'Platform / ops' },
+  external: { tone: '--external-stroke', label: 'User / external' },
+  ghost: { tone: '--ghost-stroke', label: 'Consideration' }
+};
+Object.keys(meta.kindLabels || {}).forEach(function (k) { if (KINDS[k]) KINDS[k].label = meta.kindLabels[k]; });
+var CLASSES = Object.assign({ public: ['Public', '--backend-stroke'], internal: ['Internal', '--external-stroke'], conf: ['Confidential', '--cloud-stroke'], pii: ['Confidential · PII', '--service-stroke'], restr: ['Restricted', '--security-stroke'] }, meta.classes || {});
+var STATUS = { confirmed: 'Confirmed', aligned: 'Aligned', consider: 'Consider', decision: 'Decision', risk: 'Risk' };
+var SIGILS = {
+  frontend: '<rect x="2" y="3" width="12" height="10" rx="2"/><path d="M2 6.5h12"/>',
+  backend: '<path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>',
+  service: '<path d="M8 2v3M8 11v3M2 8h3M11 8h3"/><circle cx="8" cy="8" r="2.5"/>',
+  database: '<ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>',
+  security: '<path d="M8 1.5 13 3.5v4c0 3-2.2 5.3-5 6.5-2.8-1.2-5-3.5-5-6.5v-4z"/>',
+  cloud: '<path d="M4.5 12h7a3 3 0 0 0 .4-6 4 4 0 0 0-7.7 1A2.5 2.5 0 0 0 4.5 12z"/>',
+  external: '<rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/><path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>',
+  ghost: '<circle cx="8" cy="8" r="5.5"/><path d="M8 5.5v3M8 10.5v.1"/>'
+};
+var nodes = M.nodes || [], edges = M.edges || [], notes = M.notes || [], flows = M.flows || {}, specs = M.specs || {};
+var byId = {}, edgeById = {};
+nodes.forEach(function (n) { byId[n.id] = n; });
+function el(tag, a, p) { var e = document.createElementNS(NS, tag); for (var k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function tone(kind) { return 'var(' + (KINDS[kind] || KINDS.external).tone + ')'; }
+// [[pii]] style tokens become classification pills anywhere text is rendered
+function rich(s) {
+  return String(s == null ? '' : s).replace(/\[\[([a-z0-9_-]+)\]\]/gi, function (m, k) {
+    var c = CLASSES[k]; if (!c) return m;
+    return '<span class="cls" style="color:var(' + c[1] + ');background:color-mix(in srgb,var(' + c[1] + ') 15%,transparent)">' + c[0] + '</span>';
+  });
+}
+function chip(st) { return '<span class="note-chip ' + st + '">' + (STATUS[st] || st) + '</span>'; }
+function list(v) { return Array.isArray(v) ? '<ul>' + v.map(function (x) { return '<li>' + rich(x) + '</li>'; }).join('') + '</ul>' : rich(v); }
+
+// ---- Header ----
+document.title = meta.title || 'Flow diagram';
+document.getElementById('title').textContent = meta.title || 'Flow diagram';
+document.getElementById('subtitle').innerHTML = rich(meta.subtitle || '');
+document.getElementById('dia-title').textContent = meta.title || '';
+document.getElementById('dia-desc').textContent = meta.description || '';
+document.getElementById('footnote').innerHTML = rich(meta.footnote || '');
+var vb = meta.viewBox || [1280, 820];
+svg.setAttribute('viewBox', '0 0 ' + vb[0] + ' ' + vb[1]);
+svg.style.minWidth = (meta.minWidth || Math.min(vb[0], 940)) + 'px';
+// Big-picture diagrams: let the page use the full window instead of the 1360px column.
+if (meta.wide) document.body.classList.add('wide');
+
+// ---- Frames (regions, lanes, sub-groups) ----
+var gF = document.getElementById('frames');
+(M.frames || []).forEach(function (f) {
+  var style = f.style || 'frame';
+  el('rect', { x: f.x, y: f.y, width: f.w, height: f.h, rx: style === 'region' ? 12 : 10, 'class': style === 'region' ? 'c-region' : 'c-frame' + (style === 'dashed' ? ' dashed' : ''), 'stroke-width': 1, style: f.tone ? 'stroke:color-mix(in srgb,' + tone(f.tone) + ' 55%,var(--lane-stroke))' : '' }, gF);
+  if (!f.label) return;
+  var ly = f.labelPos === 'bottom' ? f.y + f.h - 8 : f.y + 16, lx = f.labelX != null ? f.labelX : f.x + 10;
+  if (style === 'region') {
+    var w = f.label.length * 5.4 + 16;
+    el('rect', { x: lx - 2, y: ly - 12, width: w, height: 17, rx: 5, 'class': 'c-mask', style: 'stroke:color-mix(in srgb,var(--cloud-stroke) 38%,var(--mask));stroke-width:.8' }, gF);
+    el('text', { x: lx + 6, y: ly + 1, 'class': 't-cloud', 'font-size': 9, 'font-weight': 600 }, gF).textContent = f.label;
+  } else {
+    el('text', { x: lx, y: ly, 'class': 't-lane', 'font-size': 8.5, 'font-weight': 600 }, gF).textContent = f.label;
+  }
+});
+
+// ---- Edges (paths are pre-routed by build_diagram.py) ----
+var gE = document.getElementById('edges');
+edges.forEach(function (ed) {
+  var s = ed.s || 'default';
+  var g = el('g', { 'class': 'edge s-' + s + (ed.ghost ? ' ghost' : '') + (ed.data ? ' has-data' : ''), 'data-id': ed.id }, gE);
+  if (ed.data) { g.setAttribute('tabindex', 0); g.setAttribute('role', 'button'); }
+  el('title', {}, g).textContent = (byId[ed.from] || {}).label + ' → ' + (byId[ed.to] || {}).label + (ed.data ? ' · click for data' : '');
+  el('path', { d: ed.d, 'class': 'halo' }, g);
+  var marker = { default: 'default', dashed: 'default', emphasis: 'emphasis', security: 'security', ghost: 'ghost' }[s] || 'default';
+  el('path', { d: ed.d, 'class': 'line', 'marker-end': ed.noArrow ? '' : 'url(#ah-' + marker + ')' }, g);
+  if (ed.label) {
+    var w = ed.label.length * 4.9 + 10;
+    el('rect', { x: ed.lx - w / 2, y: ed.ly - 7, width: w, height: 13, rx: 6, 'class': 'lbl-bg' }, g);
+    el('text', { x: ed.lx, y: ed.ly + 3, 'text-anchor': 'middle', 'class': 'lbl' }, g).textContent = ed.label;
+  }
+  el('path', { d: ed.d, 'class': 'hit' }, g);
+  if (ed.data) {
+    g.addEventListener('click', function (ev) { ev.stopPropagation(); showEdge(ed.id); });
+    g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showEdge(ed.id); } });
+  }
+  ed.g = g; edgeById[ed.id] = ed;
+});
+
+// ---- Nodes ----
+var gN = document.getElementById('nodes');
+nodes.forEach(function (n) {
+  var kind = n.ghost ? 'ghost' : (n.kind || 'external'), t = tone(kind);
+  var g = el('g', { 'class': 'node k-' + kind + (n.ghost ? ' ghost' : ''), 'data-id': n.id, tabindex: 0, role: 'button', 'aria-label': n.label + (n.sub ? ', ' + n.sub : '') }, gN);
+  el('title', {}, g).textContent = n.label + (n.sub ? ' · ' + n.sub : '');
+  el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 8, 'class': 'c-mask' }, g);
+  el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 8, 'class': 'body', style: n.ghost ? 'fill:color-mix(in srgb,' + t + ' 6%,var(--mask));stroke:' + t : 'fill:color-mix(in srgb,' + t + ' 13%,var(--mask));stroke:color-mix(in srgb,' + t + ' 72%,var(--mask))' }, g);
+  if (n.h >= 40) el('g', { 'class': 'sigil', stroke: t, transform: 'translate(' + (n.x + 6) + ' ' + (n.y + 6) + ') scale(0.6875)' }, g).innerHTML = SIGILS[n.sigil || kind] || SIGILS.external;
+  var cx = n.x + n.w / 2, cy = n.y + n.h / 2, off = n.sub2 ? -8 : 0, small = n.h < 40;
+  el('text', { x: cx, y: cy - (n.sub ? 2 : -4) + off, 'text-anchor': 'middle', 'class': 't-primary', 'font-size': small ? 10 : 11, 'font-weight': 600 }, g).textContent = n.label;
+  if (n.sub) el('text', { x: cx, y: cy + (small ? 10 : 13) + off, 'text-anchor': 'middle', 'class': 't-muted', 'font-size': small ? 8 : 9 }, g).textContent = n.sub;
+  if (n.sub2) el('text', { x: cx, y: cy + 30 + off, 'text-anchor': 'middle', 'class': 't-muted', 'font-size': 7.5 }, g).textContent = n.sub2;
+  n.g = g;
+  var act = function () { if (n.flow && flows[n.flow]) showFlow(n.flow); else selectNode(n.id); };
+  g.addEventListener('click', function (ev) { ev.stopPropagation(); act(); });
+  g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); act(); } });
+});
+
+// ---- Comment pins (stacked leftwards along the node's top edge) ----
+var gP = document.getElementById('pins'), pinCount = {};
+notes.forEach(function (nt) {
+  var n = byId[nt.on]; if (!n) return;
+  var k = pinCount[nt.on] = (pinCount[nt.on] || 0) + 1;
+  var g = el('g', { 'class': 'pin ' + (nt.st || 'consider') + (n.ghost ? ' ghost' : ''), tabindex: 0, role: 'button', 'aria-label': 'Note ' + nt.id + ': ' + nt.t, transform: 'translate(' + (n.x + n.w - 6 - (k - 1) * 22) + ' ' + n.y + ')' }, gP);
+  el('title', {}, g).textContent = nt.id + ' · ' + nt.t;
+  el('circle', { r: 9 }, g);
+  el('text', { y: 3, 'text-anchor': 'middle' }, g).textContent = nt.id;
+  g.addEventListener('click', function (ev) { ev.stopPropagation(); showNote(nt.id); });
+  g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showNote(nt.id); } });
+});
+
+// ---- Legend (only what the diagram uses; legend items are not .node/.edge so they never dim) ----
+var legend = document.getElementById('legend');
+var lgY = meta.legendY != null ? meta.legendY : vb[1] - 62;
+legend.setAttribute('transform', 'translate(' + (meta.legendX || 30) + ' ' + lgY + ')');
+el('text', { x: 0, y: 0, 'class': 't-primary', 'font-size': 12, 'font-weight': 650 }, legend).textContent = 'Legend';
+var usedKinds = [], usedStyles = [], usedStatus = [];
+nodes.forEach(function (n) { var k = n.ghost ? 'ghost' : (n.kind || 'external'); if (usedKinds.indexOf(k) < 0) usedKinds.push(k); });
+edges.forEach(function (e) { var s = e.s || 'default'; if (usedStyles.indexOf(s) < 0) usedStyles.push(s); });
+notes.forEach(function (n) { var s = n.st || 'consider'; if (n.on && usedStatus.indexOf(s) < 0) usedStatus.push(s); });
+var lx = 0;
+Object.keys(KINDS).filter(function (k) { return usedKinds.indexOf(k) >= 0; }).forEach(function (k) {
+  var g = el('g', { 'class': 'lg', transform: 'translate(' + lx + ' 14)' }, legend), t = tone(k);
+  el('rect', { x: 0, y: 0, width: 14, height: 14, rx: 3, 'class': 'body', style: 'fill:color-mix(in srgb,' + t + ' 13%,var(--mask));stroke:' + t + (k === 'ghost' ? ';stroke-dasharray:3 2' : '') }, g);
+  el('text', { x: 20, y: 11, 'class': 't-muted', 'font-size': 10, 'font-weight': 500 }, g).textContent = KINDS[k].label;
+  lx += 30 + KINDS[k].label.length * 6.2;
+});
+var STYLE_LBL = Object.assign({ emphasis: 'Primary flow', default: 'Call / read-write', security: 'Auth / secrets', dashed: 'Async / deploy', ghost: 'Consideration' }, meta.edgeLabels || {});
+lx = 0;
+['emphasis', 'default', 'security', 'dashed', 'ghost'].filter(function (s) { return usedStyles.indexOf(s) >= 0; }).forEach(function (s) {
+  var g = el('g', { 'class': 'lg s-' + s, transform: 'translate(' + lx + ' 44)' }, legend);
+  el('path', { d: 'M0 0 L26 0', 'class': 'line', 'marker-end': 'url(#ah-' + (s === 'dashed' ? 'default' : s) + ')' }, g);
+  el('text', { x: 34, y: 3.5, 'class': 't-muted', 'font-size': 10 }, g).textContent = STYLE_LBL[s];
+  lx += 44 + STYLE_LBL[s].length * 6.2;
+});
+usedStatus.forEach(function (st) {
+  var g = el('g', { 'class': 'pin ' + st, transform: 'translate(' + (lx + 9) + ' 44)', style: 'cursor:default' }, legend);
+  el('circle', { r: 7 }, g);
+  el('text', { x: 14, y: 3.5, 'font-size': 10, style: 'fill:var(--text-muted);font-weight:400' }, g).textContent = STATUS[st] + ' note';
+  lx += 36 + (STATUS[st].length + 5) * 6.2;
+});
+
+// ---- Toolbar ----
+var tb = document.getElementById('toolbar');
+function tbtn(html, attrs) { var b = document.createElement('button'); b.type = 'button'; b.innerHTML = html; for (var k in attrs) b.setAttribute(k, attrs[k]); tb.appendChild(b); return b; }
+(meta.links || []).forEach(function (l) { var a = document.createElement('a'); a.href = l.href; a.textContent = l.label; tb.appendChild(a); });
+tbtn('All', { 'data-flow': 'all', 'aria-pressed': 'true' });
+Object.keys(flows).forEach(function (k) {
+  if (k === 'all') return;
+  var c = flows[k].color ? '<span class="chip-dot" style="background:' + tone(flows[k].color) + '"></span>' : '';
+  tbtn(c + (flows[k].button || flows[k].title), { 'data-flow': k, 'aria-pressed': 'false' });
+});
+var sep = document.createElement('span'); sep.className = 'sep'; tb.appendChild(sep);
+var hasPins = notes.some(function (n) { return n.on && byId[n.on]; });
+var hasGhost = nodes.some(function (n) { return n.ghost; }) || edges.some(function (e) { return e.ghost; });
+var btnPins = hasPins ? tbtn('Comments', { id: 'btn-pins', 'aria-pressed': 'true' }) : null;
+var btnGhost = hasGhost ? tbtn('Considerations', { id: 'btn-ghost', 'aria-pressed': 'false' }) : null;
+var btnTheme = tbtn('Theme', { id: 'btn-theme', title: 'Toggle theme (T)' });
+
+// ---- Side panel & interaction ----
+var side = document.getElementById('side'), badges = document.getElementById('badges'), current = 'all';
+var allFlow = Object.assign({ title: meta.title || 'Overview', intro: 'Pick a flow above, or click any component, arrow or numbered pin.', steps: [] }, flows.all || {});
+function flowOf(k) { return k === 'all' ? allFlow : flows[k]; }
+function clearHighlight() { svg.classList.remove('dim'); nodes.forEach(function (n) { n.g.classList.remove('on', 'selected'); }); edges.forEach(function (e) { e.g.classList.remove('on'); }); badges.innerHTML = ''; }
+function highlight(ids, extra) {
+  svg.classList.add('dim');
+  ids.forEach(function (id) { var e = edgeById[id]; if (!e) return; e.g.classList.add('on'); if (byId[e.from]) byId[e.from].g.classList.add('on'); if (byId[e.to]) byId[e.to].g.classList.add('on'); });
+  (extra || []).forEach(function (id) { if (byId[id]) byId[id].g.classList.add('on'); });
+}
+function badge(num, edgeId) {
+  // Badges sit just before the arrowhead: steps often share a trunk start (fan-outs, buses).
+  var e = edgeById[edgeId]; if (!e) return;
+  var path = e.g.querySelector('path.line'), p = path.getPointAtLength(Math.max(0, path.getTotalLength() - 16));
+  var g = el('g', { 'class': 'step-badge', transform: 'translate(' + p.x + ' ' + p.y + ')' }, badges);
+  el('circle', { r: 8 }, g);
+  el('text', { y: 3.2, 'text-anchor': 'middle' }, g).textContent = num;
+}
+function setGhost(on) { if (!btnGhost) return; svg.classList.toggle('show-ghost', on); btnGhost.setAttribute('aria-pressed', String(on)); }
+function specHtml(id) {
+  var s = specs[id]; if (!s) return '';
+  var rows = meta.specRows || [['host', 'Hosting'], ['trigger', 'Triggered by'], ['ops', 'Does'], ['data', 'Data'], ['nfr', 'NFR / notes']];
+  var extra = Object.keys(s).filter(function (k) { return !rows.some(function (r) { return r[0] === k; }); }).map(function (k) { return [k, k.charAt(0).toUpperCase() + k.slice(1)]; });
+  return '<dl class="spec">' + rows.concat(extra).map(function (r) { var v = s[r[0]]; return v ? '<dt>' + r[1] + '</dt><dd>' + list(v) + '</dd>' : ''; }).join('') + '</dl>';
+}
+function dataHtml(d) {
+  var rows = [['Payload', d.p], ['Format', d.f], ['Class', d.c ? rich('[[' + d.c + ']]') : ''], ['Security', d.s], ['When', d.w]].filter(function (r) { return r[1]; });
+  return '<div class="kv">' + rows.map(function (r) { return '<span>' + r[0] + '</span><span>' + rich(r[1]) + '</span>'; }).join('') + '</div>';
+}
+function showFlow(key) {
+  current = key;
+  tb.querySelectorAll('[data-flow]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.flow === key)); });
+  clearHighlight();
+  var f = flowOf(key), steps = f.steps || [];
+  if (steps.some(function (s) { return s.e.some(function (id) { return edgeById[id] && edgeById[id].ghost; }); })) setGhost(true);
+  var html = '<div class="eyebrow">' + (key === 'all' ? 'Overview' : (f.eyebrow || 'Flow')) + '</div><h2>' + rich(f.title) + '</h2>' + (f.intro ? '<p>' + rich(f.intro) + '</p>' : '');
+  if (f.tags) html += '<p>' + f.tags.map(function (t) { return '<span class="tagp">' + rich(t) + '</span>'; }).join('') + '</p>';
+  if (steps.length) {
+    var ids = [];
+    steps.forEach(function (s, i) { ids = ids.concat(s.e); badge(i + 1, s.e[0]); });
+    highlight(ids, f.nodes);
+    html += '<ol>' + steps.map(function (s) { return '<li>' + rich(s.t) + '</li>'; }).join('') + '</ol>';
+  } else if (meta.overview) {
+    html += '<div class="kv">' + meta.overview.map(function (r) { return '<span>' + rich(r[0]) + '</span><span>' + rich(r[1]) + '</span>'; }).join('') + '</div>';
+  }
+  side.innerHTML = html + '<p class="hint">Click a component, an arrow or a numbered pin · T toggles the theme · Esc resets</p>';
+}
+function selectNode(id) {
+  var n = byId[id]; clearHighlight();
+  tb.querySelectorAll('[data-flow]').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+  var vis = function (e) { return !e.ghost || svg.classList.contains('show-ghost'); };
+  var ins = edges.filter(function (e) { return e.to === id && vis(e); }), outs = edges.filter(function (e) { return e.from === id && vis(e); });
+  highlight(ins.concat(outs).map(function (e) { return e.id; }), [id]);
+  n.g.classList.add('selected');
+  function rel(e, other, arrow) { var o = byId[other] || { label: other }; return '<button type="button" data-edge="' + e.id + '">' + arrow + ' <span class="tag">' + o.label + '</span>' + (e.data && e.data.p ? ' · ' + rich(e.data.p) : (e.label ? ' · ' + e.label : '')) + '</button>'; }
+  var pins = notes.filter(function (nt) { return nt.on === id; });
+  side.innerHTML = '<div class="eyebrow">' + KINDS[n.ghost ? 'ghost' : (n.kind || 'external')].label + '</div><h2>' + n.label + '</h2>' + (n.desc ? '<p>' + rich(n.desc) + '</p>' : '') + specHtml(id) +
+    (ins.length + outs.length ? '<div class="links">' + ins.map(function (e) { return rel(e, e.from, '←'); }).join('') + outs.map(function (e) { return rel(e, e.to, '→'); }).join('') + '</div>' : '') +
+    pins.map(function (p) { return '<div class="note-box">' + chip(p.st || 'consider') + ' <b>' + p.id + ' · ' + rich(p.t) + '</b><div style="margin-top:.3rem">' + rich(p.b) + '</div></div>'; }).join('') +
+    (specs[id] ? '<p class="hint"><button class="linkish" type="button" data-goto="svc-' + id + '">Open in catalogue</button> · Esc returns</p>' : '<p class="hint">Esc returns</p>');
+}
+function showEdge(id) {
+  var e = edgeById[id]; clearHighlight(); highlight([id]);
+  side.innerHTML = '<div class="eyebrow">Connection · data contract</div><h2>' + (byId[e.from] || {}).label + ' → ' + (byId[e.to] || {}).label + '</h2>' + dataHtml(e.data || {}) + '<p class="hint">Esc returns to ' + rich(flowOf(current).title) + '</p>';
+}
+function showNote(nid) {
+  var nt = notes.filter(function (x) { return x.id === nid; })[0]; clearHighlight();
+  if (nt.on && byId[nt.on]) { highlight([], [nt.on]); byId[nt.on].g.classList.add('selected'); }
+  side.innerHTML = '<div class="eyebrow">Note ' + nt.id + '</div><h2>' + rich(nt.t) + '</h2><p>' + chip(nt.st || 'consider') + (nt.on && byId[nt.on] ? ' <span class="refs">on ' + byId[nt.on].label + '</span>' : '') + '</p><p>' + rich(nt.b) + '</p>' + (nt.r ? '<p class="refs">Refs: ' + rich(nt.r) + '</p>' : '') +
+    '<p class="hint"><button class="linkish" type="button" data-goto="note-' + nt.id + '">Show in notes list</button> · Esc returns</p>';
+}
+side.addEventListener('click', function (ev) {
+  var eb = ev.target.closest('[data-edge]'); if (eb) { if (edgeById[eb.dataset.edge].data) showEdge(eb.dataset.edge); return; }
+  var t = ev.target.closest('[data-goto]'); if (!t) return;
+  var target = document.getElementById(t.dataset.goto); if (!target) return;
+  target.hidden = false; target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  target.classList.add('flash'); setTimeout(function () { target.classList.remove('flash'); }, 1600);
+});
+tb.querySelectorAll('[data-flow]').forEach(function (b) { b.addEventListener('click', function () { showFlow(b.dataset.flow); }); });
+svg.addEventListener('click', function () { showFlow(current); });
+if (btnGhost) btnGhost.addEventListener('click', function () { setGhost(!svg.classList.contains('show-ghost')); });
+if (btnPins) btnPins.addEventListener('click', function () { var hide = !svg.classList.contains('hide-pins'); svg.classList.toggle('hide-pins', hide); btnPins.setAttribute('aria-pressed', String(!hide)); });
+function toggleTheme() { var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); try { localStorage.setItem('flow-diagram-theme', t); } catch (_) {} }
+btnTheme.addEventListener('click', toggleTheme);
+document.addEventListener('keydown', function (ev) {
+  if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA') return;
+  if (ev.key === 't' || ev.key === 'T') toggleTheme();
+  if (ev.key === 'Escape') showFlow(current);
+});
+
+// ---- Sections below the diagram ----
+var secEl = document.getElementById('sections');
+var sections = M.sections || [notes.length ? { type: 'notes' } : null, Object.keys(specs).length ? { type: 'catalogue' } : null].filter(Boolean);
+function head(s, dflt) { return '<h2 class="section-title">' + rich(s.title || dflt) + '</h2>' + (s.lead ? '<p class="section-lead">' + rich(s.lead) + '</p>' : ''); }
+sections.forEach(function (s) {
+  var wrap = document.createElement('div'), html = '';
+  if (s.type === 'notes') {
+    html = head(s, 'Design notes') + '<div class="toolbar" style="margin-bottom:.75rem" data-note-filter></div><div class="grid-cards" data-notes>' + notes.map(function (nt) {
+      return '<article class="card" id="note-' + nt.id + '" data-st="' + (nt.st || 'consider') + '"><header><h3><span>' + nt.id + '</span>' + chip(nt.st || 'consider') + '<span>' + rich(nt.t) + '</span></h3></header><div class="note-body">' + rich(nt.b) + '</div><div class="refs">' +
+        (nt.on && byId[nt.on] ? 'On: ' + byId[nt.on].label : 'Cross-cutting') + (nt.r ? ' · Refs: ' + rich(nt.r) : '') + '</div></article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'catalogue') {
+    html = head(s, 'Component catalogue') + '<div class="grid-cards">' + nodes.filter(function (n) { return specs[n.id]; }).map(function (n) {
+      var k = n.ghost ? 'ghost' : (n.kind || 'external'), pins = notes.filter(function (nt) { return nt.on === n.id; });
+      return '<article class="card lefty" id="svc-' + n.id + '" style="--tone:' + tone(k) + '"><header><h3>' + n.label + '</h3><span class="kind">' + KINDS[k].label + '</span></header>' + specHtml(n.id) +
+        (pins.length ? '<div class="card-notes">' + pins.map(function (p) { return '<a class="note-chip ' + (p.st || 'consider') + '" href="#note-' + p.id + '" style="text-decoration:none">' + p.id + ' · ' + p.t + '</a>'; }).join('') + '</div>' : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'personas') {
+    html = head(s, 'Who does what') + '<div class="grid-cards">' + (s.items || []).map(function (p) {
+      return '<article class="card toned" style="--tone:' + tone(p.tone || 'external') + '"><header><div><h3>' + rich(p.title) + '</h3>' + (p.tags ? '<div style="margin-top:.35rem">' + p.tags.map(function (t) { return '<span class="tagp">' + rich(t) + '</span>'; }).join('') + '</div>' : '') + '</div></header>' +
+        '<dl class="spec">' + (p.rows || []).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + list(r[1]) + '</dd>'; }).join('') + '</dl>' +
+        (p.flow && flows[p.flow] ? '<div class="toolbar" style="margin-top:.75rem"><button type="button" data-show="' + p.flow + '">Show on diagram</button></div>' : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'table') {
+    var cell = function (v) { v = String(v); if (s.matrix) { if (v === '✓' || v.indexOf('✓') === 0) return '<span class="y">' + v + '</span>'; if (v === '–' || v === '-' || v === 'n/a') return '<span class="n">' + v + '</span>'; return '<span class="p">' + rich(v) + '</span>'; } return rich(v); };
+    html = head(s, '') + '<div class="tbl"><table class="grid' + (s.matrix ? ' matrix' : '') + '"><thead><tr>' + (s.columns || []).map(function (c) { return '<th>' + rich(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      (s.rows || []).map(function (r) { return '<tr>' + r.map(function (c, i) { return '<td>' + (i === 0 ? rich(c) : cell(c)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
+  } else if (s.type === 'cards') {
+    html = head(s, '') + '<div class="grid-cards narrow">' + (s.items || []).map(function (c) {
+      return '<article class="card" style="--tone:' + tone(c.tone || 'external') + '"><header><h3><span class="card-dot"></span>' + rich(c.title) + '</h3></header>' + (c.bullets ? '<ul class="b">' + c.bullets.map(function (b) { return '<li>' + rich(b) + '</li>'; }).join('') + '</ul>' : '') + (c.html ? rich(c.html) : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'html') {
+    html = head(s, '') + rich(s.html || '');
+  }
+  wrap.innerHTML = html; secEl.appendChild(wrap);
+});
+secEl.addEventListener('click', function (ev) { var b = ev.target.closest('[data-show]'); if (!b) return; showFlow(b.dataset.show); document.getElementById('diagram').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+var nf = secEl.querySelector('[data-note-filter]'), nl = secEl.querySelector('[data-notes]');
+if (nf) {
+  var present = ['decision', 'risk', 'consider', 'confirmed', 'aligned'].filter(function (st) { return notes.some(function (n) { return (n.st || 'consider') === st; }); });
+  [['all', 'All']].concat(present.map(function (st) { return [st, STATUS[st]]; })).forEach(function (f, i) {
+    var b = document.createElement('button'); b.type = 'button';
+    b.textContent = f[1] + ' (' + notes.filter(function (n) { return f[0] === 'all' || (n.st || 'consider') === f[0]; }).length + ')';
+    b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      nf.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      nl.querySelectorAll('.card').forEach(function (c) { c.hidden = f[0] !== 'all' && c.dataset.st !== f[0]; });
+    });
+    nf.appendChild(b);
+  });
+}
+
+// ?flow=<key> pre-selects a flow (handy for screenshots and deep links)
+var startFlow = 'all';
+try { var qf = new URLSearchParams(location.search).get('flow'); if (qf && flows[qf]) startFlow = qf; } catch (_) {}
+showFlow(startFlow);
+})();
+</script>
+</body>
+</html>

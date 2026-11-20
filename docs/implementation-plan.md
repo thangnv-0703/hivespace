@@ -290,7 +290,7 @@ Stand these up with the skeleton or in the slice that first needs them. Requirem
 
 - [ ] **Repo and templates**: layout per repo-structure; Copier templates for rich/lean .NET, Go, Python (ADR-0020); Conventional Commits and PR checklist (dev-standards §4).
 - [ ] **Local stack**: Aspire AppHost with Postgres per service, MongoDB, Service Bus emulator, Azurite, Mailpit; migrations run on start (NFR-PORT-001, NFR-REL-007, ADR-0015).
-- [ ] **Contracts**: OpenAPI per service with a generated web client; `contracts/proto/` with `buf` lint and breaking checks; event JSON schemas; shared `.feature` files run by Reqnroll, godog and pytest-bdd (dev-standards §6, §9.1).
+- [ ] **Contracts**: OpenAPI per service with a generated web client; `contracts/proto/` with `buf` lint and breaking checks; event JSON schemas; shared `.feature` files run by cucumber-js (ADR-0025) (dev-standards §6, §9.1).
 - [ ] **Messaging**: `IEventBus`, event envelope, outbox relay and inbox dedupe in each stack (ADR-0002, NFR-REL-005, EIR-COM-003).
 - [ ] **Gateway**: single origin, routing, BFF cookie, rate-limit middleware, correlation ID (EIR-COM-001, FR-AUTH-015, FR-AUTH-016).
 - [ ] **Authorization**: JWT validation and ownership checks in every service; the shared cross-user authorization test suite, extended by each slice (FR-ROLE-004, FR-ROLE-005, NFR-SEC-006).

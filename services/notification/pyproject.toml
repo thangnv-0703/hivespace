@@ -12,6 +12,8 @@ dependencies = [
     "alembic>=1.20,<2",
     "opentelemetry-instrumentation-fastapi>=0.66b0",
     "hivespace-common",
+    "aiosmtplib>=5.1.3",
+    "jinja2>=3.1.6",
 ]
 
 [dependency-groups]
@@ -23,6 +25,7 @@ dev = [
     "ruff>=0.17",
     "mypy>=2.4",
     "import-linter>=2.16",
+    "testcontainers[postgres]>=4.15.0",
 ]
 
 [tool.uv.sources]

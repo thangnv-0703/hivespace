@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in on mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="position: relative; box-sizing: border-box; width: 100%; min-height: 844px; padding: 72px 16px 32px; background: #ffffff">
+  <div style="position: absolute; top: 12px; right: 16px; display: flex; gap: 8px">
+    <button type="button" aria-label="Language: English" style="display: flex; align-items: center; gap: 6px; min-height: 44px; padding: 0 12px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054; font: 500 14px 'Outfit','Noto Sans',sans-serif">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>EN
+    </button>
+    <button type="button" aria-label="Switch to dark theme" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    </button>
+  </div>
+  <main>
+    <a href="#" style="display: inline-flex; align-items: center; gap: 8px; margin-bottom: 24px; text-decoration: none; color: #101828; font: 600 20px 'Outfit',sans-serif">
+      <img src="/_blob/3fa3d29dce6541dc0f2efd6f6bef232f" alt="HiveSpace" style="height: 28px; width: auto; display: block">
+    </a>
+    <h1 style="margin: 0 0 8px; font-size: 20px; line-height: 30px; font-weight: 600; color: #101828">Sign in</h1>
+    <p style="margin: 0 0 24px; font-size: 14px; line-height: 20px; color: #667085">Welcome back. Sign in to keep shopping on HiveSpace.</p>
+    <div role="alert" style="display: flex; align-items: flex-start; gap: 12px; margin-bottom: 20px; padding: 16px; border: 1px solid #d92d20; border-radius: 12px; background: #fef3f2">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d92d20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0; margin-top: 2px"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+      <div>
+        <p style="margin: 0; font-size: 14px; line-height: 20px; font-weight: 600; color: #101828">Sign-in failed</p>
+        <p style="margin: 4px 0 0; font-size: 14px; line-height: 20px; color: #344054">The email or password is not correct. Check them and try again.</p>
+      </div>
+    </div>
+    <form style="display: flex; flex-direction: column; gap: 20px">
+      <div>
+        <label for="email" style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Email <span style="color: #b42318" aria-hidden="true">*</span></label>
+        <input id="email" type="email" value="linh.nguyen@example.com" autocomplete="email" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 16px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; font: 400 16px 'Outfit','Noto Sans',sans-serif; color: #101828; box-shadow: 0 1px 2px #1018280d">
+      </div>
+      <div>
+        <label for="password" style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Password <span style="color: #b42318" aria-hidden="true">*</span></label>
+        <div style="position: relative">
+          <input id="password" type="password" value="" placeholder="Enter your password" autocomplete="current-password" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 48px 0 16px; border: 1px solid #465fff; border-radius: 8px; background: #ffffff; font: 400 16px 'Outfit','Noto Sans',sans-serif; color: #101828; box-shadow: 0 0 0 4px #465fff40">
+          <button type="button" aria-label="Show password" aria-pressed="false" style="position: absolute; top: 0; right: 0; display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; background: transparent; color: #667085">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/></svg>
+          </button>
+        </div>
+      </div>
+      <button type="submit" style="width: 100%; height: 48px; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 16px 'Outfit','Noto Sans',sans-serif; box-shadow: 0 1px 2px #1018280d">Sign in</button>
+    </form>
+    <p style="margin: 24px 0 0; font-size: 14px; line-height: 20px; color: #344054">No account yet? <a href="Register.dc.html" style="font-weight: 500; text-decoration: underline">Create an account</a></p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":844}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

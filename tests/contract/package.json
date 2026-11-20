@@ -1,0 +1,19 @@
+{
+  "name": "hivespace-contract-tests",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.15.9",
+  "scripts": {
+    "test": "node --import tsx ./node_modules/@cucumber/cucumber/bin/cucumber.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@cucumber/cucumber": "^12.0.0",
+    "@testcontainers/postgresql": "^11.0.0",
+    "@types/node": "^24.13.4",
+    "@types/pg": "^8.15.0",
+    "pg": "^8.16.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}

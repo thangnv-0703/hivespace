@@ -1,3 +1,5 @@
+using System.Security.Claims;
+using Gateway.Auth;
 using Yarp.ReverseProxy.Transforms;
 using Yarp.ReverseProxy.Transforms.Builder;
 
@@ -14,6 +16,7 @@ internal static class GatewayTransforms
         // Never let a client spoof the identity headers the gateway owns (FR-AUTH-016).
         context.AddRequestHeaderRemove(UserIdHeader);
         context.AddRequestHeaderRemove(UserRolesHeader);
+        context.AddRequestHeaderRemove("Authorization");
 
         context.AddRequestTransform(transform =>
         {
@@ -27,15 +30,38 @@ internal static class GatewayTransforms
                 transform.ProxyRequest.Headers.Add(Extensions.CorrelationHeader, correlationId);
             }
 
-            // STUB: replaced by the BFF cookie session and bearer-token relay in FEAT-001 (ADR-0008).
-            // Development only, so a deployed gateway never asserts an identity it did not verify.
-            if (http.RequestServices.GetRequiredService<IHostEnvironment>().IsDevelopment())
+            // Token relay (FR-AUTH-015): the validated access token goes downstream as a bearer token; the browser never sees it.
+            if (http.Items[SessionAuthenticationHandler.AccessTokenItem] is string accessToken && http.User.Identity?.IsAuthenticated == true)
             {
-                transform.ProxyRequest.Headers.Add(UserIdHeader, "dev-user");
-                transform.ProxyRequest.Headers.Add(UserRolesHeader, "Buyer");
+                transform.ProxyRequest.Headers.TryAddWithoutValidation("Authorization", "Bearer " + accessToken);
+                transform.ProxyRequest.Headers.TryAddWithoutValidation(UserIdHeader, http.User.FindFirstValue("sub"));
+                transform.ProxyRequest.Headers.TryAddWithoutValidation(
+                    UserRolesHeader,
+                    string.Join(',', http.User.FindAll("role").Select(c => c.Value)));
             }
+
+            // The BFF cookie is for the gateway only; Identity still needs its own hs.idp cookie.
+            StripBffCookie(transform.ProxyRequest);
 
             return ValueTask.CompletedTask;
         });
+    }
+
+    private static void StripBffCookie(HttpRequestMessage request)
+    {
+        if (!request.Headers.TryGetValues("Cookie", out var values))
+        {
+            return;
+        }
+
+        var kept = values
+            .SelectMany(v => v.Split(';', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries))
+            .Where(c => !c.StartsWith("hs.bff", StringComparison.Ordinal))
+            .ToList();
+        request.Headers.Remove("Cookie");
+        if (kept.Count > 0)
+        {
+            request.Headers.TryAddWithoutValidation("Cookie", string.Join("; ", kept));
+        }
     }
 }

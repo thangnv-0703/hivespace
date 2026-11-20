@@ -33,7 +33,7 @@
 | CountDown | Reference timer with per-digit boxes, uses fixed brand classes | Port if flash-sale or OTP countdown is needed; `useOtpTimer`/`useCooldown` cover the logic |
 | Table (`tables/basic-tables/BasicTablesOne`) | A demo table with hard-coded rows and raw colours; no sorting, empty or loading states | Write a real `Table` with the data-view states (design.md §4.4) with the first list screen (product list) |
 | Pages `Maintenance`, `NotFound`, `ServerError` | Use `vue-i18n` and a fixed illustration set | Our `ErrorPage` already covers 404, 500 and maintenance and is now built on `Button` (done). Optional later: reuse the recoloured error SVGs from `assets/images/error` |
-| `AuthLayout`, `FullScreenLayout` | Sign-in screens are not in this phase (FEAT-001); they use the reference's decorative shapes | Port with the first auth screen |
+| `AuthLayout`, `FullScreenLayout` | Sign-in screens are not in this phase (FEAT-001); they use the reference's decorative shapes | Done in FEAT-001 T12 (shared `AuthLayout`, used by sign-in, register and verify); panel art and controls aligned to the mockups afterwards |
 | Composables `useDebounce`, `useCooldown`, `useOtpTimer`, `useFieldValidation`, `useValidationRules`, `useAsyncAction`, `useFormatDate`, `useMoneyInput`, `useMoneyFormatter`, `useNumberInputFormatter` | Useful, but money and date formatting overlap `@hivespace/core` (money, time) and the amount-plus-currency rule in dev-standards §5 | Compare each with `web/packages/core` before porting; keep one implementation |
 
 ## 3. Not suitable (skipped)

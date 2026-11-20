@@ -5,6 +5,9 @@
     "language": "Language",
     "toggleTheme": "Switch light/dark theme",
     "sellerCentre": "Seller centre",
+    "cart": "Cart",
+    "menu": "Open menu",
+    "closeMenu": "Close menu",
     "search": "Search",
     "searchPlaceholder": "Search products, shops..."
   },

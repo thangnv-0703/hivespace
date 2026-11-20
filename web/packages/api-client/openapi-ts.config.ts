@@ -8,4 +8,14 @@ export default defineConfig([
     output: 'src/catalog',
     plugins: ['@hey-api/client-fetch'],
   },
+  {
+    input: '../../../contracts/openapi/identity.yaml',
+    output: 'src/identity',
+    plugins: ['@hey-api/client-fetch'],
+  },
+  {
+    input: '../../../contracts/openapi/gateway.yaml',
+    output: 'src/gateway',
+    plugins: ['@hey-api/client-fetch'],
+  },
 ])

@@ -2,4 +2,8 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+  <!-- contracts/errors is the source of truth for codes, statuses and vi/en messages (FR-LOC-004); embedded so every service ships it. -->
+  <ItemGroup>
+    <EmbeddedResource Include="..\..\..\contracts\errors\*.yaml" LogicalName="errors.%(Filename)%(Extension)" WithCulture="false" />
+  </ItemGroup>
 </Project>

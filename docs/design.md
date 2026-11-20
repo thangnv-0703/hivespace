@@ -351,7 +351,7 @@ This block lives in `web/packages/ui/src/theme.css`. Both apps import it right a
 - **Product grid (STF):** 2 columns below `sm`, 3 at `sm`, 4 at `md`, 5 at `lg`, 6 at `xl`. Gap 12 px, or 16 px from `md`.
 - **STF page shell:**
   - **Sticky header** (`--size-header-stf` 120 px on desktop): a 40 px top bar (seller centre link, language switch, theme toggle, account or sign-in; there is no notification bell, because the SRS excludes an in-app notification centre) and an 80 px row (logo, search field, cart button with count).
-  - **Header below `md`:** collapses to 56 px (logo, search icon that expands to a full-width field, cart, menu button). The top-bar items move into the menu drawer.
+  - **Header below `md`:** collapses to 56 px (logo, search icon that expands to a full-width field, cart, menu button). The top-bar items (seller centre, language, theme, account) move into a menu panel opened by the menu button. The cart is a placeholder icon until the cart slice.
   - **Footer:** links, language switch, copyright.
   - **Cart and checkout:** use a reduced header (logo plus step title, no search) to limit distraction.
 - **SEL page shell:**
@@ -490,11 +490,14 @@ Every list, table and async region defines all four states:
 - **Avatar:** 32, 40 or 64 px, radius full. Fallback shows initials on `bg-brand-100 text-brand-700`.
 - **OrderTimeline:** a vertical stepper. Done steps have a `feedback-success-icon` dot; the current step has an `action-primary-bg` ring; future steps are `border-border-control`. Each step shows a label and a timestamp in Asia/Ho_Chi_Minh (NFR-L10N-002).
 
+- **AuthLayout:** full-screen frame for sign-in, register and verify (SCR-STF-012..014). Two equal columns from `lg`: the form column (`bg-bg-surface`, `max-w-md`, logo link, `h1`, optional subtitle, corner slot top-right for the language and theme controls) and a brand panel that is `bg-brand-950` with `text-on-brand` in both themes, a grid shape at 35 % opacity, the three-hexagon illustration, a heading and body. Below `lg` the panel is hidden. Presentational only (props and slots, no i18n or router). Accepted as E-1 of FEAT-001.
+- **Warning strip (banner):** a single-row full-width strip under a header: `bg-feedback-warning-bg`, `border-b border-feedback-warning-icon`, text `text-feedback-warning-fg`, a `TriangleAlert` icon, a bold underlined action link and a 44 px dismiss button.
+
 ### 4.6 Navigation primitives
 
 - **DropdownMenu:** `bg-bg-surface shadow-lg border border-border-default` at radius xl, `p-1`. Items are 40 px tall at radius lg with `text-sm`, hover `bg-bg-subtle`, and the destructive item in `text-feedback-error-fg`. Keyboard: arrows, Home/End, Esc returns focus.
-- **LanguageSwitcher:** a globe icon plus the current code ("VI" / "EN"); the menu lists "Tiếng Việt" and "English" in their own language. Switching applies immediately (FR-LOC-002).
-- **ThemeToggler:** an icon button (sun/moon) with `aria-label` "Switch to dark theme" or "Switch to light theme". The choice persists in the browser. The first visit follows `prefers-color-scheme`.
+- **LanguageSwitcher:** a globe icon plus the current code ("VI" / "EN"), with no flag or chevron in the trigger. `bordered` (default) is a 44 px `rounded-lg` box with `border-border-default`, used in the auth corner, the mobile menu and SEL; `plain` is borderless and compact, used in the STF top bar. The menu lists "Tiếng Việt" and "English" in their own language. Switching applies immediately (FR-LOC-002).
+- **ThemeToggler:** a 44 px `rounded-lg` bordered square icon button (sun/moon; `compact` is 32 px for the STF top bar) with `aria-label` "Switch to dark theme" or "Switch to light theme". The choice persists in the browser. The first visit follows `prefers-color-scheme`.
 - **SEL sidebar item:** 44 px tall at radius lg, icon 20 px plus a `text-sm font-medium` label. Active: `bg-brand-50 text-brand-600` (dark: `bg-brand-950 text-brand-300`) with `aria-current="page"`. Section group labels are `text-xs uppercase text-text-muted`.
 
 ### 4.7 Commerce components (STF; ProductCard is also used in SEL previews)

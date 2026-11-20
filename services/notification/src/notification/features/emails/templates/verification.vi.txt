@@ -1,0 +1,7 @@
+Xin chào {{ display_name }},
+
+Cảm ơn bạn đã đăng ký HiveSpace. Vui lòng xác minh email của bạn bằng liên kết sau (có hiệu lực trong 24 giờ):
+
+{{ link }}
+
+Nếu bạn không đăng ký, hãy bỏ qua email này.

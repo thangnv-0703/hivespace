@@ -1,5 +1,6 @@
 import { createHiveI18n } from '@hivespace/core'
 import { flushPromises, mount } from '@vue/test-utils'
+import { createPinia } from 'pinia'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
@@ -27,7 +28,7 @@ describe('storefront shell', () => {
     )
     const { router, i18n } = setup()
     await router.push('/')
-    const wrapper = mount(App, { global: { plugins: [router, i18n] } })
+    const wrapper = mount(App, { global: { plugins: [router, i18n, createPinia()] } })
     await flushPromises()
 
     expect(wrapper.get('[data-testid=category]').text()).toBe('Thời trang')
@@ -44,7 +45,7 @@ describe('storefront shell', () => {
     )
     const { router, i18n } = setup('en')
     await router.push('/')
-    const wrapper = mount(App, { global: { plugins: [router, i18n] } })
+    const wrapper = mount(App, { global: { plugins: [router, i18n, createPinia()] } })
     await flushPromises()
 
     expect(wrapper.get('[data-testid=category]').text()).toBe('Fashion')
@@ -54,7 +55,7 @@ describe('storefront shell', () => {
     vi.spyOn(globalThis, 'fetch').mockRejectedValue(new Error('down'))
     const { router, i18n } = setup()
     await router.push('/')
-    const wrapper = mount(App, { global: { plugins: [router, i18n] } })
+    const wrapper = mount(App, { global: { plugins: [router, i18n, createPinia()] } })
     await flushPromises()
 
     expect(wrapper.text()).toContain('Không tải được danh mục.')

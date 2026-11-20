@@ -6,7 +6,7 @@ import Spinner from './Spinner.vue'
 const props = withDefaults(
   defineProps<{
     variant?: 'primary' | 'secondary' | 'primary-outline' | 'ghost' | 'danger'
-    size?: 'sm' | 'md'
+    size?: 'sm' | 'md' | 'lg'
     type?: 'button' | 'submit' | 'reset'
     /** Renders a link that looks like the button (navigation, not an action). */
     href?: string
@@ -41,8 +41,8 @@ const variants = {
   ghost: 'text-text-secondary hover:bg-bg-subtle',
   danger: 'bg-action-danger-bg text-action-danger-fg hover:bg-action-danger-bg-hover',
 }
-const heights = { sm: 'min-h-9 text-sm', md: 'min-h-11 text-sm' }
-const squares = { sm: 'size-9', md: 'size-11' }
+const heights = { sm: 'min-h-9 text-sm', md: 'min-h-11 text-sm', lg: 'min-h-12 text-md' }
+const squares = { sm: 'size-9', md: 'size-11', lg: 'size-12' }
 </script>
 
 <template>
@@ -55,7 +55,7 @@ const squares = { sm: 'size-9', md: 'size-11' }
     :aria-label="iconOnly ? ariaLabel : undefined"
     :class="[
       'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium transition-colors duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus-ring disabled:cursor-not-allowed disabled:opacity-50',
-      iconOnly ? squares[props.size] : [heights[props.size], 'px-4'],
+      iconOnly ? squares[props.size] : [heights[props.size], props.size === 'lg' ? 'px-5' : 'px-4'],
       variants[props.variant],
     ]"
   >

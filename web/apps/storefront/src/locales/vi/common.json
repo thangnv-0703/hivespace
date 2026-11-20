@@ -5,6 +5,9 @@
     "language": "Ngôn ngữ",
     "toggleTheme": "Đổi giao diện sáng/tối",
     "sellerCentre": "Kênh người bán",
+    "cart": "Giỏ hàng",
+    "menu": "Mở menu",
+    "closeMenu": "Đóng menu",
     "search": "Tìm kiếm",
     "searchPlaceholder": "Tìm sản phẩm, cửa hàng..."
   },

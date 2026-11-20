@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Header with unverified banner</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="width: 810px; background: #f9fafb">
+  <header style="background: #ffffff; border-bottom: 1px solid #e4e7ec">
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 40px; padding: 0 24px; border-bottom: 1px solid #e4e7ec; font-size: 14px; color: #344054">
+      <a href="#" style="color: #344054">Seller centre</a>
+      <div style="display: flex; align-items: center; gap: 20px">
+        <span style="display: flex; align-items: center; gap: 6px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>EN
+        </span>
+        <button type="button" style="display: flex; align-items: center; gap: 8px; height: 32px; padding: 0 4px; border: 0; background: transparent; font: 500 14px 'Outfit','Noto Sans',sans-serif; color: #101828">
+          <span style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9999px; background: #dde9ff; color: #2a31d8; font-size: 12px; font-weight: 600" aria-hidden="true">LN</span>Linh Nguyen
+        </button>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 24px; height: 80px; padding: 0 24px">
+      <a href="#" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #101828; font: 600 20px 'Outfit',sans-serif">
+        <img src="/_blob/3fa3d29dce6541dc0f2efd6f6bef232f" alt="HiveSpace" style="height: 28px; width: auto; display: block">
+      </a>
+      <div style="flex: 1 1 0; display: flex; align-items: center; height: 44px; padding: 0 16px; border: 1px solid #667085; border-radius: 8px; font-size: 14px; color: #667085">Search products</div>
+      <span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: #344054" aria-label="Cart">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+      </span>
+    </div>
+  </header>
+  <div role="status" style="display: flex; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid #dc6803; background: #fffaeb; color: #b54708; font-size: 14px; line-height: 20px">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <p style="flex: 1 1 0; margin: 0">Verify your email to place orders. We sent a link to <strong>linh.nguyen@example.com</strong>.</p>
+    <a href="#" style="color: #b54708; font-weight: 600; text-decoration: underline; white-space: nowrap">Resend email</a>
+    <button type="button" aria-label="Dismiss" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; margin: -12px -12px -12px 0; border: 0; background: transparent; color: #b54708">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":810,"height":300}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

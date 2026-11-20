@@ -10,6 +10,6 @@ var go = builder.AddGoServices(infra);
 var python = builder.AddPythonServices(infra);
 var dotnet = builder.AddDotnetServices(infra, go);
 var web = builder.AddWeb();
-builder.AddGateway(dotnet, go, python, web);
+builder.AddGateway(infra, dotnet, go, python, web);
 
 builder.Build().Run();
