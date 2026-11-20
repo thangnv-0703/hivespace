@@ -55,6 +55,10 @@ End-to-end browser tests (Playwright). User journeys are Gherkin in `tests/e2e/f
 
 New service: generate it from `templates/` (see `templates/README.md`); never copy a service by hand.
 
+## Cloud sessions
+
+`scripts/cloud-setup.sh` (run by the `SessionStart` hook in `.claude/settings.json`) installs the .NET SDK, pnpm and uv when Claude Code runs in the cloud, and prints whether Docker is available. Without Docker, Testcontainers integration tests, `tests/contract`, `tests/system`, the AppHost and `tests/e2e` cannot run. Then: run every other check, never mark a task done when its done-when needs one of those, and list them as "pending local run" in the PR. Project skills, including `/feature-implementation FEAT-NNN`, are in `.claude/skills/` (see its `README.md`).
+
 ## Boundary rules (enforced by tooling — do not work around them)
 
 - No service references another service's code or database; data crosses by gRPC or events only.
