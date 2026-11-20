@@ -207,12 +207,12 @@
 | FR-GEN-001 | the operator runs the data generator with a target order count, generate synthet… | Could | Active | P1-4 | — | _TBD_ | FEAT-038 | _TBD_ |
 | FR-GEN-002 | the operator supplies a random seed, generate the same dataset on each run. | Could | Active | P1-4 | — | _TBD_ | FEAT-038 | _TBD_ |
 | FR-GEN-003 | the generator is pointed at the deployed demo environment, then it shall refuse … | Could | Active | P1-4 | — | _TBD_ | FEAT-038 | _TBD_ |
-| FR-PROF-001 | a signed-in user opens their profile, show display name, email, phone, gender, d… | Must | Active | CR-1 | UC-027 | ADR-0011 | FEAT-002 | _TBD_ |
-| FR-PROF-002 | a signed-in user submits changes to display name, phone, gender or date of birth… | Must | Active | CR-1 | UC-027 | _TBD_ | FEAT-002 | _TBD_ |
-| FR-PROF-003 | a profile field is invalid (display name empty or over 80 characters, phone not … | Must | Active | CR-1 | UC-027 | _TBD_ | FEAT-002 | _TBD_ |
-| FR-PROF-004 | show the account email as read-only on the profile. | Must | Active | CR-1 | UC-027 | _TBD_ | FEAT-002 | _TBD_ |
+| FR-PROF-001 | a signed-in user opens their profile, show display name, email, phone, gender, d… | Must | Active | CR-1 | UC-027 | ADR-0011, features/FEAT-002-profile-and-language/technical-design.md, features/FEAT-002-profile-and-language/ui-design.md | FEAT-002 | _TBD_ |
+| FR-PROF-002 | a signed-in user submits changes to display name, phone, gender or date of birth… | Must | Active | CR-1 | UC-027 | features/FEAT-002-profile-and-language/technical-design.md, features/FEAT-002-profile-and-language/ui-design.md | FEAT-002 | _TBD_ |
+| FR-PROF-003 | a profile field is invalid (display name empty or over 80 characters, phone not … | Must | Active | CR-1 | UC-027 | features/FEAT-002-profile-and-language/technical-design.md, features/FEAT-002-profile-and-language/ui-design.md | FEAT-002 | _TBD_ |
+| FR-PROF-004 | show the account email as read-only on the profile. | Must | Active | CR-1 | UC-027 | features/FEAT-002-profile-and-language/technical-design.md, features/FEAT-002-profile-and-language/ui-design.md | FEAT-002 | _TBD_ |
 | FR-PROF-005 | any user views another user's information (for example a review author), show on… | Must | Active | CR-1 | UC-009 | _TBD_ | FEAT-033 | _TBD_ |
-| FR-PROF-006 | a signed-in user selects a preferred language, save it to the profile. | Must | Active | CR-1 | UC-027 | _TBD_ | FEAT-002 | _TBD_ |
+| FR-PROF-006 | a signed-in user selects a preferred language, save it to the profile. | Must | Active | CR-1 | UC-027 | features/FEAT-002-profile-and-language/technical-design.md, features/FEAT-002-profile-and-language/ui-design.md | FEAT-002 | _TBD_ |
 | FR-MEDIA-001 | a signed-in user uploads an avatar image, store it and show it on the user's pro… | Must | Active | CR-1 | UC-027, UC-028 | ADR-0011 | FEAT-035 | _TBD_ |
 | FR-MEDIA-002 | a shop owner uploads a shop logo or shop cover image, store it and show it on th… | Must | Active | CR-1 | UC-004, UC-028 | ADR-0011 | FEAT-036 | _TBD_ |
 | FR-MEDIA-003 | a seller uploads product images, store up to five per product in a seller-chosen… | Must | Active | CR-1 | UC-005, UC-006, UC-028 | ADR-0011 | FEAT-036 | _TBD_ |
@@ -222,7 +222,7 @@
 | FR-MEDIA-007 | the system stores an uploaded image, it shall remove embedded metadata such as l… | Should | Active | CR-1, Inferred | UC-028 | ADR-0011 | FEAT-035 | _TBD_ |
 | FR-MEDIA-008 | image storage is unavailable, then reject the upload, keep the existing image, a… | Must | Active | CR-1 | UC-028 | ADR-0011 | FEAT-035 | _TBD_ |
 | FR-LOC-001 | provide the UI, system messages and emails in Vietnamese (vi) and English (en), … | Must | Active | CR-1 | UC-027 | _TBD_ | Foundations | _TBD_ |
-| FR-LOC-002 | a user selects a language, switch the UI at once and save the choice to the prof… | Must | Active | CR-1 | UC-027 | _TBD_ | FEAT-002 | _TBD_ |
+| FR-LOC-002 | a user selects a language, switch the UI at once and save the choice to the prof… | Must | Active | CR-1 | UC-027 | features/FEAT-002-profile-and-language/technical-design.md, features/FEAT-002-profile-and-language/ui-design.md | FEAT-002 | _TBD_ |
 | FR-LOC-003 | a visitor with no saved language opens the site, use English if the browser pref… | Must | Active | CR-1 | UC-027 | _TBD_ | Foundations | _TBD_ |
 | FR-LOC-004 | the system rejects a request, it shall return a stable error code and a message … | Must | Active | CR-1 | UC-027 | ADR-0019, features/FEAT-001-register-and-sign-in/technical-design.md | Foundations | features/FEAT-001-register-and-sign-in/acceptance-report.md |
 | FR-LOC-005 | the system sends an email, it shall use the recipient's saved language, and for … | Must | Active | CR-1 | UC-001, UC-018 | ADR-0016, features/FEAT-001-register-and-sign-in/technical-design.md | FEAT-001, FEAT-032 | features/FEAT-001-register-and-sign-in/acceptance-report.md (partial) |

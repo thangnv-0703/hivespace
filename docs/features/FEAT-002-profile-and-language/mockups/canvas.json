@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-19T12:00:00Z" },
+  "title": "FEAT-002 Profile Screen",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 1180, "title": "SCR-STF-016 Profile", "expand": "fill" },
+    "ProfileErrors.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 1260, "title": "SCR-STF-016 Validation errors", "expand": "fill" },
+    "ProfileLoading.dc.html": { "x": 0, "y": 1380, "w": 1280, "h": 900, "title": "SCR-STF-016 Loading", "expand": "fill" },
+    "ProfileMobile.dc.html": { "x": 1360, "y": 1380, "w": 390, "h": 1500, "title": "SCR-STF-016 Mobile, save failed", "expand": "fill" },
+    "AccountMenu.dc.html": { "x": 1830, "y": 1380, "w": 810, "h": 360, "title": "Header account menu with Profile" }
+  },
+  "order": [
+    "Main.dc.html",
+    "ProfileErrors.dc.html",
+    "ProfileLoading.dc.html",
+    "ProfileMobile.dc.html",
+    "AccountMenu.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "FEAT-002: profile and preferred language", "kind": "title1", "maxW": 2640 }
+  },
+  "designSystems": []
+}
