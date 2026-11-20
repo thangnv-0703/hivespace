@@ -1,3 +1,11 @@
 extends: ["spectral:oas"]
 rules:
   info-contact: off
+  # dev-standards §6 rule 7: updates use PUT, never PATCH.
+  hs-no-patch:
+    description: Updates use PUT with the full editable representation; PATCH is not used.
+    severity: error
+    given: "$.paths[*]"
+    then:
+      field: patch
+      function: falsy

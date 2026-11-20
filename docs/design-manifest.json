@@ -38,7 +38,7 @@
           "text-brand-500 links -> text-text-link"
         ],
         "escalations": [
-          "E-1 AuthLayout shell (accepted 2026-11-19; design.md amendment to follow via ux-foundations)",
+          "E-1 AuthLayout shell (accepted 2026-11-19; amended into design.md §4.5)",
           "E-3 inventory wording (unverified notice moves to header banner) (proposed)"
         ]
       },
@@ -86,7 +86,7 @@
           "confirmPassword kept client-side only"
         ],
         "escalations": [
-          "E-1 AuthLayout shell (accepted 2026-11-19; design.md amendment to follow via ux-foundations)",
+          "E-1 AuthLayout shell (accepted 2026-11-19; amended into design.md §4.5)",
           "E-2 PasswordRules hint component (accepted 2026-11-19; design.md amendment to follow via ux-foundations)"
         ]
       },
@@ -135,7 +135,7 @@
           "userId query param dropped (API takes token only)"
         ],
         "escalations": [
-          "E-1 AuthLayout shell (accepted 2026-11-19; design.md amendment to follow via ux-foundations)"
+          "E-1 AuthLayout shell (accepted 2026-11-19; amended into design.md §4.5)"
         ]
       },
       "status": "designed",

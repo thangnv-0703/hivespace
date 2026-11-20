@@ -4,6 +4,7 @@
 > Implements: FR-AUTH-001..010, FR-AUTH-013, FR-AUTH-014, FR-ROLE-001, FR-NOTIF-002, FR-NOTIF-001 (p), FR-LOC-005 (p); also covers FR-AUTH-015, FR-AUTH-016 (Foundations in the RTM, acceptance criterion 8 of the plan), FR-AUTH-008 (p, record only), FR-LOC-004 (first real use)
 > Realizes: UC-001, UC-002 · Screens: SCR-STF-012, SCR-STF-013, SCR-STF-014 (designed by ui-design)
 > Status: Draft · Date: 2026-11-18
+> Diagram: [design-flow.html](design-flow.html) (interactive flow diagram, html-flow-diagram)
 
 ## 1. Intent
 A visitor registers, receives a verification email, opens the link, signs in and signs out. Every later slice needs a signed-in user with roles, so this one is first. It also proves the riskiest plumbing early: OpenIddict as the authorization server, the gateway as a confidential BFF with an encrypted cookie (ADR-0008, R-11), 15-minute access tokens with silent refresh (NFR-SEC-004), and the first real cross-stack event (Identity outbox → Service Bus → Python Notification → Mailpit) with the verification token in the event (R-6).

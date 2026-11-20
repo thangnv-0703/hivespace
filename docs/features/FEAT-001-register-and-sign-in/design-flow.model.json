@@ -1,0 +1,121 @@
+{
+ "meta": {
+  "title": "FEAT-001 · Register, verify, sign in, sign out",
+  "subtitle": "Design solution from <code>technical-design.md</code>: the components this slice builds or changes, the contract on every arrow, and the decisions behind them. Pick a flow to follow one use-case path; click any arrow for its data contract.",
+  "description": "A browser uses the storefront SPA, which calls the gateway BFF. The gateway routes /v1/users to Identity, proxies OIDC endpoints and exchanges tokens server to server, keeps tokens in an encrypted cookie whose keys live in Azurite blob, and relays a bearer token to protected APIs. Identity writes users and an outbox in identitydb and publishes events to Service Bus; Notification consumes them, records emails in notificationdb and sends through Mailpit. The email link brings the browser back to the verify page.",
+  "viewBox": [1450, 720],
+  "links": [{"href": "technical-design.md", "label": "technical-design.md"}, {"href": "../../architecture-flow.html", "label": "Architecture"}],
+  "kindLabels": {"security": "Gateway / BFF", "backend": "Event bus"},
+  "edgeLabels": {"dashed": "Event / email link", "security": "Auth / tokens"},
+  "overview": [
+   ["Implements", "FR-AUTH-001..010, 013..016, FR-ROLE-001, FR-NOTIF-002"],
+   ["Realizes", "UC-001, UC-002"],
+   ["Screens", "SCR-STF-012, 013, 014"],
+   ["Builds", "Identity (OIDC server), BFF, Notification email path"],
+   ["Tokens", "Access 15 min, refresh 7 d with rotation"]
+  ],
+  "footnote": "Source: <code>docs/features/FEAT-001-register-and-sign-in/technical-design.md</code> (§3 contracts, §4 schema, §5 components, §7 decisions, §8 open items). Protected APIs are a placeholder for FEAT-002 onward. Generated with html-flow-diagram; edit <code>design-flow.model.json</code> and rebuild."
+ },
+ "frames": [
+  {"x": 740, "y": 90, "w": 470, "h": 230, "label": "Identity service", "style": "frame", "tone": "service", "labelPos": "bottom", "labelX": 1080},
+  {"x": 740, "y": 360, "w": 470, "h": 210, "label": "Async email path", "style": "frame", "tone": "backend", "labelPos": "bottom", "labelX": 760},
+  {"x": 1255, "y": 360, "w": 180, "h": 100, "label": "External", "style": "dashed", "labelPos": "bottom"}
+ ],
+ "nodes": [
+  {"id": "browser", "kind": "external", "x": 20, "y": 230, "w": 150, "h": 50, "label": "Browser", "sub": "visitor · buyer", "flow": "register", "desc": "The visitor registering and signing in. Holds only the encrypted <code>hs.bff</code> cookie and the Identity session cookie <code>hs.idp</code>; never a token."},
+  {"id": "spa", "kind": "frontend", "x": 220, "y": 110, "w": 180, "h": 56, "label": "Storefront SPA", "sub": "/signin /register /verify", "desc": "Auth pages on the shared <code>AuthLayout</code> (D-1). <code>features/auth/api.ts</code> is the only API-client import; sends <code>X-HS-CSRF: 1</code> and <code>Accept-Language</code> on every call; session store fed by <code>GET /bff/user</code>."},
+  {"id": "gw", "kind": "security", "x": 480, "y": 110, "w": 200, "h": 190, "label": "Gateway + BFF", "sub": "hs.bff cookie · CSRF", "sub2": "/bff/* · route policy", "desc": "Confidential OIDC client. Serves <code>/bff/login</code>, <code>/bff/callback</code>, <code>POST /bff/logout</code>, <code>/bff/user</code>; refreshes tokens near expiry; validates the JWT on authenticated routes and relays it; rejects non-GET <code>/v1/*</code> without the CSRF header."},
+  {"id": "identity", "kind": "service", "x": 760, "y": 110, "w": 200, "h": 190, "label": "Identity", "sub": "OpenIddict · rich .NET", "sub2": "/v1/users · /connect/*", "desc": "Handlers RegisterUser, VerifyEmail, ResendVerificationEmail, SignIn; OpenIddict authorize, token, revoke, logout, discovery. Argon2id hashes (D-3), SHA-256 token hashes, ES256 keys from configuration (D-7)."},
+  {"id": "idb", "kind": "database", "x": 1040, "y": 110, "w": 160, "h": 56, "label": "identitydb", "sub": "users · tokens · outbox", "desc": "Migration <code>0001_InitialIdentity</code>: users, credentials, role_grants, verification_tokens, outbox, inbox, OpenIddict tables."},
+  {"id": "bus", "kind": "backend", "x": 760, "y": 380, "w": 200, "h": 50, "label": "Service Bus", "sub": "topic hivespace-events", "sigil": "service", "desc": "Outbox relay (1 s poll, at least once). Notification's subscription has no filter; it dispatches by <code>eventType</code>."},
+  {"id": "notif", "kind": "service", "x": 1040, "y": 380, "w": 160, "h": 56, "label": "Notification", "sub": "Python · inbox", "desc": "Event dispatcher → <code>contacts</code> (upsert contact) and <code>emails</code> (record + send). Jinja2 templates in vi and en; link <code>{PUBLIC_BASE_URL}/verify-email?token=…</code>."},
+  {"id": "ndb", "kind": "database", "x": 1040, "y": 490, "w": 160, "h": 56, "label": "notificationdb", "sub": "contacts · email_records", "desc": "Alembic <code>0002_contacts_and_emails</code>; unique (<code>event_id</code>, <code>template</code>) gives one email per event. No token stored."},
+  {"id": "mail", "kind": "external", "x": 1270, "y": 380, "w": 150, "h": 50, "label": "Mailpit", "sub": "Resend in demo", "desc": "SMTP via <code>providers/smtp.py</code> (aiosmtplib) behind the <code>EmailSender</code> protocol."},
+  {"id": "keys", "kind": "database", "x": 220, "y": 380, "w": 180, "h": 56, "label": "Azurite blob", "sub": "data-protection keys", "desc": "ASP.NET Data Protection key ring for the <code>hs.bff</code> cookie (container <code>dataprotection</code>)."},
+  {"id": "apis", "kind": "service", "x": 480, "y": 380, "w": 200, "h": 56, "label": "Protected APIs", "sub": "/v1/* · FEAT-002 onward", "desc": "Any route with the <code>authenticated</code> policy. Receives <code>Authorization: Bearer</code>, <code>X-User-Id</code>, <code>X-User-Roles</code>; inbound copies are stripped."}
+ ],
+ "edges": [
+  {"id": "e1", "from": "browser", "to": "spa", "s": "emphasis", "data": {"p": "Form input (email, display name, password)", "f": "SPA routes", "c": "pii", "s": "Password never stored client-side"}},
+  {"id": "e2", "from": "spa", "to": "gw", "s": "emphasis", "label": "REST", "fromAt": 0.5, "toAt": 0.15, "data": {"p": "POST /v1/users · /verify-email · /verification-email · /sign-in; GET /bff/user", "f": "REST/JSON · Accept-Language", "c": "pii", "s": "X-HS-CSRF: 1 on writes; hs.bff cookie; rate-limit hook on /v1/users/*"}},
+  {"id": "e3", "from": "browser", "to": "gw", "s": "security", "label": "navigations", "toAt": 0.76, "data": {"p": "GET /bff/login, /bff/callback?code, POST /bff/logout, /connect/* via proxy", "f": "HTTP redirects", "c": "conf", "s": "Local returnUrl only; logout checks Sec-Fetch-Site: same-origin (D-4)"}},
+  {"id": "e4", "from": "gw", "to": "identity", "s": "emphasis", "label": "REST", "fromAt": 0.15, "toAt": 0.15, "data": {"p": "/v1/users* requests", "f": "REST/JSON", "c": "pii", "s": "Anonymous route policy; errors localized by UseApiErrors"}},
+  {"id": "e5", "from": "gw", "to": "identity", "s": "security", "label": "proxy", "fromAt": 0.5, "toAt": 0.5, "data": {"p": "/connect/authorize, /connect/logout, /.well-known/*", "f": "OIDC · code + PKCE (S256)", "c": "conf", "s": "No hs.idp session → 302 /signin?returnUrl=…"}},
+  {"id": "e6", "from": "gw", "to": "identity", "s": "security", "label": "token", "fromAt": 0.85, "toAt": 0.85, "data": {"p": "Code + verifier → access (15 min) + refresh (7 d); refresh; revoke", "f": "POST /connect/token, /connect/revoke", "c": "restr", "s": "Confidential client secret; server to server; rotation on refresh"}},
+  {"id": "e7", "from": "identity", "to": "idb", "s": "default", "label": "1 tx", "fromAt": 0.15, "data": {"p": "User, credential, Buyer role, token hash, outbox row", "f": "EF Core · SQL", "c": "pii", "s": "Argon2id hash; SHA-256 token hash; unique normalized_email"}},
+  {"id": "e8", "from": "identity", "to": "bus", "s": "dashed", "label": "events", "data": {"p": "UserRegistered / VerificationEmailRequested {userId, email, displayName, language, verificationToken, expiresAt}", "f": "Event envelope · JSON schema v1", "c": "restr", "s": "Token never logged; sent outbox rows deleted after 24 h (R-6)", "w": "After commit, relayed at least once"}},
+  {"id": "e9", "from": "bus", "to": "notif", "s": "dashed", "data": {"p": "Same events", "f": "Service Bus subscription", "c": "restr", "s": "Inbox dedupe by eventId"}},
+  {"id": "e10", "from": "notif", "to": "ndb", "s": "default", "data": {"p": "Inbox row, contact upsert, email_record (pending)", "f": "SQL · one transaction", "c": "pii", "s": "No token stored"}},
+  {"id": "e11", "from": "notif", "to": "mail", "s": "default", "label": "SMTP", "data": {"p": "Verification email (vi or en)", "f": "SMTP", "c": "restr", "s": "Link carries the token; failure marks failed, user can resend"}},
+  {"id": "e12", "from": "mail", "to": "browser", "s": "dashed", "label": "verify link", "fromSide": "bottom", "toSide": "bottom", "via": [[1345, 600], [95, 600]], "data": {"p": "/verify-email?token=…", "f": "Link in email", "c": "restr", "s": "Valid 24 h; earlier tokens invalidated by resend"}},
+  {"id": "e13", "from": "gw", "to": "keys", "s": "security", "fromSide": "left", "toSide": "top", "fromAt": 0.9, "via": [[310, 281]], "data": {"p": "Data-protection key ring", "f": "Blob API", "c": "restr", "s": "Encrypts the hs.bff cookie"}},
+  {"id": "e14", "from": "gw", "to": "apis", "s": "security", "label": "bearer", "data": {"p": "Authorization: Bearer <jwt>, X-User-Id, X-User-Roles", "f": "HTTP headers", "c": "conf", "s": "JWT checked against Identity JWKS; 401 common.unauthenticated otherwise"}}
+ ],
+ "flows": {
+  "all": {"title": "FEAT-001 design solution", "intro": "Six paths: register, verify, resend, sign in, an authenticated call with refresh, and sign out."},
+  "register": {"title": "Register (UC-001 main)", "button": "Register", "color": "frontend", "tags": ["UC-001", "FR-AUTH-001..004", "AC-1..AC-7"], "steps": [
+   {"e": ["e1", "e2"], "t": "<strong>Submit the form</strong>: <code>POST /v1/users</code> with CSRF and language headers."},
+   {"e": ["e4"], "t": "<strong>Validate</strong> every rule at once; 400 lists all failures, 409 <code>identity.email_in_use</code>."},
+   {"e": ["e7"], "t": "<strong>One transaction</strong>: unverified user, credential, Buyer role, token hash, outbox. Returns 201 without waiting for email."},
+   {"e": ["e8", "e9"], "t": "<strong>UserRegistered</strong> is relayed to Notification, at least once."},
+   {"e": ["e10", "e11"], "t": "<strong>Exactly one email</strong>: inbox + record in one transaction, then send in the registration language."}
+  ]},
+  "verify": {"title": "Verify email (UC-001)", "button": "Verify", "color": "external", "tags": ["FR-AUTH-005, 006", "AC-9, AC-10"], "steps": [
+   {"e": ["e12", "e1"], "t": "<strong>Open the link</strong> on the storefront verify page."},
+   {"e": ["e2", "e4"], "t": "<strong>POST /v1/users/verify-email</strong> with the token."},
+   {"e": ["e7"], "t": "<strong>Hash and look up</strong>: 204 sets <code>email_verified_at</code>; invalid, expired or already-verified return their designed errors."}
+  ]},
+  "resend": {"title": "Resend verification email", "button": "Resend", "color": "backend", "tags": ["FR-AUTH-007", "AC-11", "D-6"], "steps": [
+   {"e": ["e2", "e4"], "t": "<strong>POST /v1/users/verification-email</strong>; always 202 (no enumeration)."},
+   {"e": ["e7"], "t": "<strong>Unverified only</strong>: invalidate earlier tokens, issue a new one."},
+   {"e": ["e8", "e9", "e11"], "t": "<strong>VerificationEmailRequested</strong> → a new email."}
+  ]},
+  "signin": {"title": "Sign in through the BFF (UC-002)", "button": "Sign in", "color": "security", "tags": ["FR-AUTH-009, 010", "AC-12, AC-13", "ADR-0008"], "steps": [
+   {"e": ["e3", "e5"], "t": "<strong>/bff/login</strong> → <code>/connect/authorize</code>; no session, so Identity redirects to <code>/signin</code>."},
+   {"e": ["e1", "e2", "e4"], "t": "<strong>POST /v1/users/sign-in</strong>: password checked (verified or not); sets <code>hs.idp</code>. Same 401 for every bad credential."},
+   {"e": ["e5"], "t": "<strong>Authorize again</strong> with the session; Identity issues a code to <code>/bff/callback</code>."},
+   {"e": ["e3", "e6"], "t": "<strong>Code exchange</strong> server to server: access 15 min, refresh 7 days."},
+   {"e": ["e13"], "t": "<strong>Encrypted hs.bff cookie</strong> set; the browser never sees a token."}
+  ]},
+  "call": {"title": "Authenticated call with silent refresh", "button": "API call", "color": "service", "tags": ["FR-AUTH-014..016", "AC-14, AC-16"], "steps": [
+   {"e": ["e2"], "t": "<strong>Call a protected route</strong> with the cookie."},
+   {"e": ["e6"], "t": "<strong>Refresh</strong> if the access token expires within 60 s; rotated tokens replace the cookie. Failure → 401."},
+   {"e": ["e14"], "t": "<strong>Relay</strong> the validated bearer plus <code>X-User-Id</code> and <code>X-User-Roles</code>."}
+  ]},
+  "signout": {"title": "Sign out", "button": "Sign out", "color": "security", "tags": ["FR-AUTH-013", "AC-15", "D-4"], "steps": [
+   {"e": ["e3"], "t": "<strong>Same-origin form POST</strong> to <code>/bff/logout</code>."},
+   {"e": ["e6"], "t": "<strong>Revoke</strong> the refresh token at Identity and delete <code>hs.bff</code>."},
+   {"e": ["e5"], "t": "<strong>/connect/logout</strong> clears <code>hs.idp</code> and returns to <code>/</code>."}
+  ]}
+ },
+ "notes": [
+  {"id": "N1", "on": "spa", "st": "confirmed", "t": "Auth screens are SPA pages", "b": "Storefront pages on a shared <code>AuthLayout</code> in <code>packages/ui</code>, not Identity-hosted Razor pages.", "r": "D-1"},
+  {"id": "N2", "on": "gw", "st": "confirmed", "t": "CSRF header on writes", "b": "Non-GET <code>/v1/*</code> without <code>X-HS-CSRF: 1</code> → 403.", "r": "D-5, AC-17"},
+  {"id": "N3", "on": "gw", "st": "confirmed", "t": "Sign-out ends in OIDC end-session", "b": "Otherwise <code>hs.idp</code> would sign the user straight back in.", "r": "D-4"},
+  {"id": "N4", "on": "identity", "st": "confirmed", "t": "Issuer is the public gateway origin", "b": "Keys load from configuration PEM so sessions survive restarts; discovery fetched via MetadataAddress.", "r": "D-7"},
+  {"id": "N5", "on": "idb", "st": "confirmed", "t": "Argon2id; credential in its own table", "b": "Google-only accounts (FEAT-004) simply have no credential row.", "r": "D-3, D-8"},
+  {"id": "N6", "on": "bus", "st": "confirmed", "t": "Separate resend event", "b": "Re-publishing <code>UserRegistered</code> would re-run account-creation consumers.", "r": "D-6"},
+  {"id": "N7", "on": "notif", "st": "risk", "t": "Token travels in the event", "b": "Never logged, never stored by Notification, outbox rows deleted after 24 h.", "r": "R-6, AC-8"},
+  {"id": "N8", "on": "mail", "st": "risk", "t": "No email retry until FEAT-032", "b": "A failed first email is not retried; the user recovers with resend.", "r": "§8 known gap"},
+  {"id": "G1", "st": "decision", "t": "Architecture edits owed", "b": "Add <code>VerificationEmailRequested</code> to the event catalog and amend ADR-0008's hosted-pages bullet.", "r": "§8 escalations"},
+  {"id": "G2", "st": "consider", "t": "Plan tag for FR-AUTH-015/016", "b": "Tagged Foundations in the RTM but proven here (AC-16); tag them FEAT-001 too.", "r": "§8 plan correction"},
+  {"id": "G3", "st": "aligned", "t": "Deferred on purpose", "b": "Lockout and real rate limits (FEAT-005), Google sign-in (FEAT-004), service-side JWT library (FEAT-002), seller-centre wiring (FEAT-009).", "r": "§8 deferred"}
+ ],
+ "specs": {
+  "gw": {"host": "Gateway (.NET, YARP)", "trigger": "Browser", "ops": ["BffEndpoints, TokenRefresh", "RoutePolicy, CsrfHeaderMiddleware", "Claims relay replaces dev-user stub"], "data": "hs.bff cookie (7 d absolute)", "nfr": "NFR-SEC-004, NFR-SEC-005"},
+  "identity": {"host": "Identity (rich .NET)", "trigger": "Gateway", "ops": ["registerUser, verifyEmail, resendVerificationEmail, signIn", "OpenIddict server, one client hivespace-gateway", "Replaces GET /v1/identity/ping"], "data": "identitydb", "nfr": "NFR-SEC-002, NFR-SEC-003"},
+  "notif": {"host": "Notification (lean Python)", "trigger": "Service Bus", "ops": ["Dispatcher by eventType", "contacts + emails features", "providers/smtp.py"], "data": "notificationdb", "nfr": "NFR-REL-005"},
+  "spa": {"host": "web/apps/storefront", "trigger": "User", "ops": ["SignInPage, RegisterPage, VerifyEmailPage", "Session store from /bff/user"], "data": "None persisted", "nfr": "FR-LOC-004"}
+ },
+ "sections": [
+  {"type": "table", "title": "Contracts", "columns": ["Endpoint", "Auth", "Success", "Errors"], "rows": [
+   ["POST /v1/users", "anonymous", "201 {userId}", "400 common.validation_failed · 409 identity.email_in_use"],
+   ["POST /v1/users/verify-email", "anonymous", "204", "400 token_invalid · 400 token_expired · 409 email_already_verified"],
+   ["POST /v1/users/verification-email", "anonymous", "202 always", "400 malformed email only"],
+   ["POST /v1/users/sign-in", "anonymous", "200 {redirectUrl} + hs.idp", "401 identity.invalid_credentials"],
+   ["GET /bff/user", "cookie", "200 {isAuthenticated, …}", "never 401 (D-9)"],
+   ["POST /bff/logout", "cookie, same-origin", "302 → /connect/logout → /", "—"]
+  ]},
+  {"type": "notes", "title": "Decisions and open items"},
+  {"type": "catalogue", "title": "Components"}
+ ]
+}

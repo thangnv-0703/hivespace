@@ -2,6 +2,7 @@
 
 > Status: Draft · Last updated: 2026-11-15 · Author: Software architecture (Claude)
 > Inputs: `docs/srs.md` v0.11, `docs/use-cases.md`, `docs/dev-standards.md` v0.1. Decisions are recorded in `docs/adr/` (index in section 9).
+> Interactive diagram: [architecture-flow.html](architecture-flow.html) (containers, data contracts, runtime flows, decisions and risks; source `architecture-flow.model.json`).
 
 ## 1. Introduction and goals
 

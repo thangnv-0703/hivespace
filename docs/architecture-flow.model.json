@@ -1,0 +1,1762 @@
+{
+ "meta": {
+  "title": "HiveSpace architecture",
+  "subtitle": "Container view of the MVP: the gateway/BFF, nine services, the image Function, the event bus and the externals. Click a component, arrow or pin; pick a flow to follow one scenario. Every service has its own database (shown in its sub-label), never read by another service.",
+  "description": "Buyers, sellers and the operator reach a single gateway/BFF that serves the SPAs and forwards REST calls to nine services. Services call each other with gRPC and exchange events through Azure Service Bus with outbox and inbox. An Azure Function processes uploaded images in blob storage. Externals: payment provider, Google, LLM, email.",
+  "viewBox": [
+   1910,
+   820
+  ],
+  "wide": true,
+  "minWidth": 1600,
+  "links": [
+   {
+    "href": "architecture.md",
+    "label": "architecture.md"
+   }
+  ],
+  "kindLabels": {
+   "service": "Service / Function",
+   "backend": "Event bus",
+   "security": "Gateway / BFF"
+  },
+  "edgeLabels": {
+   "dashed": "Event / async",
+   "default": "REST or gRPC"
+  },
+  "overview": [
+   [
+    "Shape",
+    "Gateway/BFF + 9 services + 1 Function"
+   ],
+   [
+    "Stacks",
+    ".NET, Go, Python, Vue 3"
+   ],
+   [
+    "Sync",
+    "REST at the edge, gRPC inside (ADR-0019)"
+   ],
+   [
+    "Async",
+    "Service Bus, outbox + inbox (ADR-0002)"
+   ],
+   [
+    "Data",
+    "Postgres per service, MongoDB for Cart, Blob"
+   ],
+   [
+    "Hosting",
+    "Container Apps, scale to zero; Aspire locally"
+   ]
+  ],
+  "footnote": "Source: <code>docs/architecture.md</code> (sections 5–6, 11) and ADR-0001…0026. gRPC and event arrows are drawn for the main relations; the full lists are in the tables below. Generated with html-flow-diagram; edit <code>architecture-flow.model.json</code> and rebuild."
+ },
+ "frames": [
+  {
+   "x": 195,
+   "y": 285,
+   "w": 1470,
+   "h": 190,
+   "style": "frame",
+   "tone": "service",
+   "labelPos": "bottom",
+   "labelX": 1300
+  },
+  {
+   "x": 1715,
+   "y": 20,
+   "w": 190,
+   "h": 385,
+   "label": "External",
+   "style": "dashed",
+   "labelPos": "bottom"
+  }
+ ],
+ "nodes": [
+  {
+   "id": "seller",
+   "kind": "external",
+   "x": 230,
+   "y": 30,
+   "w": 150,
+   "h": 50,
+   "label": "Seller",
+   "sub": "seller centre",
+   "desc": "Manages a shop, products, stock and orders in the seller centre (/seller)."
+  },
+  {
+   "id": "buyer",
+   "kind": "external",
+   "x": 420,
+   "y": 30,
+   "w": 150,
+   "h": 50,
+   "label": "Buyer / Visitor",
+   "sub": "storefront",
+   "flow": "checkout",
+   "desc": "Browses, searches, keeps a cart, checks out and pays."
+  },
+  {
+   "id": "operator",
+   "kind": "external",
+   "x": 610,
+   "y": 30,
+   "w": 150,
+   "h": 50,
+   "label": "Operator",
+   "sub": "scripts · mocks",
+   "desc": "The builder: seeds data, drives the mock payment and shipping controls during demos."
+  },
+  {
+   "id": "spa",
+   "kind": "frontend",
+   "x": 20,
+   "y": 144,
+   "w": 150,
+   "h": 56,
+   "label": "Web SPAs",
+   "sub": "Vue 3 · TS",
+   "desc": "Storefront (/) and seller centre (/seller). Static files served from the gateway image; generated API client; vue-i18n."
+  },
+  {
+   "id": "gw",
+   "kind": "security",
+   "x": 200,
+   "y": 140,
+   "w": 1460,
+   "h": 64,
+   "label": "Gateway + BFF",
+   "sub": ".NET · YARP · one public origin · encrypted cookie · token relay · rate limits · anonymous callback route",
+   "desc": "The only external ingress. Confidential OIDC client and BFF: tokens stay server-side in an encrypted HttpOnly cookie; relays a bearer token to services; CSRF header, rate limits, correlation ID (ADR-0008)."
+  },
+  {
+   "id": "media",
+   "kind": "service",
+   "x": 210,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Media",
+   "sub": ".NET · Postgres",
+   "desc": "Upload intents, SAS issuing and media records (pending, ready, rejected, detached)."
+  },
+  {
+   "id": "catalog",
+   "kind": "service",
+   "x": 374,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Catalog",
+   "sub": ".NET · Postgres",
+   "desc": "Category tree, products, variants, reviews and rating aggregates."
+  },
+  {
+   "id": "inventory",
+   "kind": "service",
+   "x": 538,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Inventory",
+   "sub": "Go · Postgres",
+   "desc": "On-hand, reserved, available; atomic reservations with lazy expiry (ADR-0007)."
+  },
+  {
+   "id": "order",
+   "kind": "service",
+   "x": 702,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Order",
+   "sub": ".NET · Postgres",
+   "desc": "Checkout saga, orders, status timeline, mock shipping, pricing pipeline (ADR-0006)."
+  },
+  {
+   "id": "cart",
+   "kind": "service",
+   "x": 866,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Cart",
+   "sub": "Go · MongoDB",
+   "desc": "Cart lines per user and cart display composition; one document per user (ADR-0017, ADR-0018)."
+  },
+  {
+   "id": "payment",
+   "kind": "service",
+   "x": 1030,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Payment",
+   "sub": ".NET · Postgres",
+   "desc": "Payments, refunds, ledger, IPaymentProvider (mock, VNPay optional), callback endpoint (ADR-0004)."
+  },
+  {
+   "id": "identity",
+   "kind": "service",
+   "x": 1194,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Identity",
+   "sub": "OpenIddict · Pg",
+   "desc": "OIDC authorization server: users, credentials, external logins, profile, addresses, shop (ADR-0008)."
+  },
+  {
+   "id": "search",
+   "kind": "service",
+   "x": 1358,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Search-AI",
+   "sub": "Python · pgvector",
+   "desc": "Product read model, full-text index, embeddings, keyword and NL search (ADR-0003, ADR-0014)."
+  },
+  {
+   "id": "notif",
+   "kind": "service",
+   "x": 1522,
+   "y": 300,
+   "w": 130,
+   "h": 60,
+   "label": "Notification",
+   "sub": "Python · Postgres",
+   "desc": "Contact projection, templates (vi, en), email records with retries and dedupe (ADR-0016)."
+  },
+  {
+   "id": "bus",
+   "kind": "backend",
+   "x": 200,
+   "y": 510,
+   "w": 1460,
+   "h": 50,
+   "label": "Event bus",
+   "sub": "Azure Service Bus · topic hivespace-events · outbox → bus → inbox · at-least-once",
+   "sigil": "service",
+   "desc": "IEventBus over Service Bus (emulator locally, RabbitMQ optional). JSON envelope, trace context in the envelope, consumers dedupe by eventId (ADR-0002)."
+  },
+  {
+   "id": "fn",
+   "kind": "service",
+   "x": 210,
+   "y": 660,
+   "w": 150,
+   "h": 56,
+   "label": "Image processor",
+   "sub": "Azure Function",
+   "desc": "Triggered by MediaUploaded: validates the signature, re-encodes, strips metadata, resizes, writes to the public container (ADR-0011)."
+  },
+  {
+   "id": "blob",
+   "kind": "database",
+   "x": 20,
+   "y": 660,
+   "w": 150,
+   "h": 56,
+   "label": "Blob storage",
+   "sub": "incoming · public",
+   "desc": "Azure Blob (Azurite locally): private incoming container, public read container, gateway data-protection keys."
+  },
+  {
+   "id": "provider",
+   "kind": "external",
+   "x": 1730,
+   "y": 30,
+   "w": 160,
+   "h": 50,
+   "label": "Payment provider",
+   "sub": "mock · VNPay sbx",
+   "desc": "Mock provider (lives in the Payment service) or VNPay sandbox. Sends signed callbacks."
+  },
+  {
+   "id": "google",
+   "kind": "external",
+   "x": 1730,
+   "y": 110,
+   "w": 160,
+   "h": 50,
+   "label": "Google",
+   "sub": "OIDC · PKCE",
+   "desc": "Social sign-in behind IExternalLoginProvider; only the Google button fails if it is down (FR-AUTH-023)."
+  },
+  {
+   "id": "llm",
+   "kind": "external",
+   "x": 1730,
+   "y": 200,
+   "w": 160,
+   "h": 50,
+   "label": "LLM + embeddings",
+   "sub": "runtime TBD",
+   "desc": "Query interpretation and embeddings behind ILlmProvider / IEmbeddingProvider; runtime undecided (ADR-0014, OQ-4)."
+  },
+  {
+   "id": "email",
+   "kind": "external",
+   "x": 1730,
+   "y": 305,
+   "w": 160,
+   "h": 50,
+   "label": "Email provider",
+   "sub": "Resend · Mailpit",
+   "desc": "IEmailSender: Mailpit locally, Resend in the demo."
+  }
+ ],
+ "edges": [
+  {
+   "id": "a1",
+   "from": "buyer",
+   "to": "gw",
+   "s": "emphasis",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "toAt": 0.2021,
+   "data": {
+    "p": "Pages, API calls with the session cookie",
+    "f": "HTTPS · REST/JSON",
+    "c": "pii",
+    "s": "TLS; encrypted HttpOnly cookie; X-HS-CSRF on writes"
+   }
+  },
+  {
+   "id": "a2",
+   "from": "seller",
+   "to": "gw",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "toAt": 0.0719,
+   "data": {
+    "p": "Seller centre calls",
+    "f": "HTTPS · REST/JSON",
+    "c": "pii",
+    "s": "Same BFF session; Seller role checked by services"
+   }
+  },
+  {
+   "id": "a3",
+   "from": "operator",
+   "to": "gw",
+   "s": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "toAt": 0.3322,
+   "data": {
+    "p": "Seed scripts, mock payment and shipping triggers",
+    "f": "HTTPS · REST",
+    "c": "internal",
+    "s": "Demo only"
+   }
+  },
+  {
+   "id": "a4",
+   "from": "gw",
+   "to": "spa",
+   "s": "default",
+   "fromSide": "left",
+   "toSide": "right",
+   "data": {
+    "p": "Static SPA bundles",
+    "f": "HTTPS",
+    "c": "public",
+    "s": "Same origin as the API, so no CORS"
+   }
+  },
+  {
+   "id": "a5",
+   "from": "seller",
+   "to": "blob",
+   "s": "dashed",
+   "label": "PUT via SAS",
+   "fromSide": "left",
+   "toSide": "right",
+   "toAt": 0.3,
+   "via": [
+    [
+     185,
+     55
+    ],
+    [
+     185,
+     677
+    ]
+   ],
+   "lx": 140,
+   "ly": 400,
+   "data": {
+    "p": "Image bytes",
+    "f": "HTTPS PUT",
+    "c": "internal",
+    "s": "Write-only, short-lived SAS into the private container",
+    "w": "After Media issues an upload intent"
+   }
+  },
+  {
+   "id": "g1",
+   "from": "gw",
+   "to": "media",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.0514,
+   "toAt": 0.5,
+   "data": {
+    "p": "Media REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "internal",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "g2",
+   "from": "gw",
+   "to": "catalog",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.1637,
+   "toAt": 0.5,
+   "data": {
+    "p": "Catalog REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "internal",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "g3",
+   "from": "gw",
+   "to": "inventory",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.276,
+   "toAt": 0.5,
+   "data": {
+    "p": "Inventory REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "internal",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "g4",
+   "from": "gw",
+   "to": "order",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.3884,
+   "toAt": 0.5,
+   "data": {
+    "p": "Order REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "pii",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "g5",
+   "from": "gw",
+   "to": "cart",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.5007,
+   "toAt": 0.5,
+   "data": {
+    "p": "Cart REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "pii",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "g6",
+   "from": "gw",
+   "to": "payment",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.613,
+   "toAt": 0.5,
+   "data": {
+    "p": "Payment REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "pii",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "g7",
+   "from": "gw",
+   "to": "identity",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.7253,
+   "toAt": 0.5,
+   "data": {
+    "p": "Identity REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "pii",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "g8",
+   "from": "gw",
+   "to": "search",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.8377,
+   "toAt": 0.5,
+   "data": {
+    "p": "Search-AI REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "internal",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "g9",
+   "from": "gw",
+   "to": "notif",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.95,
+   "toAt": 0.5,
+   "data": {
+    "p": "Notification REST calls",
+    "f": "REST/JSON (OpenAPI)",
+    "c": "pii",
+    "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"
+   }
+  },
+  {
+   "id": "p1",
+   "from": "payment",
+   "to": "provider",
+   "s": "emphasis",
+   "label": "create payment",
+   "fromSide": "top",
+   "toSide": "left",
+   "fromAt": 0.8,
+   "via": [
+    [
+     1134.0,
+     215
+    ],
+    [
+     1700,
+     215
+    ],
+    [
+     1700,
+     62
+    ]
+   ],
+   "lx": 1450,
+   "ly": 224,
+   "data": {
+    "p": "Payment request (orderIds, amount + currency)",
+    "f": "HTTPS · provider API",
+    "c": "conf",
+    "s": "Idempotency key; secret from Key Vault"
+   }
+  },
+  {
+   "id": "p2",
+   "from": "provider",
+   "to": "gw",
+   "s": "security",
+   "label": "signed callback",
+   "fromSide": "left",
+   "toSide": "top",
+   "fromAt": 0.4,
+   "toAt": 0.9863,
+   "via": [
+    [
+     1640,
+     50
+    ]
+   ],
+   "lx": 1600,
+   "ly": 100,
+   "data": {
+    "p": "Provider event (event id, status, amount)",
+    "f": "HTTPS POST /v1/payments/callbacks/mock",
+    "c": "conf",
+    "s": "Anonymous route; signature verified by Payment (401 if bad)"
+   }
+  },
+  {
+   "id": "x1",
+   "from": "identity",
+   "to": "google",
+   "s": "security",
+   "label": "OIDC",
+   "fromSide": "top",
+   "toSide": "left",
+   "fromAt": 0.85,
+   "via": [
+    [
+     1304.5,
+     255
+    ],
+    [
+     1680,
+     255
+    ],
+    [
+     1680,
+     135
+    ]
+   ],
+   "data": {
+    "p": "Authorization code, ID token",
+    "f": "OIDC code + PKCE",
+    "c": "pii",
+    "s": "state, nonce; verified email required to auto-link"
+   }
+  },
+  {
+   "id": "x2",
+   "from": "search",
+   "to": "llm",
+   "s": "dashed",
+   "label": "interpret · embed",
+   "fromSide": "top",
+   "toSide": "left",
+   "fromAt": 0.8,
+   "via": [
+    [
+     1462.0,
+     235
+    ],
+    [
+     1690,
+     235
+    ],
+    [
+     1690,
+     225
+    ]
+   ],
+   "data": {
+    "p": "Query text (as data) → structured filters, vectors",
+    "f": "Provider API · JSON schema",
+    "c": "internal",
+    "s": "3 s timeout; fixed schema out; no tools (NFR-SEC-010)"
+   }
+  },
+  {
+   "id": "x3",
+   "from": "notif",
+   "to": "email",
+   "s": "default",
+   "label": "send",
+   "fromSide": "right",
+   "toSide": "left",
+   "data": {
+    "p": "Recipient, rendered template (vi/en)",
+    "f": "SMTP / HTTPS API",
+    "c": "pii",
+    "s": "API key; tokens never logged (R-6)"
+   }
+  },
+  {
+   "id": "r1",
+   "from": "catalog",
+   "to": "media",
+   "s": "default",
+   "fromSide": "left",
+   "toSide": "right",
+   "fromAt": 0.5,
+   "toAt": 0.5,
+   "data": {
+    "p": "Verify media ready and owned",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Bearer in metadata; deadline"
+   }
+  },
+  {
+   "id": "r2",
+   "from": "catalog",
+   "to": "inventory",
+   "s": "default",
+   "fromSide": "right",
+   "toSide": "left",
+   "fromAt": 0.35,
+   "toAt": 0.35,
+   "data": {
+    "p": "Availability, set on-hand",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Deadline; product page shows unknown if down"
+   }
+  },
+  {
+   "id": "r3",
+   "from": "order",
+   "to": "inventory",
+   "s": "emphasis",
+   "fromSide": "left",
+   "toSide": "right",
+   "fromAt": 0.65,
+   "toAt": 0.65,
+   "data": {
+    "p": "Batch Reserve / Release (checkoutId, lines)",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Deadline 10 s; one DB transaction; idempotent per line"
+   }
+  },
+  {
+   "id": "r4",
+   "from": "order",
+   "to": "cart",
+   "s": "emphasis",
+   "fromSide": "right",
+   "toSide": "left",
+   "fromAt": 0.5,
+   "toAt": 0.5,
+   "data": {
+    "p": "Selected cart lines",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Bearer in metadata"
+   }
+  },
+  {
+   "id": "r5",
+   "from": "order",
+   "to": "catalog",
+   "s": "emphasis",
+   "fromSide": "bottom",
+   "toSide": "bottom",
+   "fromAt": 0.25,
+   "toAt": 0.75,
+   "via": [
+    [
+     734.5,
+     385
+    ],
+    [
+     471.5,
+     385
+    ]
+   ],
+   "data": {
+    "p": "Authoritative prices and status",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Checkout never trusts cart prices"
+   }
+  },
+  {
+   "id": "r6",
+   "from": "cart",
+   "to": "inventory",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "bottom",
+   "fromAt": 0.25,
+   "toAt": 0.75,
+   "via": [
+    [
+     898.5,
+     400
+    ],
+    [
+     635.5,
+     400
+    ]
+   ],
+   "data": {
+    "p": "Availability for display",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Shown as unknown if down"
+   }
+  },
+  {
+   "id": "r7",
+   "from": "cart",
+   "to": "catalog",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "bottom",
+   "fromAt": 0.12,
+   "toAt": 0.55,
+   "via": [
+    [
+     881.6,
+     415
+    ],
+    [
+     445.5,
+     415
+    ]
+   ],
+   "data": {
+    "p": "Variant status, price, shop",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Add fails clearly if down"
+   }
+  },
+  {
+   "id": "r8",
+   "from": "order",
+   "to": "payment",
+   "s": "emphasis",
+   "fromSide": "bottom",
+   "toSide": "bottom",
+   "fromAt": 0.75,
+   "toAt": 0.25,
+   "via": [
+    [
+     799.5,
+     430
+    ],
+    [
+     1062.5,
+     430
+    ]
+   ],
+   "data": {
+    "p": "Initiate online payment",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Failure or timeout → saga compensates"
+   }
+  },
+  {
+   "id": "r9",
+   "from": "order",
+   "to": "identity",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "bottom",
+   "fromAt": 0.88,
+   "toAt": 0.25,
+   "via": [
+    [
+     816.4,
+     445
+    ],
+    [
+     1226.5,
+     445
+    ]
+   ],
+   "data": {
+    "p": "Address snapshot",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Checkout fails with retry message if down"
+   }
+  },
+  {
+   "id": "r10",
+   "from": "identity",
+   "to": "media",
+   "s": "default",
+   "fromSide": "bottom",
+   "toSide": "bottom",
+   "fromAt": 0.55,
+   "toAt": 0.5,
+   "via": [
+    [
+     1265.5,
+     460
+    ],
+    [
+     275.0,
+     460
+    ]
+   ],
+   "data": {
+    "p": "Verify media ready and owned",
+    "f": "gRPC",
+    "c": "internal",
+    "s": "Attach fails; old image kept"
+   }
+  },
+  {
+   "id": "v1",
+   "from": "identity",
+   "to": "bus",
+   "s": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.9,
+   "toAt": 0.761,
+   "data": {
+    "p": "UserRegistered, UserProfileChanged, ShopRegistered, ShopChanged, MediaDetached",
+    "f": "Event envelope · JSON (contracts/events)",
+    "c": "pii",
+    "s": "Carries the verification token (R-6); hash-only storage, no logging",
+    "w": "Relayed by the outbox, at least once"
+   }
+  },
+  {
+   "id": "v2",
+   "from": "catalog",
+   "to": "bus",
+   "s": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.1,
+   "toAt": 0.1281,
+   "data": {
+    "p": "ProductChanged (versioned), VariantCreated, ReviewChanged, CategoryTreeChanged, MediaDetached",
+    "f": "Event envelope · JSON (contracts/events)",
+    "c": "internal",
+    "s": "Outbox in the same transaction",
+    "w": "Relayed by the outbox, at least once"
+   }
+  },
+  {
+   "id": "v3",
+   "from": "order",
+   "to": "bus",
+   "s": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.06,
+   "toAt": 0.3492,
+   "data": {
+    "p": "CheckoutCompleted, OrderPlaced, OrderShipped, OrderCancelled, OrderDelivered, OrderCompleted",
+    "f": "Event envelope · JSON (contracts/events)",
+    "c": "pii",
+    "s": "Outbox in the same transaction",
+    "w": "Relayed by the outbox, at least once"
+   }
+  },
+  {
+   "id": "v4",
+   "from": "payment",
+   "to": "bus",
+   "s": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.6,
+   "toAt": 0.6219,
+   "data": {
+    "p": "PaymentSucceeded, PaymentFailed, PaymentRefunded",
+    "f": "Event envelope · JSON (contracts/events)",
+    "c": "conf",
+    "s": "Outbox in the same transaction as the provider-event row",
+    "w": "Relayed by the outbox, at least once"
+   }
+  },
+  {
+   "id": "v5",
+   "from": "media",
+   "to": "bus",
+   "s": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.12,
+   "toAt": 0.0175,
+   "data": {
+    "p": "MediaUploaded",
+    "f": "Event envelope · JSON (contracts/events)",
+    "c": "internal",
+    "s": "Outbox",
+    "w": "Relayed by the outbox, at least once"
+   }
+  },
+  {
+   "id": "c1",
+   "from": "bus",
+   "to": "notif",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.95,
+   "toAt": 0.5,
+   "data": {
+    "p": "User*, Shop*, Order* events",
+    "f": "Event envelope · JSON",
+    "c": "pii",
+    "s": "Inbox dedupe; one email per event and recipient"
+   }
+  },
+  {
+   "id": "c2",
+   "from": "bus",
+   "to": "search",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.8377,
+   "toAt": 0.5,
+   "data": {
+    "p": "ProductChanged, ReviewChanged, ShopChanged, CategoryTreeChanged",
+    "f": "Event envelope · JSON",
+    "c": "internal",
+    "s": "Older versions ignored (R-12)"
+   }
+  },
+  {
+   "id": "c3",
+   "from": "bus",
+   "to": "inventory",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.2493,
+   "toAt": 0.2,
+   "data": {
+    "p": "VariantCreated, OrderPlaced, OrderShipped, OrderCancelled",
+    "f": "Event envelope · JSON",
+    "c": "internal",
+    "s": "Inbox dedupe; reservation HELD → COMMITTED → CONSUMED / RELEASED"
+   }
+  },
+  {
+   "id": "c4",
+   "from": "bus",
+   "to": "cart",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.5229,
+   "toAt": 0.75,
+   "data": {
+    "p": "CheckoutCompleted",
+    "f": "Event envelope · JSON",
+    "c": "internal",
+    "s": "Removes purchased lines idempotently"
+   }
+  },
+  {
+   "id": "c5",
+   "from": "bus",
+   "to": "order",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.3884,
+   "toAt": 0.5,
+   "data": {
+    "p": "PaymentSucceeded, PaymentFailed, PaymentRefunded",
+    "f": "Event envelope · JSON",
+    "c": "conf",
+    "s": "Guarded AWAITING_PAYMENT → PLACED transition"
+   }
+  },
+  {
+   "id": "c6",
+   "from": "bus",
+   "to": "payment",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.6468,
+   "toAt": 0.88,
+   "data": {
+    "p": "OrderPlaced, OrderCancelled, OrderDelivered, OrderCompleted",
+    "f": "Event envelope · JSON",
+    "c": "conf",
+    "s": "COD pending, refunds, release to seller"
+   }
+  },
+  {
+   "id": "c7",
+   "from": "bus",
+   "to": "media",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.0852,
+   "toAt": 0.88,
+   "data": {
+    "p": "MediaProcessed, MediaRejected, MediaDetached",
+    "f": "Event envelope · JSON",
+    "c": "internal",
+    "s": "Inbox dedupe"
+   }
+  },
+  {
+   "id": "c8",
+   "from": "bus",
+   "to": "catalog",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.1993,
+   "toAt": 0.9,
+   "data": {
+    "p": "ShopRegistered, ShopChanged, OrderCompleted",
+    "f": "Event envelope · JSON",
+    "c": "internal",
+    "s": "Shop snapshot, verified-purchase projection"
+   }
+  },
+  {
+   "id": "f1",
+   "from": "bus",
+   "to": "fn",
+   "s": "dashed",
+   "fromSide": "bottom",
+   "toSide": "top",
+   "fromAt": 0.0342,
+   "toAt": 0.2667,
+   "data": {
+    "p": "MediaUploaded (media id, blob path)",
+    "f": "Service Bus trigger",
+    "c": "internal",
+    "s": "Managed connection"
+   }
+  },
+  {
+   "id": "f2",
+   "from": "fn",
+   "to": "bus",
+   "s": "dashed",
+   "fromSide": "top",
+   "toSide": "bottom",
+   "fromAt": 0.7333,
+   "toAt": 0.0822,
+   "data": {
+    "p": "MediaProcessed / MediaRejected",
+    "f": "Event envelope · JSON",
+    "c": "internal",
+    "s": "Output binding"
+   }
+  },
+  {
+   "id": "f3",
+   "from": "fn",
+   "to": "blob",
+   "s": "default",
+   "fromSide": "left",
+   "toSide": "right",
+   "toAt": 0.7,
+   "data": {
+    "p": "Reads incoming, writes re-encoded variants to public",
+    "f": "Blob API",
+    "c": "internal",
+    "s": "Nothing served until validated (NFR-SEC-013)"
+   }
+  }
+ ],
+ "flows": {
+  "all": {
+   "title": "HiveSpace: overall architecture",
+   "intro": "Gateway/BFF in front of nine services and one Function. REST at the edge, gRPC between services, events through the bus. Pick a flow to see one scenario."
+  },
+  "register": {
+   "title": "Register and verify email",
+   "button": "Register",
+   "color": "security",
+   "intro": "UC-001: the first cross-stack event path (FEAT-001).",
+   "tags": [
+    "UC-001",
+    "Data: [[pii]]"
+   ],
+   "steps": [
+    {
+     "e": [
+      "a1",
+      "g7"
+     ],
+     "t": "<strong>Visitor registers</strong>: the storefront posts to <code>/v1/users</code> through the gateway."
+    },
+    {
+     "e": [
+      "v1"
+     ],
+     "t": "<strong>Identity commits</strong> the user, credential, token hash and <code>UserRegistered</code> in one transaction; the outbox relays it."
+    },
+    {
+     "e": [
+      "c1"
+     ],
+     "t": "<strong>Notification consumes</strong> it once (inbox) and records the email."
+    },
+    {
+     "e": [
+      "x3"
+     ],
+     "t": "<strong>Verification email</strong> goes out in the registration language."
+    }
+   ]
+  },
+  "signin": {
+   "title": "Sign in through the BFF (password or Google)",
+   "button": "Sign-in",
+   "color": "security",
+   "intro": "UC-002, UC-025, ADR-0008. The browser never sees a token.",
+   "tags": [
+    "UC-002",
+    "UC-025",
+    "ADR-0008"
+   ],
+   "steps": [
+    {
+     "e": [
+      "a1"
+     ],
+     "t": "<strong>/bff/login</strong> starts the OIDC code flow with PKCE."
+    },
+    {
+     "e": [
+      "g7"
+     ],
+     "t": "<strong>Identity authorizes</strong>: password check with lockout, or…"
+    },
+    {
+     "e": [
+      "x1"
+     ],
+     "t": "<strong>Continue with Google</strong>: code exchange, verified email required to auto-link."
+    },
+    {
+     "e": [
+      "a4"
+     ],
+     "t": "<strong>Gateway stores tokens</strong> in the encrypted cookie and returns to the SPA."
+    }
+   ]
+  },
+  "checkout": {
+   "title": "Checkout with stock reservation and compensation",
+   "button": "Checkout",
+   "color": "service",
+   "intro": "UC-011: orchestrated saga in Order (ADR-0006, ADR-0007).",
+   "tags": [
+    "UC-011",
+    "Idempotency-Key",
+    "CON-7"
+   ],
+   "steps": [
+    {
+     "e": [
+      "a1",
+      "g4"
+     ],
+     "t": "<strong>POST /v1/checkouts</strong> with an Idempotency-Key; Order starts the saga."
+    },
+    {
+     "e": [
+      "r4",
+      "r5",
+      "r9"
+     ],
+     "t": "<strong>Gather</strong> selected cart lines, authoritative prices and the address snapshot."
+    },
+    {
+     "e": [
+      "r3"
+     ],
+     "t": "<strong>Reserve all lines atomically</strong> in Inventory; any shortfall fails the checkout with no orders."
+    },
+    {
+     "e": [
+      "r8"
+     ],
+     "t": "<strong>Online payment</strong> is initiated; a failure releases the reservation and compensates."
+    },
+    {
+     "e": [
+      "v3",
+      "c4",
+      "c3"
+     ],
+     "t": "<strong>Events</strong>: <code>CheckoutCompleted</code> clears the cart; <code>OrderPlaced</code> commits the reservation (COD)."
+    }
+   ]
+  },
+  "payment": {
+   "title": "Payment callback, delivered three times",
+   "button": "Payment",
+   "color": "external",
+   "intro": "UC-012, NFR-REL-003, ADR-0004: one payment effect, one order transition.",
+   "tags": [
+    "UC-012",
+    "NFR-REL-003"
+   ],
+   "steps": [
+    {
+     "e": [
+      "p1"
+     ],
+     "t": "<strong>Payment created</strong> at the provider; the buyer pays there."
+    },
+    {
+     "e": [
+      "p2",
+      "g6"
+     ],
+     "t": "<strong>Signed callback</strong> arrives on the anonymous gateway route and is forwarded to Payment."
+    },
+    {
+     "e": [
+      "v4"
+     ],
+     "t": "<strong>One transaction</strong>: unique provider-event row, compare-and-set PENDING → PAID, outbox. Duplicates are acknowledged and ignored."
+    },
+    {
+     "e": [
+      "c5"
+     ],
+     "t": "<strong>Order</strong> moves AWAITING_PAYMENT → PLACED and publishes <code>OrderPlaced</code>."
+    },
+    {
+     "e": [
+      "v3",
+      "c3"
+     ],
+     "t": "<strong>Inventory</strong> commits the reservation."
+    }
+   ]
+  },
+  "search": {
+   "title": "Natural-language search with keyword fallback",
+   "button": "NL search",
+   "color": "service",
+   "intro": "UC-008: the LLM is optional; a timeout or bad output falls back to keyword search.",
+   "tags": [
+    "UC-008",
+    "NFR-SEC-010"
+   ],
+   "steps": [
+    {
+     "e": [
+      "v2",
+      "c2"
+     ],
+     "t": "<strong>Read model</strong>: Catalog publishes versioned <code>ProductChanged</code>; Search-AI indexes it."
+    },
+    {
+     "e": [
+      "a1",
+      "g8"
+     ],
+     "t": "<strong>GET /v1/search/nl</strong>, rate limited at the gateway."
+    },
+    {
+     "e": [
+      "x2"
+     ],
+     "t": "<strong>Interpret and embed</strong> (3 s timeout, fixed schema); on failure, keyword search on the raw query."
+    }
+   ]
+  },
+  "media": {
+   "title": "Image upload through a presigned URL",
+   "button": "Upload",
+   "color": "database",
+   "intro": "ADR-0011: the browser uploads straight to blob; the Function validates before anything is public.",
+   "tags": [
+    "FR-MEDIA",
+    "NFR-SEC-013"
+   ],
+   "steps": [
+    {
+     "e": [
+      "a2",
+      "g1"
+     ],
+     "t": "<strong>Upload intent</strong>: Media returns a write-only SAS URL."
+    },
+    {
+     "e": [
+      "a5"
+     ],
+     "t": "<strong>Browser PUTs</strong> the bytes into the private container."
+    },
+    {
+     "e": [
+      "v5",
+      "f1"
+     ],
+     "t": "<strong>MediaUploaded</strong> triggers the image processor."
+    },
+    {
+     "e": [
+      "f3",
+      "f2",
+      "c7"
+     ],
+     "t": "<strong>Validate and re-encode</strong> into the public container; Media marks the record ready."
+    }
+   ]
+  }
+ },
+ "notes": [
+  {
+   "id": "N1",
+   "on": "gw",
+   "st": "confirmed",
+   "t": "Gateway is the BFF",
+   "b": "Tokens stay server-side in an encrypted cookie; the browser never holds a token. Services still validate the JWT and enforce roles.",
+   "r": "ADR-0008"
+  },
+  {
+   "id": "N2",
+   "on": "gw",
+   "st": "risk",
+   "t": "In-memory rate limiter",
+   "b": "Limits are wrong with 2+ replicas; pin the gateway to one replica.",
+   "r": "R-5"
+  },
+  {
+   "id": "N3",
+   "on": "order",
+   "st": "confirmed",
+   "t": "Orchestrated checkout saga",
+   "b": "State persisted after every step; a crash resumes or compensates on the next wake. 0 orphan orders under failure injection.",
+   "r": "ADR-0006, NFR-REL-002"
+  },
+  {
+   "id": "N4",
+   "on": "inventory",
+   "st": "confirmed",
+   "t": "Atomic reservation",
+   "b": "Conditional update on sorted rows in one transaction; lazy expiry is the final backstop.",
+   "r": "ADR-0007, NFR-SCAL-001"
+  },
+  {
+   "id": "N5",
+   "on": "payment",
+   "st": "confirmed",
+   "t": "Idempotent callbacks",
+   "b": "Unique provider-event row in the same transaction as the status change.",
+   "r": "ADR-0004"
+  },
+  {
+   "id": "N6",
+   "on": "bus",
+   "st": "risk",
+   "t": "Service Bus cost",
+   "b": "Standard tier is billed per hour while the namespace exists (~$10/month if left up). Provision per deploy window, amend the budget, or swap to RabbitMQ.",
+   "r": "R-2, ADR-0005"
+  },
+  {
+   "id": "N7",
+   "on": "notif",
+   "st": "risk",
+   "t": "Tokens travel in events",
+   "b": "Verification and reset tokens are in the event payload. Hash-only storage in Identity, never logged, outbox rows deleted after 24 h.",
+   "r": "R-6"
+  },
+  {
+   "id": "N8",
+   "on": "llm",
+   "st": "decision",
+   "t": "AI runtime undecided",
+   "b": "Pick the LLM and embedding provider; store the model ID with every vector.",
+   "r": "ADR-0014, OQ-4, R-10"
+  },
+  {
+   "id": "N9",
+   "on": "cart",
+   "st": "decision",
+   "t": "MongoDB demo host",
+   "b": "Atlas free tier or Cosmos DB for MongoDB; Cart stays on single-document atomic updates.",
+   "r": "ADR-0018, R-13"
+  },
+  {
+   "id": "N10",
+   "on": "fn",
+   "st": "risk",
+   "t": "Cold starts stack",
+   "b": "App scale-from-zero + Neon wake + Function start can miss the 5 s image target. Warm the stack before demos.",
+   "r": "R-4, NFR-PERF-007"
+  },
+  {
+   "id": "G1",
+   "st": "risk",
+   "t": "Service count for one builder",
+   "b": "9 services, 1 Function, 3 stacks against ~390 hours. Cut order: Media + Function, then Notification into Order, then Cart into Order. Never the saga or inventory.",
+   "r": "R-1, CON-1"
+  },
+  {
+   "id": "G2",
+   "st": "risk",
+   "t": "Internal trust",
+   "b": "Services trust the network plus a validated JWT; no mTLS or service identity. Acceptable for a demo with no real money.",
+   "r": "R-7"
+  },
+  {
+   "id": "G3",
+   "st": "consider",
+   "t": "Pending architecture edits from FEAT-001",
+   "b": "Add <code>VerificationEmailRequested</code> to the event catalog and amend ADR-0008's hosted-pages bullet (auth screens are SPA pages).",
+   "r": "FEAT-001 technical design §8"
+  }
+ ],
+ "specs": {
+  "gw": {
+   "host": "Container App, external ingress",
+   "trigger": "Browsers, payment callbacks",
+   "ops": [
+    "OIDC client + encrypted cookie",
+    "Token refresh and relay",
+    "Rate limits, CSRF header",
+    "Serves both SPAs"
+   ],
+   "data": "Session cookie; DP keys in blob",
+   "nfr": "NFR-SEC-004, NFR-SEC-005"
+  },
+  "identity": {
+   "host": "Container App (internal), rich .NET",
+   "trigger": "Gateway REST, gRPC",
+   "ops": [
+    "Register, verify, sign in",
+    "OIDC server (OpenIddict)",
+    "Profile, addresses, shop"
+   ],
+   "data": "identitydb (Postgres)",
+   "nfr": "NFR-SEC-002, NFR-SEC-015"
+  },
+  "catalog": {
+   "host": "Container App (internal), rich .NET",
+   "trigger": "Gateway REST, gRPC, events",
+   "ops": [
+    "Products, variants, categories",
+    "Reviews and ratings"
+   ],
+   "data": "Postgres (store open, ADR-0018)",
+   "nfr": "NFR-PERF-001"
+  },
+  "inventory": {
+   "host": "Container App (internal), Go",
+   "trigger": "gRPC, events",
+   "ops": [
+    "Reserve / release",
+    "Expiry sweeper"
+   ],
+   "data": "Postgres",
+   "nfr": "NFR-SCAL-001, NFR-PERF-005"
+  },
+  "order": {
+   "host": "Container App (internal), rich .NET",
+   "trigger": "Gateway REST, events",
+   "ops": [
+    "Checkout saga",
+    "Orders and timeline",
+    "Mock shipping, pricing"
+   ],
+   "data": "Postgres",
+   "nfr": "NFR-REL-002, NFR-PERF-004"
+  },
+  "cart": {
+   "host": "Container App (internal), lean Go",
+   "trigger": "Gateway REST, gRPC, events",
+   "ops": [
+    "Cart lines",
+    "Display composition"
+   ],
+   "data": "MongoDB, one document per user",
+   "nfr": "NFR-REL-008"
+  },
+  "payment": {
+   "host": "Container App (internal), rich .NET",
+   "trigger": "Gateway REST, gRPC, callbacks, events",
+   "ops": [
+    "Payments, refunds, ledger",
+    "Mock provider controls"
+   ],
+   "data": "Postgres",
+   "nfr": "NFR-REL-003"
+  },
+  "search": {
+   "host": "Container App (internal), Python",
+   "trigger": "Gateway REST, events",
+   "ops": [
+    "Keyword and NL search",
+    "Read model and vectors"
+   ],
+   "data": "Postgres + pgvector",
+   "nfr": "NFR-PERF-002, NFR-PERF-003"
+  },
+  "notif": {
+   "host": "Container App (internal), Python",
+   "trigger": "Events",
+   "ops": [
+    "Contact projection",
+    "Templated emails (vi, en)"
+   ],
+   "data": "Postgres",
+   "nfr": "NFR-REL-004"
+  },
+  "media": {
+   "host": "Container App (internal), lean .NET",
+   "trigger": "Gateway REST, gRPC, events",
+   "ops": [
+    "Upload intents, SAS",
+    "Media records, cleanup"
+   ],
+   "data": "Postgres + blob",
+   "nfr": "NFR-SEC-013"
+  },
+  "fn": {
+   "host": "Azure Function (Consumption)",
+   "trigger": "Service Bus",
+   "ops": [
+    "Validate, re-encode, resize"
+   ],
+   "data": "Blob",
+   "nfr": "NFR-PERF-007"
+  }
+ },
+ "sections": [
+  {
+   "type": "table",
+   "title": "gRPC calls between services",
+   "lead": "Internal ingress only; deadline and retry policy on every call; the user's bearer token travels as metadata.",
+   "columns": [
+    "Caller → callee",
+    "Purpose",
+    "If the callee is down"
+   ],
+   "rows": [
+    [
+     "Order → Catalog",
+     "Authoritative price and status",
+     "Checkout fails with a retry message"
+    ],
+    [
+     "Order → Inventory",
+     "Batch reserve, release",
+     "Checkout fails and compensates"
+    ],
+    [
+     "Order → Cart",
+     "Selected cart lines",
+     "Checkout fails with a retry message"
+    ],
+    [
+     "Cart → Catalog",
+     "Variant status, price, shop",
+     "Add fails; view shows lines without fresh prices"
+    ],
+    [
+     "Cart → Inventory",
+     "Availability",
+     "Shown as unknown"
+    ],
+    [
+     "Order → Payment",
+     "Initiate online payment",
+     "Saga compensates"
+    ],
+    [
+     "Order → Identity",
+     "Address snapshot",
+     "Checkout fails with a retry message"
+    ],
+    [
+     "Catalog → Inventory",
+     "Availability, set on-hand",
+     "Unknown availability; stock edit fails"
+    ],
+    [
+     "Catalog, Identity → Media",
+     "Media ready and owned",
+     "Attach fails; existing image kept"
+    ]
+   ]
+  },
+  {
+   "type": "table",
+   "title": "Events",
+   "columns": [
+    "Event",
+    "Producer",
+    "Consumers"
+   ],
+   "rows": [
+    [
+     "UserRegistered, UserProfileChanged, PasswordChanged, ExternalLoginLinked",
+     "Identity",
+     "Notification"
+    ],
+    [
+     "ShopRegistered, ShopChanged",
+     "Identity",
+     "Catalog, Notification, Search-AI"
+    ],
+    [
+     "CategoryTreeChanged, ProductChanged, ReviewChanged",
+     "Catalog",
+     "Search-AI"
+    ],
+    [
+     "VariantCreated",
+     "Catalog",
+     "Inventory"
+    ],
+    [
+     "CheckoutCompleted",
+     "Order",
+     "Cart"
+    ],
+    [
+     "OrderPlaced",
+     "Order",
+     "Inventory, Notification, Payment"
+    ],
+    [
+     "OrderShipped",
+     "Order",
+     "Inventory, Notification"
+    ],
+    [
+     "OrderCancelled",
+     "Order",
+     "Inventory, Payment, Notification"
+    ],
+    [
+     "OrderDelivered, OrderCompleted",
+     "Order",
+     "Payment, Catalog"
+    ],
+    [
+     "PaymentSucceeded, PaymentFailed, PaymentRefunded",
+     "Payment",
+     "Order"
+    ],
+    [
+     "MediaUploaded",
+     "Media",
+     "Image processor"
+    ],
+    [
+     "MediaProcessed, MediaRejected",
+     "Image processor",
+     "Media"
+    ],
+    [
+     "MediaDetached",
+     "Identity, Catalog",
+     "Media"
+    ]
+   ]
+  },
+  {
+   "type": "notes",
+   "title": "Decisions and risks"
+  },
+  {
+   "type": "catalogue",
+   "title": "Component catalogue"
+  }
+ ]
+}

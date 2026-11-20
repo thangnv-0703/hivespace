@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HiveSpace architecture</title>
+<script>
+// Resolve the theme before first paint so light-preference users don't see a dark flash.
+(function () {
+  var theme = null;
+  try { var p = new URLSearchParams(location.search).get('theme'); if (p === 'light' || p === 'dark') theme = p; } catch (_) {}
+  if (!theme) { try { theme = localStorage.getItem('flow-diagram-theme'); } catch (_) {} }
+  if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="dark"] {
+  --bg: #020617; --grid: #1e293b;
+  --text: #ffffff; --text-muted: #94a3b8; --text-dim: #475569; --text-faint: #7d8da1;
+  --panel: rgba(15, 23, 42, 0.5); --panel-border: #1e293b;
+  --lane-fill: rgba(15, 23, 42, 0.22); --lane-stroke: #334155;
+  --arrow: #94a3b8; --arrow-emphasis: #34d399; --mask: #0f172a;
+  --frontend-stroke: #22d3ee; --backend-stroke: #34d399; --database-stroke: #a78bfa;
+  --cloud-stroke: #fbbf24; --security-stroke: #fb7185; --external-stroke: #94a3b8;
+  --service-stroke: #fb923c; --ghost-stroke: #7d8da1;
+  --toolbar-bg: rgba(15, 23, 42, 0.8); --toolbar-border: #334155; --toolbar-text: #e2e8f0; --toolbar-hover: rgba(30, 41, 59, 0.95);
+}
+[data-theme="light"] {
+  --bg: #f4f5f7; --grid: #e9edf2;
+  --text: #111827; --text-muted: #5b6474; --text-dim: #9aa3b2; --text-faint: #6b7280;
+  --panel: #ffffff; --panel-border: #e5e7eb;
+  --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1;
+  --arrow: #64748b; --arrow-emphasis: #059669; --mask: #ffffff;
+  --frontend-stroke: #0891b2; --backend-stroke: #059669; --database-stroke: #7c3aed;
+  --cloud-stroke: #d97706; --security-stroke: #e11d48; --external-stroke: #64748b;
+  --service-stroke: #ea580c; --ghost-stroke: #6b7280;
+  --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 16px; transition: background .2s, color .2s; }
+.container { max-width: 1360px; margin: 0 auto; }
+body.wide .container { max-width: 2200px; }
+body.wide .stage { grid-template-columns: minmax(0, 1fr) 300px; }
+a { color: var(--frontend-stroke); }
+code { color: var(--frontend-stroke); font-family: inherit; }
+
+.header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.header-row { display: flex; align-items: center; gap: .75rem; }
+.pulse-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--backend-stroke); box-shadow: 0 0 0 4px color-mix(in srgb, var(--backend-stroke) 20%, transparent); animation: pulse 2s ease-in-out infinite; flex: none; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--backend-stroke) 0%, transparent); } }
+h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+.subtitle { color: var(--text-muted); font-size: .8125rem; margin-top: .4rem; padding-left: 1.6rem; line-height: 1.55; max-width: 1000px; }
+.subtitle b { color: var(--text); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.toolbar button, .toolbar a { font: inherit; font-size: .75rem; color: var(--toolbar-text); background: var(--toolbar-bg); border: 1px solid var(--toolbar-border); border-radius: 8px; padding: .45rem .75rem; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; text-decoration: none; }
+.toolbar button:hover, .toolbar a:hover { background: var(--toolbar-hover); }
+.toolbar button:focus-visible, .toolbar a:focus-visible { outline: 2px solid var(--frontend-stroke); outline-offset: 2px; }
+.toolbar button[aria-pressed="true"] { border-color: var(--arrow-emphasis); color: var(--text); box-shadow: inset 0 0 0 1px var(--arrow-emphasis); }
+.toolbar .sep { width: 1px; height: 22px; background: var(--toolbar-border); margin: 0 .15rem; }
+.chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1rem; }
+@media (max-width: 1150px) { .stage { grid-template-columns: 1fr; } }
+.diagram-container { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 1.25rem; overflow-x: auto; scroll-margin-top: 1rem; }
+.diagram-container svg { display: block; width: 100%; height: auto; }
+
+/* SVG */
+.c-grid { stroke: var(--grid); fill: none; }
+.c-region { fill: color-mix(in srgb, var(--cloud-stroke) 3%, transparent); stroke: color-mix(in srgb, var(--cloud-stroke) 42%, var(--lane-stroke)); }
+.c-frame { fill: var(--lane-fill); stroke: var(--lane-stroke); }
+.c-frame.dashed { fill: none; stroke-dasharray: 4 3; }
+.c-mask { fill: var(--mask); }
+.t-primary { fill: var(--text); } .t-muted { fill: var(--text-muted); } .t-cloud { fill: var(--cloud-stroke); } .t-lane { fill: var(--text-muted); }
+.node { cursor: pointer; outline: none; }
+.node rect.body, .lg rect.body { stroke-width: 1.25; transition: stroke-width .15s; }
+.sigil { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.node:hover rect.body, .node:focus-visible rect.body, .node.selected rect.body { stroke-width: 2.5; }
+.k-ghost rect.body { stroke-dasharray: 5 3; }
+.k-ghost text.t-primary { fill: var(--text-muted); }
+.edge path.line, .lg path.line { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.edge path.halo { fill: none; stroke: var(--mask); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.edge path.hit { fill: none; stroke: transparent; stroke-width: 12; pointer-events: stroke; cursor: pointer; }
+.edge.has-data:hover path.line { stroke-width: 2.6; }
+.s-default path.line { stroke: var(--arrow); }
+.s-emphasis path.line { stroke: var(--arrow-emphasis); stroke-width: 1.8; }
+.s-security path.line { stroke: var(--security-stroke); }
+.s-dashed path.line { stroke: var(--arrow); stroke-dasharray: 5 4; }
+.s-ghost path.line { stroke: var(--ghost-stroke); stroke-dasharray: 3 4; }
+.m-default { fill: var(--arrow); } .m-emphasis { fill: var(--arrow-emphasis); } .m-security { fill: var(--security-stroke); } .m-ghost { fill: var(--ghost-stroke); }
+.edge .lbl-bg { fill: var(--mask); stroke: var(--lane-stroke); stroke-width: .75; }
+.edge .lbl { font-size: 8px; pointer-events: none; }
+.s-default .lbl, .s-dashed .lbl { fill: var(--text-muted); } .s-emphasis .lbl { fill: var(--arrow-emphasis); } .s-security .lbl { fill: var(--security-stroke); } .s-ghost .lbl { fill: var(--ghost-stroke); }
+svg:not(.show-ghost) .ghost { display: none; }
+.pin { cursor: pointer; }
+.pin circle { stroke: var(--mask); stroke-width: 1.5; }
+.pin text { fill: var(--mask); font-size: 8px; font-weight: 700; pointer-events: none; }
+.pin.confirmed circle, .pin.aligned circle { fill: var(--backend-stroke); } .pin.consider circle { fill: var(--cloud-stroke); } .pin.decision circle { fill: var(--security-stroke); } .pin.risk circle { fill: var(--service-stroke); }
+.pin:hover circle, .pin:focus-visible circle { stroke: var(--text); }
+svg.hide-pins #pins { display: none; }
+.step-badge circle { fill: var(--arrow-emphasis); }
+.step-badge text { fill: var(--mask); font-size: 9px; font-weight: 700; }
+svg.dim .node:not(.on), svg.dim #pins .pin { opacity: .22; }
+svg.dim .edge:not(.on) { opacity: .1; }
+svg.dim .edge.on path.line { stroke-width: 2.4; stroke-dasharray: 7 5; animation: flow 1s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -24; } }
+@media (prefers-reduced-motion: reduce) { svg.dim .edge.on path.line { animation: none; } .pulse-dot { animation: none; } }
+
+/* Side panel */
+.side { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 1.1rem; font-size: .78rem; line-height: 1.55; align-self: start; max-height: 1000px; overflow-y: auto; }
+.side .eyebrow { font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+.side h2 { font-size: .95rem; margin: .2rem 0 .5rem; }
+.side p { color: var(--text-muted); margin-bottom: .6rem; }
+.side ol { list-style: none; counter-reset: s; }
+.side ol li { counter-increment: s; position: relative; padding-left: 1.75rem; margin-bottom: .55rem; color: var(--text-muted); }
+.side ol li::before { content: counter(s); position: absolute; left: 0; top: .05rem; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: var(--arrow-emphasis); color: var(--mask); font-weight: 700; font-size: .68rem; display: grid; place-items: center; }
+.side strong, .side b, .side .tag { color: var(--text); }
+.side .links { margin-top: .6rem; padding-top: .6rem; border-top: 1px solid var(--panel-border); color: var(--text-muted); }
+.side .links button { all: unset; cursor: pointer; display: block; padding: .1rem 0; }
+.side .links button:hover { color: var(--text); text-decoration: underline; }
+.side .kv { display: grid; grid-template-columns: auto 1fr; gap: .3rem .7rem; margin-top: .4rem; color: var(--text-muted); }
+.side .kv > span:nth-child(odd) { color: var(--text-faint); }
+.side .note-box { border: 1px solid var(--panel-border); border-radius: 10px; padding: .6rem .7rem; margin-top: .6rem; color: var(--text-muted); }
+.hint { color: var(--text-faint); font-size: .7rem; margin-top: .75rem; }
+.linkish { color: var(--frontend-stroke); background: none; border: 0; font: inherit; font-size: .72rem; cursor: pointer; text-decoration: underline; padding: 0; }
+.refs { color: var(--text-faint); font-size: .68rem; margin-top: .35rem; }
+.chip, .note-chip, .cls { display: inline-flex; align-items: center; font-size: .63rem; padding: .12rem .5rem; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.note-chip.confirmed, .note-chip.aligned { color: var(--backend-stroke); background: color-mix(in srgb, var(--backend-stroke) 15%, transparent); }
+.note-chip.consider { color: var(--cloud-stroke); background: color-mix(in srgb, var(--cloud-stroke) 15%, transparent); }
+.note-chip.decision { color: var(--security-stroke); background: color-mix(in srgb, var(--security-stroke) 15%, transparent); }
+.note-chip.risk { color: var(--service-stroke); background: color-mix(in srgb, var(--service-stroke) 15%, transparent); }
+.tagp { font-size: .65rem; padding: .12rem .5rem; border-radius: 999px; border: 1px solid var(--toolbar-border); color: var(--text-muted); white-space: nowrap; display: inline-block; margin: 0 .2rem .2rem 0; }
+
+/* Sections */
+.section-title { font-size: 1.05rem; font-weight: 650; margin: 1.9rem 0 .35rem; }
+.section-lead { color: var(--text-muted); font-size: .78rem; margin-bottom: .9rem; line-height: 1.55; max-width: 1080px; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(390px, 1fr)); gap: .9rem; }
+.grid-cards.narrow { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+@media (max-width: 520px) { .grid-cards { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 1rem 1.1rem; scroll-margin-top: 1rem; }
+.card.toned { border-top: 3px solid var(--tone); }
+.card.lefty { border-left: 3px solid var(--tone); }
+.card.flash { box-shadow: 0 0 0 2px var(--cloud-stroke); }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; margin-bottom: .55rem; flex-wrap: wrap; }
+.card h3 { font-size: .9rem; display: flex; align-items: center; gap: .55rem; }
+.card .kind { font-size: .65rem; color: var(--tone); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+.card ul.b { list-style: none; }
+.card ul.b li { font-size: .77rem; color: var(--text-muted); line-height: 1.55; padding-left: 1rem; position: relative; margin-bottom: .42rem; }
+.card ul.b li::before { content: ''; position: absolute; left: 0; top: .55em; width: 5px; height: 5px; border-radius: 50%; background: var(--text-dim); }
+.card b { color: var(--text); font-weight: 600; }
+.card-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--tone); }
+.spec { display: grid; grid-template-columns: 6.2rem 1fr; gap: .38rem .75rem; font-size: .74rem; line-height: 1.5; }
+.side .spec { grid-template-columns: 5.6rem 1fr; font-size: .72rem; margin-top: .5rem; }
+.spec dt { color: var(--text-faint); }
+.spec dd { color: var(--text-muted); }
+.spec dd ul { list-style: none; }
+.spec dd li { position: relative; padding-left: .8rem; }
+.spec dd li::before { content: '·'; position: absolute; left: 0; color: var(--text-dim); }
+.card-notes { margin-top: .6rem; display: flex; flex-wrap: wrap; gap: .35rem; }
+.note-body { font-size: .75rem; line-height: 1.55; color: var(--text-muted); }
+.tbl { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: .5rem .75rem; overflow-x: auto; }
+table.grid { width: 100%; border-collapse: collapse; font-size: .73rem; }
+table.grid th { text-align: left; color: var(--text-faint); font-weight: 500; padding: .45rem .5rem; border-bottom: 1px solid var(--panel-border); white-space: nowrap; }
+table.grid td { padding: .5rem; border-bottom: 1px solid var(--panel-border); color: var(--text-muted); vertical-align: top; line-height: 1.5; }
+table.grid td:first-child { color: var(--text); font-weight: 600; }
+table.grid tr:last-child td { border-bottom: 0; }
+table.matrix td:not(:first-child), table.matrix th:not(:first-child) { text-align: center; }
+.y { color: var(--backend-stroke); font-weight: 700; } .n { color: var(--text-dim); } .p { color: var(--cloud-stroke); }
+.footnote { color: var(--text-faint); font-size: .7rem; margin-top: 1.25rem; line-height: 1.6; }
+@media print { body { background: #fff; padding: 0; } .toolbar, .hint { display: none; } .stage { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-row"><div class="pulse-dot"></div><h1 id="title"></h1></div>
+      <p class="subtitle" id="subtitle"></p>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Diagram actions" id="toolbar"></div>
+  </div>
+  <div class="stage">
+    <div class="diagram-container" id="diagram">
+      <svg id="dia" role="img" aria-labelledby="dia-title dia-desc">
+        <title id="dia-title"></title>
+        <desc id="dia-desc"></desc>
+        <defs>
+          <marker id="ah-default" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-default"/></marker>
+          <marker id="ah-emphasis" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-emphasis"/></marker>
+          <marker id="ah-security" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-security"/></marker>
+          <marker id="ah-ghost" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-ghost"/></marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" class="c-grid" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+        <g id="frames"></g><g id="edges"></g><g id="nodes"></g><g id="pins"></g><g id="badges"></g><g id="legend"></g>
+      </svg>
+    </div>
+    <aside class="side" id="side" aria-live="polite"></aside>
+  </div>
+  <div id="sections"></div>
+  <p class="footnote" id="footnote"></p>
+</div>
+
+<script>
+/* The model is injected by scripts/build_diagram.py (edges already carry routed `d`, `lx`, `ly`). */
+var MODEL = {"meta": {"title": "HiveSpace architecture", "subtitle": "Container view of the MVP: the gateway/BFF, nine services, the image Function, the event bus and the externals. Click a component, arrow or pin; pick a flow to follow one scenario. Every service has its own database (shown in its sub-label), never read by another service.", "description": "Buyers, sellers and the operator reach a single gateway/BFF that serves the SPAs and forwards REST calls to nine services. Services call each other with gRPC and exchange events through Azure Service Bus with outbox and inbox. An Azure Function processes uploaded images in blob storage. Externals: payment provider, Google, LLM, email.", "viewBox": [1910, 820], "wide": true, "minWidth": 1600, "links": [{"href": "architecture.md", "label": "architecture.md"}], "kindLabels": {"service": "Service / Function", "backend": "Event bus", "security": "Gateway / BFF"}, "edgeLabels": {"dashed": "Event / async", "default": "REST or gRPC"}, "overview": [["Shape", "Gateway/BFF + 9 services + 1 Function"], ["Stacks", ".NET, Go, Python, Vue 3"], ["Sync", "REST at the edge, gRPC inside (ADR-0019)"], ["Async", "Service Bus, outbox + inbox (ADR-0002)"], ["Data", "Postgres per service, MongoDB for Cart, Blob"], ["Hosting", "Container Apps, scale to zero; Aspire locally"]], "footnote": "Source: <code>docs/architecture.md<\/code> (sections 5–6, 11) and ADR-0001…0026. gRPC and event arrows are drawn for the main relations; the full lists are in the tables below. Generated with html-flow-diagram; edit <code>architecture-flow.model.json<\/code> and rebuild."}, "frames": [{"x": 195, "y": 285, "w": 1470, "h": 190, "style": "frame", "tone": "service", "labelPos": "bottom", "labelX": 1300}, {"x": 1715, "y": 20, "w": 190, "h": 385, "label": "External", "style": "dashed", "labelPos": "bottom"}], "nodes": [{"id": "seller", "kind": "external", "x": 230, "y": 30, "w": 150, "h": 50, "label": "Seller", "sub": "seller centre", "desc": "Manages a shop, products, stock and orders in the seller centre (/seller)."}, {"id": "buyer", "kind": "external", "x": 420, "y": 30, "w": 150, "h": 50, "label": "Buyer / Visitor", "sub": "storefront", "flow": "checkout", "desc": "Browses, searches, keeps a cart, checks out and pays."}, {"id": "operator", "kind": "external", "x": 610, "y": 30, "w": 150, "h": 50, "label": "Operator", "sub": "scripts · mocks", "desc": "The builder: seeds data, drives the mock payment and shipping controls during demos."}, {"id": "spa", "kind": "frontend", "x": 20, "y": 144, "w": 150, "h": 56, "label": "Web SPAs", "sub": "Vue 3 · TS", "desc": "Storefront (/) and seller centre (/seller). Static files served from the gateway image; generated API client; vue-i18n."}, {"id": "gw", "kind": "security", "x": 200, "y": 140, "w": 1460, "h": 64, "label": "Gateway + BFF", "sub": ".NET · YARP · one public origin · encrypted cookie · token relay · rate limits · anonymous callback route", "desc": "The only external ingress. Confidential OIDC client and BFF: tokens stay server-side in an encrypted HttpOnly cookie; relays a bearer token to services; CSRF header, rate limits, correlation ID (ADR-0008)."}, {"id": "media", "kind": "service", "x": 210, "y": 300, "w": 130, "h": 60, "label": "Media", "sub": ".NET · Postgres", "desc": "Upload intents, SAS issuing and media records (pending, ready, rejected, detached)."}, {"id": "catalog", "kind": "service", "x": 374, "y": 300, "w": 130, "h": 60, "label": "Catalog", "sub": ".NET · Postgres", "desc": "Category tree, products, variants, reviews and rating aggregates."}, {"id": "inventory", "kind": "service", "x": 538, "y": 300, "w": 130, "h": 60, "label": "Inventory", "sub": "Go · Postgres", "desc": "On-hand, reserved, available; atomic reservations with lazy expiry (ADR-0007)."}, {"id": "order", "kind": "service", "x": 702, "y": 300, "w": 130, "h": 60, "label": "Order", "sub": ".NET · Postgres", "desc": "Checkout saga, orders, status timeline, mock shipping, pricing pipeline (ADR-0006)."}, {"id": "cart", "kind": "service", "x": 866, "y": 300, "w": 130, "h": 60, "label": "Cart", "sub": "Go · MongoDB", "desc": "Cart lines per user and cart display composition; one document per user (ADR-0017, ADR-0018)."}, {"id": "payment", "kind": "service", "x": 1030, "y": 300, "w": 130, "h": 60, "label": "Payment", "sub": ".NET · Postgres", "desc": "Payments, refunds, ledger, IPaymentProvider (mock, VNPay optional), callback endpoint (ADR-0004)."}, {"id": "identity", "kind": "service", "x": 1194, "y": 300, "w": 130, "h": 60, "label": "Identity", "sub": "OpenIddict · Pg", "desc": "OIDC authorization server: users, credentials, external logins, profile, addresses, shop (ADR-0008)."}, {"id": "search", "kind": "service", "x": 1358, "y": 300, "w": 130, "h": 60, "label": "Search-AI", "sub": "Python · pgvector", "desc": "Product read model, full-text index, embeddings, keyword and NL search (ADR-0003, ADR-0014)."}, {"id": "notif", "kind": "service", "x": 1522, "y": 300, "w": 130, "h": 60, "label": "Notification", "sub": "Python · Postgres", "desc": "Contact projection, templates (vi, en), email records with retries and dedupe (ADR-0016)."}, {"id": "bus", "kind": "backend", "x": 200, "y": 510, "w": 1460, "h": 50, "label": "Event bus", "sub": "Azure Service Bus · topic hivespace-events · outbox → bus → inbox · at-least-once", "sigil": "service", "desc": "IEventBus over Service Bus (emulator locally, RabbitMQ optional). JSON envelope, trace context in the envelope, consumers dedupe by eventId (ADR-0002)."}, {"id": "fn", "kind": "service", "x": 210, "y": 660, "w": 150, "h": 56, "label": "Image processor", "sub": "Azure Function", "desc": "Triggered by MediaUploaded: validates the signature, re-encodes, strips metadata, resizes, writes to the public container (ADR-0011)."}, {"id": "blob", "kind": "database", "x": 20, "y": 660, "w": 150, "h": 56, "label": "Blob storage", "sub": "incoming · public", "desc": "Azure Blob (Azurite locally): private incoming container, public read container, gateway data-protection keys."}, {"id": "provider", "kind": "external", "x": 1730, "y": 30, "w": 160, "h": 50, "label": "Payment provider", "sub": "mock · VNPay sbx", "desc": "Mock provider (lives in the Payment service) or VNPay sandbox. Sends signed callbacks."}, {"id": "google", "kind": "external", "x": 1730, "y": 110, "w": 160, "h": 50, "label": "Google", "sub": "OIDC · PKCE", "desc": "Social sign-in behind IExternalLoginProvider; only the Google button fails if it is down (FR-AUTH-023)."}, {"id": "llm", "kind": "external", "x": 1730, "y": 200, "w": 160, "h": 50, "label": "LLM + embeddings", "sub": "runtime TBD", "desc": "Query interpretation and embeddings behind ILlmProvider / IEmbeddingProvider; runtime undecided (ADR-0014, OQ-4)."}, {"id": "email", "kind": "external", "x": 1730, "y": 305, "w": 160, "h": 50, "label": "Email provider", "sub": "Resend · Mailpit", "desc": "IEmailSender: Mailpit locally, Resend in the demo."}], "edges": [{"id": "a1", "from": "buyer", "to": "gw", "s": "emphasis", "fromSide": "bottom", "toSide": "top", "toAt": 0.2021, "data": {"p": "Pages, API calls with the session cookie", "f": "HTTPS · REST/JSON", "c": "pii", "s": "TLS; encrypted HttpOnly cookie; X-HS-CSRF on writes"}, "d": "M495 80 L495 109.97 Q495 110 495.03 110 L495.03 110 Q495.07 110 495.07 110.03 L495.07 140"}, {"id": "a2", "from": "seller", "to": "gw", "s": "default", "fromSide": "bottom", "toSide": "top", "toAt": 0.0719, "data": {"p": "Seller centre calls", "f": "HTTPS · REST/JSON", "c": "pii", "s": "Same BFF session; Seller role checked by services"}, "d": "M305 80 L305 109.99 Q305 110 304.99 110 L304.99 110 Q304.97 110 304.97 110.01 L304.97 140"}, {"id": "a3", "from": "operator", "to": "gw", "s": "dashed", "fromSide": "bottom", "toSide": "top", "toAt": 0.3322, "data": {"p": "Seed scripts, mock payment and shipping triggers", "f": "HTTPS · REST", "c": "internal", "s": "Demo only"}, "d": "M685 80 L685 109.99 Q685 110 685.01 110 L685.01 110 Q685.01 110 685.01 110.01 L685.01 140"}, {"id": "a4", "from": "gw", "to": "spa", "s": "default", "fromSide": "left", "toSide": "right", "data": {"p": "Static SPA bundles", "f": "HTTPS", "c": "public", "s": "Same origin as the API, so no CORS"}, "d": "M200 172 L170 172"}, {"id": "a5", "from": "seller", "to": "blob", "s": "dashed", "label": "PUT via SAS", "fromSide": "left", "toSide": "right", "toAt": 0.3, "via": [[185, 55], [185, 677]], "lx": 140, "ly": 400, "data": {"p": "Image bytes", "f": "HTTPS PUT", "c": "internal", "s": "Write-only, short-lived SAS into the private container", "w": "After Media issues an upload intent"}, "d": "M230 55 L193 55 Q185 55 185 63 L185 669.3 Q185 676.8 177.5 676.8 L170 676.8"}, {"id": "g1", "from": "gw", "to": "media", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.0514, "toAt": 0.5, "data": {"p": "Media REST calls", "f": "REST/JSON (OpenAPI)", "c": "internal", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M275.04 204 L275.04 251.98 Q275.04 252 275.02 252 L275.02 252 Q275 252 275 252.02 L275 300"}, {"id": "g2", "from": "gw", "to": "catalog", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.1637, "toAt": 0.5, "data": {"p": "Catalog REST calls", "f": "REST/JSON (OpenAPI)", "c": "internal", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M439 204 L439 300"}, {"id": "g3", "from": "gw", "to": "inventory", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.276, "toAt": 0.5, "data": {"p": "Inventory REST calls", "f": "REST/JSON (OpenAPI)", "c": "internal", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M602.96 204 L602.96 251.98 Q602.96 252 602.98 252 L602.98 252 Q603 252 603 252.02 L603 300"}, {"id": "g4", "from": "gw", "to": "order", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.3884, "toAt": 0.5, "data": {"p": "Order REST calls", "f": "REST/JSON (OpenAPI)", "c": "pii", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M767.06 204 L767.06 251.97 Q767.06 252 767.03 252 L767.03 252 Q767 252 767 252.03 L767 300"}, {"id": "g5", "from": "gw", "to": "cart", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.5007, "toAt": 0.5, "data": {"p": "Cart REST calls", "f": "REST/JSON (OpenAPI)", "c": "pii", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M931.02 204 L931.02 251.99 Q931.02 252 931.01 252 L931.01 252 Q931 252 931 252.01 L931 300"}, {"id": "g6", "from": "gw", "to": "payment", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.613, "toAt": 0.5, "data": {"p": "Payment REST calls", "f": "REST/JSON (OpenAPI)", "c": "pii", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M1094.98 204 L1094.98 251.99 Q1094.98 252 1094.99 252 L1094.99 252 Q1095 252 1095 252.01 L1095 300"}, {"id": "g7", "from": "gw", "to": "identity", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.7253, "toAt": 0.5, "data": {"p": "Identity REST calls", "f": "REST/JSON (OpenAPI)", "c": "pii", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M1258.94 204 L1258.94 251.97 Q1258.94 252 1258.97 252 L1258.97 252 Q1259 252 1259 252.03 L1259 300"}, {"id": "g8", "from": "gw", "to": "search", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.8377, "toAt": 0.5, "data": {"p": "Search-AI REST calls", "f": "REST/JSON (OpenAPI)", "c": "internal", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M1423.04 204 L1423.04 251.98 Q1423.04 252 1423.02 252 L1423.02 252 Q1423 252 1423 252.02 L1423 300"}, {"id": "g9", "from": "gw", "to": "notif", "s": "default", "fromSide": "bottom", "toSide": "top", "fromAt": 0.95, "toAt": 0.5, "data": {"p": "Notification REST calls", "f": "REST/JSON (OpenAPI)", "c": "pii", "s": "Bearer JWT relayed by the gateway; X-User-Id / X-User-Roles; service re-validates"}, "d": "M1587 204 L1587 300"}, {"id": "p1", "from": "payment", "to": "provider", "s": "emphasis", "label": "create payment", "fromSide": "top", "toSide": "left", "fromAt": 0.8, "via": [[1134.0, 215], [1700, 215], [1700, 62]], "lx": 1450, "ly": 224, "data": {"p": "Payment request (orderIds, amount + currency)", "f": "HTTPS · provider API", "c": "conf", "s": "Idempotency key; secret from Key Vault"}, "d": "M1134 300 L1134 223 Q1134 215 1142 215 L1692 215 Q1700 215 1700 207 L1700 63 Q1700 55 1708 55 L1730 55"}, {"id": "p2", "from": "provider", "to": "gw", "s": "security", "label": "signed callback", "fromSide": "left", "toSide": "top", "fromAt": 0.4, "toAt": 0.9863, "via": [[1640, 50]], "lx": 1600, "ly": 100, "data": {"p": "Provider event (event id, status, amount)", "f": "HTTPS POST /v1/payments/callbacks/mock", "c": "conf", "s": "Anonymous route; signature verified by Payment (401 if bad)"}, "d": "M1730 50 L1648 50 Q1640 50 1640 58 L1640 140"}, {"id": "x1", "from": "identity", "to": "google", "s": "security", "label": "OIDC", "fromSide": "top", "toSide": "left", "fromAt": 0.85, "via": [[1304.5, 255], [1680, 255], [1680, 135]], "data": {"p": "Authorization code, ID token", "f": "OIDC code + PKCE", "c": "pii", "s": "state, nonce; verified email required to auto-link"}, "d": "M1304.5 300 L1304.5 263 Q1304.5 255 1312.5 255 L1672 255 Q1680 255 1680 247 L1680 143 Q1680 135 1688 135 L1730 135", "lx": 1492.2, "ly": 255.0}, {"id": "x2", "from": "search", "to": "llm", "s": "dashed", "label": "interpret · embed", "fromSide": "top", "toSide": "left", "fromAt": 0.8, "via": [[1462.0, 235], [1690, 235], [1690, 225]], "data": {"p": "Query text (as data) → structured filters, vectors", "f": "Provider API · JSON schema", "c": "internal", "s": "3 s timeout; fixed schema out; no tools (NFR-SEC-010)"}, "d": "M1462 300 L1462 243 Q1462 235 1470 235 L1685 235 Q1690 235 1690 230 L1690 230 Q1690 225 1695 225 L1730 225", "lx": 1576.0, "ly": 235.0}, {"id": "x3", "from": "notif", "to": "email", "s": "default", "label": "send", "fromSide": "right", "toSide": "left", "data": {"p": "Recipient, rendered template (vi/en)", "f": "SMTP / HTTPS API", "c": "pii", "s": "API key; tokens never logged (R-6)"}, "d": "M1652 330 L1730 330", "lx": 1691.0, "ly": 330.0}, {"id": "r1", "from": "catalog", "to": "media", "s": "default", "fromSide": "left", "toSide": "right", "fromAt": 0.5, "toAt": 0.5, "data": {"p": "Verify media ready and owned", "f": "gRPC", "c": "internal", "s": "Bearer in metadata; deadline"}, "d": "M374 330 L340 330"}, {"id": "r2", "from": "catalog", "to": "inventory", "s": "default", "fromSide": "right", "toSide": "left", "fromAt": 0.35, "toAt": 0.35, "data": {"p": "Availability, set on-hand", "f": "gRPC", "c": "internal", "s": "Deadline; product page shows unknown if down"}, "d": "M504 321 L538 321"}, {"id": "r3", "from": "order", "to": "inventory", "s": "emphasis", "fromSide": "left", "toSide": "right", "fromAt": 0.65, "toAt": 0.65, "data": {"p": "Batch Reserve / Release (checkoutId, lines)", "f": "gRPC", "c": "internal", "s": "Deadline 10 s; one DB transaction; idempotent per line"}, "d": "M702 339 L668 339"}, {"id": "r4", "from": "order", "to": "cart", "s": "emphasis", "fromSide": "right", "toSide": "left", "fromAt": 0.5, "toAt": 0.5, "data": {"p": "Selected cart lines", "f": "gRPC", "c": "internal", "s": "Bearer in metadata"}, "d": "M832 330 L866 330"}, {"id": "r5", "from": "order", "to": "catalog", "s": "emphasis", "fromSide": "bottom", "toSide": "bottom", "fromAt": 0.25, "toAt": 0.75, "via": [[734.5, 385], [471.5, 385]], "data": {"p": "Authoritative prices and status", "f": "gRPC", "c": "internal", "s": "Checkout never trusts cart prices"}, "d": "M734.5 360 L734.5 377 Q734.5 385 726.5 385 L479.5 385 Q471.5 385 471.5 377 L471.5 360"}, {"id": "r6", "from": "cart", "to": "inventory", "s": "default", "fromSide": "bottom", "toSide": "bottom", "fromAt": 0.25, "toAt": 0.75, "via": [[898.5, 400], [635.5, 400]], "data": {"p": "Availability for display", "f": "gRPC", "c": "internal", "s": "Shown as unknown if down"}, "d": "M898.5 360 L898.5 392 Q898.5 400 890.5 400 L643.5 400 Q635.5 400 635.5 392 L635.5 360"}, {"id": "r7", "from": "cart", "to": "catalog", "s": "default", "fromSide": "bottom", "toSide": "bottom", "fromAt": 0.12, "toAt": 0.55, "via": [[881.6, 415], [445.5, 415]], "data": {"p": "Variant status, price, shop", "f": "gRPC", "c": "internal", "s": "Add fails clearly if down"}, "d": "M881.6 360 L881.6 407 Q881.6 415 873.6 415 L453.5 415 Q445.5 415 445.5 407 L445.5 360"}, {"id": "r8", "from": "order", "to": "payment", "s": "emphasis", "fromSide": "bottom", "toSide": "bottom", "fromAt": 0.75, "toAt": 0.25, "via": [[799.5, 430], [1062.5, 430]], "data": {"p": "Initiate online payment", "f": "gRPC", "c": "internal", "s": "Failure or timeout → saga compensates"}, "d": "M799.5 360 L799.5 422 Q799.5 430 807.5 430 L1054.5 430 Q1062.5 430 1062.5 422 L1062.5 360"}, {"id": "r9", "from": "order", "to": "identity", "s": "default", "fromSide": "bottom", "toSide": "bottom", "fromAt": 0.88, "toAt": 0.25, "via": [[816.4, 445], [1226.5, 445]], "data": {"p": "Address snapshot", "f": "gRPC", "c": "internal", "s": "Checkout fails with retry message if down"}, "d": "M816.4 360 L816.4 437 Q816.4 445 824.4 445 L1218.5 445 Q1226.5 445 1226.5 437 L1226.5 360"}, {"id": "r10", "from": "identity", "to": "media", "s": "default", "fromSide": "bottom", "toSide": "bottom", "fromAt": 0.55, "toAt": 0.5, "via": [[1265.5, 460], [275.0, 460]], "data": {"p": "Verify media ready and owned", "f": "gRPC", "c": "internal", "s": "Attach fails; old image kept"}, "d": "M1265.5 360 L1265.5 452 Q1265.5 460 1257.5 460 L283 460 Q275 460 275 452 L275 360"}, {"id": "v1", "from": "identity", "to": "bus", "s": "dashed", "fromSide": "bottom", "toSide": "top", "fromAt": 0.9, "toAt": 0.761, "data": {"p": "UserRegistered, UserProfileChanged, ShopRegistered, ShopChanged, MediaDetached", "f": "Event envelope · JSON (contracts/events)", "c": "pii", "s": "Carries the verification token (R-6); hash-only storage, no logging", "w": "Relayed by the outbox, at least once"}, "d": "M1311 360 L1311 434.97 Q1311 435 1311.03 435 L1311.03 435 Q1311.06 435 1311.06 435.03 L1311.06 510"}, {"id": "v2", "from": "catalog", "to": "bus", "s": "dashed", "fromSide": "bottom", "toSide": "top", "fromAt": 0.1, "toAt": 0.1281, "data": {"p": "ProductChanged (versioned), VariantCreated, ReviewChanged, CategoryTreeChanged, MediaDetached", "f": "Event envelope · JSON (contracts/events)", "c": "internal", "s": "Outbox in the same transaction", "w": "Relayed by the outbox, at least once"}, "d": "M387 360 L387 434.99 Q387 435 387.01 435 L387.01 435 Q387.03 435 387.03 435.01 L387.03 510"}, {"id": "v3", "from": "order", "to": "bus", "s": "dashed", "fromSide": "bottom", "toSide": "top", "fromAt": 0.06, "toAt": 0.3492, "data": {"p": "CheckoutCompleted, OrderPlaced, OrderShipped, OrderCancelled, OrderDelivered, OrderCompleted", "f": "Event envelope · JSON (contracts/events)", "c": "pii", "s": "Outbox in the same transaction", "w": "Relayed by the outbox, at least once"}, "d": "M709.8 360 L709.8 434.98 Q709.8 435 709.82 435 L709.82 435 Q709.83 435 709.83 435.02 L709.83 510"}, {"id": "v4", "from": "payment", "to": "bus", "s": "dashed", "fromSide": "bottom", "toSide": "top", "fromAt": 0.6, "toAt": 0.6219, "data": {"p": "PaymentSucceeded, PaymentFailed, PaymentRefunded", "f": "Event envelope · JSON (contracts/events)", "c": "conf", "s": "Outbox in the same transaction as the provider-event row", "w": "Relayed by the outbox, at least once"}, "d": "M1108 360 L1108 434.99 Q1108 435 1107.99 435 L1107.99 435 Q1107.97 435 1107.97 435.01 L1107.97 510"}, {"id": "v5", "from": "media", "to": "bus", "s": "dashed", "fromSide": "bottom", "toSide": "top", "fromAt": 0.12, "toAt": 0.0175, "data": {"p": "MediaUploaded", "f": "Event envelope · JSON (contracts/events)", "c": "internal", "s": "Outbox", "w": "Relayed by the outbox, at least once"}, "d": "M225.6 360 L225.6 434.98 Q225.6 435 225.57 435 L225.57 435 Q225.55 435 225.55 435.02 L225.55 510"}, {"id": "c1", "from": "bus", "to": "notif", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.95, "toAt": 0.5, "data": {"p": "User*, Shop*, Order* events", "f": "Event envelope · JSON", "c": "pii", "s": "Inbox dedupe; one email per event and recipient"}, "d": "M1587 510 L1587 360"}, {"id": "c2", "from": "bus", "to": "search", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.8377, "toAt": 0.5, "data": {"p": "ProductChanged, ReviewChanged, ShopChanged, CategoryTreeChanged", "f": "Event envelope · JSON", "c": "internal", "s": "Older versions ignored (R-12)"}, "d": "M1423.04 510 L1423.04 435.02 Q1423.04 435 1423.02 435 L1423.02 435 Q1423 435 1423 434.98 L1423 360"}, {"id": "c3", "from": "bus", "to": "inventory", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.2493, "toAt": 0.2, "data": {"p": "VariantCreated, OrderPlaced, OrderShipped, OrderCancelled", "f": "Event envelope · JSON", "c": "internal", "s": "Inbox dedupe; reservation HELD → COMMITTED → CONSUMED / RELEASED"}, "d": "M563.98 510 L563.98 435.01 Q563.98 435 563.99 435 L563.99 435 Q564 435 564 434.99 L564 360"}, {"id": "c4", "from": "bus", "to": "cart", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.5229, "toAt": 0.75, "data": {"p": "CheckoutCompleted", "f": "Event envelope · JSON", "c": "internal", "s": "Removes purchased lines idempotently"}, "d": "M963.43 510 L963.43 435.03 Q963.43 435 963.47 435 L963.47 435 Q963.5 435 963.5 434.97 L963.5 360"}, {"id": "c5", "from": "bus", "to": "order", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.3884, "toAt": 0.5, "data": {"p": "PaymentSucceeded, PaymentFailed, PaymentRefunded", "f": "Event envelope · JSON", "c": "conf", "s": "Guarded AWAITING_PAYMENT → PLACED transition"}, "d": "M767.06 510 L767.06 435.03 Q767.06 435 767.03 435 L767.03 435 Q767 435 767 434.97 L767 360"}, {"id": "c6", "from": "bus", "to": "payment", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.6468, "toAt": 0.88, "data": {"p": "OrderPlaced, OrderCancelled, OrderDelivered, OrderCompleted", "f": "Event envelope · JSON", "c": "conf", "s": "COD pending, refunds, release to seller"}, "d": "M1144.33 510 L1144.33 435.04 Q1144.33 435 1144.36 435 L1144.36 435 Q1144.4 435 1144.4 434.96 L1144.4 360"}, {"id": "c7", "from": "bus", "to": "media", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.0852, "toAt": 0.88, "data": {"p": "MediaProcessed, MediaRejected, MediaDetached", "f": "Event envelope · JSON", "c": "internal", "s": "Inbox dedupe"}, "d": "M324.39 510 L324.4 360"}, {"id": "c8", "from": "bus", "to": "catalog", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.1993, "toAt": 0.9, "data": {"p": "ShopRegistered, ShopChanged, OrderCompleted", "f": "Event envelope · JSON", "c": "internal", "s": "Shop snapshot, verified-purchase projection"}, "d": "M490.98 510 L490.98 435.01 Q490.98 435 490.99 435 L490.99 435 Q491 435 491 434.99 L491 360"}, {"id": "f1", "from": "bus", "to": "fn", "s": "dashed", "fromSide": "bottom", "toSide": "top", "fromAt": 0.0342, "toAt": 0.2667, "data": {"p": "MediaUploaded (media id, blob path)", "f": "Service Bus trigger", "c": "internal", "s": "Managed connection"}, "d": "M249.93 560 L249.93 609.96 Q249.93 610 249.97 610 L249.97 610 Q250 610 250 610.04 L250 660"}, {"id": "f2", "from": "fn", "to": "bus", "s": "dashed", "fromSide": "top", "toSide": "bottom", "fromAt": 0.7333, "toAt": 0.0822, "data": {"p": "MediaProcessed / MediaRejected", "f": "Event envelope · JSON", "c": "internal", "s": "Output binding"}, "d": "M320 660 L320 610.01 Q320 610 320 610 L320 610 Q320.01 610 320.01 609.99 L320.01 560"}, {"id": "f3", "from": "fn", "to": "blob", "s": "default", "fromSide": "left", "toSide": "right", "toAt": 0.7, "data": {"p": "Reads incoming, writes re-encoded variants to public", "f": "Blob API", "c": "internal", "s": "Nothing served until validated (NFR-SEC-013)"}, "d": "M210 688 L195.6 688 Q190 688 190 693.6 L190 693.6 Q190 699.2 184.4 699.2 L170 699.2"}], "flows": {"all": {"title": "HiveSpace: overall architecture", "intro": "Gateway/BFF in front of nine services and one Function. REST at the edge, gRPC between services, events through the bus. Pick a flow to see one scenario."}, "register": {"title": "Register and verify email", "button": "Register", "color": "security", "intro": "UC-001: the first cross-stack event path (FEAT-001).", "tags": ["UC-001", "Data: [[pii]]"], "steps": [{"e": ["a1", "g7"], "t": "<strong>Visitor registers<\/strong>: the storefront posts to <code>/v1/users<\/code> through the gateway."}, {"e": ["v1"], "t": "<strong>Identity commits<\/strong> the user, credential, token hash and <code>UserRegistered<\/code> in one transaction; the outbox relays it."}, {"e": ["c1"], "t": "<strong>Notification consumes<\/strong> it once (inbox) and records the email."}, {"e": ["x3"], "t": "<strong>Verification email<\/strong> goes out in the registration language."}]}, "signin": {"title": "Sign in through the BFF (password or Google)", "button": "Sign-in", "color": "security", "intro": "UC-002, UC-025, ADR-0008. The browser never sees a token.", "tags": ["UC-002", "UC-025", "ADR-0008"], "steps": [{"e": ["a1"], "t": "<strong>/bff/login<\/strong> starts the OIDC code flow with PKCE."}, {"e": ["g7"], "t": "<strong>Identity authorizes<\/strong>: password check with lockout, or…"}, {"e": ["x1"], "t": "<strong>Continue with Google<\/strong>: code exchange, verified email required to auto-link."}, {"e": ["a4"], "t": "<strong>Gateway stores tokens<\/strong> in the encrypted cookie and returns to the SPA."}]}, "checkout": {"title": "Checkout with stock reservation and compensation", "button": "Checkout", "color": "service", "intro": "UC-011: orchestrated saga in Order (ADR-0006, ADR-0007).", "tags": ["UC-011", "Idempotency-Key", "CON-7"], "steps": [{"e": ["a1", "g4"], "t": "<strong>POST /v1/checkouts<\/strong> with an Idempotency-Key; Order starts the saga."}, {"e": ["r4", "r5", "r9"], "t": "<strong>Gather<\/strong> selected cart lines, authoritative prices and the address snapshot."}, {"e": ["r3"], "t": "<strong>Reserve all lines atomically<\/strong> in Inventory; any shortfall fails the checkout with no orders."}, {"e": ["r8"], "t": "<strong>Online payment<\/strong> is initiated; a failure releases the reservation and compensates."}, {"e": ["v3", "c4", "c3"], "t": "<strong>Events<\/strong>: <code>CheckoutCompleted<\/code> clears the cart; <code>OrderPlaced<\/code> commits the reservation (COD)."}]}, "payment": {"title": "Payment callback, delivered three times", "button": "Payment", "color": "external", "intro": "UC-012, NFR-REL-003, ADR-0004: one payment effect, one order transition.", "tags": ["UC-012", "NFR-REL-003"], "steps": [{"e": ["p1"], "t": "<strong>Payment created<\/strong> at the provider; the buyer pays there."}, {"e": ["p2", "g6"], "t": "<strong>Signed callback<\/strong> arrives on the anonymous gateway route and is forwarded to Payment."}, {"e": ["v4"], "t": "<strong>One transaction<\/strong>: unique provider-event row, compare-and-set PENDING → PAID, outbox. Duplicates are acknowledged and ignored."}, {"e": ["c5"], "t": "<strong>Order<\/strong> moves AWAITING_PAYMENT → PLACED and publishes <code>OrderPlaced<\/code>."}, {"e": ["v3", "c3"], "t": "<strong>Inventory<\/strong> commits the reservation."}]}, "search": {"title": "Natural-language search with keyword fallback", "button": "NL search", "color": "service", "intro": "UC-008: the LLM is optional; a timeout or bad output falls back to keyword search.", "tags": ["UC-008", "NFR-SEC-010"], "steps": [{"e": ["v2", "c2"], "t": "<strong>Read model<\/strong>: Catalog publishes versioned <code>ProductChanged<\/code>; Search-AI indexes it."}, {"e": ["a1", "g8"], "t": "<strong>GET /v1/search/nl<\/strong>, rate limited at the gateway."}, {"e": ["x2"], "t": "<strong>Interpret and embed<\/strong> (3 s timeout, fixed schema); on failure, keyword search on the raw query."}]}, "media": {"title": "Image upload through a presigned URL", "button": "Upload", "color": "database", "intro": "ADR-0011: the browser uploads straight to blob; the Function validates before anything is public.", "tags": ["FR-MEDIA", "NFR-SEC-013"], "steps": [{"e": ["a2", "g1"], "t": "<strong>Upload intent<\/strong>: Media returns a write-only SAS URL."}, {"e": ["a5"], "t": "<strong>Browser PUTs<\/strong> the bytes into the private container."}, {"e": ["v5", "f1"], "t": "<strong>MediaUploaded<\/strong> triggers the image processor."}, {"e": ["f3", "f2", "c7"], "t": "<strong>Validate and re-encode<\/strong> into the public container; Media marks the record ready."}]}}, "notes": [{"id": "N1", "on": "gw", "st": "confirmed", "t": "Gateway is the BFF", "b": "Tokens stay server-side in an encrypted cookie; the browser never holds a token. Services still validate the JWT and enforce roles.", "r": "ADR-0008"}, {"id": "N2", "on": "gw", "st": "risk", "t": "In-memory rate limiter", "b": "Limits are wrong with 2+ replicas; pin the gateway to one replica.", "r": "R-5"}, {"id": "N3", "on": "order", "st": "confirmed", "t": "Orchestrated checkout saga", "b": "State persisted after every step; a crash resumes or compensates on the next wake. 0 orphan orders under failure injection.", "r": "ADR-0006, NFR-REL-002"}, {"id": "N4", "on": "inventory", "st": "confirmed", "t": "Atomic reservation", "b": "Conditional update on sorted rows in one transaction; lazy expiry is the final backstop.", "r": "ADR-0007, NFR-SCAL-001"}, {"id": "N5", "on": "payment", "st": "confirmed", "t": "Idempotent callbacks", "b": "Unique provider-event row in the same transaction as the status change.", "r": "ADR-0004"}, {"id": "N6", "on": "bus", "st": "risk", "t": "Service Bus cost", "b": "Standard tier is billed per hour while the namespace exists (~$10/month if left up). Provision per deploy window, amend the budget, or swap to RabbitMQ.", "r": "R-2, ADR-0005"}, {"id": "N7", "on": "notif", "st": "risk", "t": "Tokens travel in events", "b": "Verification and reset tokens are in the event payload. Hash-only storage in Identity, never logged, outbox rows deleted after 24 h.", "r": "R-6"}, {"id": "N8", "on": "llm", "st": "decision", "t": "AI runtime undecided", "b": "Pick the LLM and embedding provider; store the model ID with every vector.", "r": "ADR-0014, OQ-4, R-10"}, {"id": "N9", "on": "cart", "st": "decision", "t": "MongoDB demo host", "b": "Atlas free tier or Cosmos DB for MongoDB; Cart stays on single-document atomic updates.", "r": "ADR-0018, R-13"}, {"id": "N10", "on": "fn", "st": "risk", "t": "Cold starts stack", "b": "App scale-from-zero + Neon wake + Function start can miss the 5 s image target. Warm the stack before demos.", "r": "R-4, NFR-PERF-007"}, {"id": "G1", "st": "risk", "t": "Service count for one builder", "b": "9 services, 1 Function, 3 stacks against ~390 hours. Cut order: Media + Function, then Notification into Order, then Cart into Order. Never the saga or inventory.", "r": "R-1, CON-1"}, {"id": "G2", "st": "risk", "t": "Internal trust", "b": "Services trust the network plus a validated JWT; no mTLS or service identity. Acceptable for a demo with no real money.", "r": "R-7"}, {"id": "G3", "st": "consider", "t": "Pending architecture edits from FEAT-001", "b": "Add <code>VerificationEmailRequested<\/code> to the event catalog and amend ADR-0008's hosted-pages bullet (auth screens are SPA pages).", "r": "FEAT-001 technical design §8"}], "specs": {"gw": {"host": "Container App, external ingress", "trigger": "Browsers, payment callbacks", "ops": ["OIDC client + encrypted cookie", "Token refresh and relay", "Rate limits, CSRF header", "Serves both SPAs"], "data": "Session cookie; DP keys in blob", "nfr": "NFR-SEC-004, NFR-SEC-005"}, "identity": {"host": "Container App (internal), rich .NET", "trigger": "Gateway REST, gRPC", "ops": ["Register, verify, sign in", "OIDC server (OpenIddict)", "Profile, addresses, shop"], "data": "identitydb (Postgres)", "nfr": "NFR-SEC-002, NFR-SEC-015"}, "catalog": {"host": "Container App (internal), rich .NET", "trigger": "Gateway REST, gRPC, events", "ops": ["Products, variants, categories", "Reviews and ratings"], "data": "Postgres (store open, ADR-0018)", "nfr": "NFR-PERF-001"}, "inventory": {"host": "Container App (internal), Go", "trigger": "gRPC, events", "ops": ["Reserve / release", "Expiry sweeper"], "data": "Postgres", "nfr": "NFR-SCAL-001, NFR-PERF-005"}, "order": {"host": "Container App (internal), rich .NET", "trigger": "Gateway REST, events", "ops": ["Checkout saga", "Orders and timeline", "Mock shipping, pricing"], "data": "Postgres", "nfr": "NFR-REL-002, NFR-PERF-004"}, "cart": {"host": "Container App (internal), lean Go", "trigger": "Gateway REST, gRPC, events", "ops": ["Cart lines", "Display composition"], "data": "MongoDB, one document per user", "nfr": "NFR-REL-008"}, "payment": {"host": "Container App (internal), rich .NET", "trigger": "Gateway REST, gRPC, callbacks, events", "ops": ["Payments, refunds, ledger", "Mock provider controls"], "data": "Postgres", "nfr": "NFR-REL-003"}, "search": {"host": "Container App (internal), Python", "trigger": "Gateway REST, events", "ops": ["Keyword and NL search", "Read model and vectors"], "data": "Postgres + pgvector", "nfr": "NFR-PERF-002, NFR-PERF-003"}, "notif": {"host": "Container App (internal), Python", "trigger": "Events", "ops": ["Contact projection", "Templated emails (vi, en)"], "data": "Postgres", "nfr": "NFR-REL-004"}, "media": {"host": "Container App (internal), lean .NET", "trigger": "Gateway REST, gRPC, events", "ops": ["Upload intents, SAS", "Media records, cleanup"], "data": "Postgres + blob", "nfr": "NFR-SEC-013"}, "fn": {"host": "Azure Function (Consumption)", "trigger": "Service Bus", "ops": ["Validate, re-encode, resize"], "data": "Blob", "nfr": "NFR-PERF-007"}}, "sections": [{"type": "table", "title": "gRPC calls between services", "lead": "Internal ingress only; deadline and retry policy on every call; the user's bearer token travels as metadata.", "columns": ["Caller → callee", "Purpose", "If the callee is down"], "rows": [["Order → Catalog", "Authoritative price and status", "Checkout fails with a retry message"], ["Order → Inventory", "Batch reserve, release", "Checkout fails and compensates"], ["Order → Cart", "Selected cart lines", "Checkout fails with a retry message"], ["Cart → Catalog", "Variant status, price, shop", "Add fails; view shows lines without fresh prices"], ["Cart → Inventory", "Availability", "Shown as unknown"], ["Order → Payment", "Initiate online payment", "Saga compensates"], ["Order → Identity", "Address snapshot", "Checkout fails with a retry message"], ["Catalog → Inventory", "Availability, set on-hand", "Unknown availability; stock edit fails"], ["Catalog, Identity → Media", "Media ready and owned", "Attach fails; existing image kept"]]}, {"type": "table", "title": "Events", "columns": ["Event", "Producer", "Consumers"], "rows": [["UserRegistered, UserProfileChanged, PasswordChanged, ExternalLoginLinked", "Identity", "Notification"], ["ShopRegistered, ShopChanged", "Identity", "Catalog, Notification, Search-AI"], ["CategoryTreeChanged, ProductChanged, ReviewChanged", "Catalog", "Search-AI"], ["VariantCreated", "Catalog", "Inventory"], ["CheckoutCompleted", "Order", "Cart"], ["OrderPlaced", "Order", "Inventory, Notification, Payment"], ["OrderShipped", "Order", "Inventory, Notification"], ["OrderCancelled", "Order", "Inventory, Payment, Notification"], ["OrderDelivered, OrderCompleted", "Order", "Payment, Catalog"], ["PaymentSucceeded, PaymentFailed, PaymentRefunded", "Payment", "Order"], ["MediaUploaded", "Media", "Image processor"], ["MediaProcessed, MediaRejected", "Image processor", "Media"], ["MediaDetached", "Identity, Catalog", "Media"]]}, {"type": "notes", "title": "Decisions and risks"}, {"type": "catalogue", "title": "Component catalogue"}]};
+
+(function () {
+var M = MODEL, meta = M.meta || {}, NS = 'http://www.w3.org/2000/svg';
+var svg = document.getElementById('dia');
+var KINDS = {
+  frontend: { tone: '--frontend-stroke', label: 'Frontend / UI' },
+  backend: { tone: '--backend-stroke', label: 'App / processing' },
+  service: { tone: '--service-stroke', label: 'Service / function' },
+  database: { tone: '--database-stroke', label: 'Data store' },
+  security: { tone: '--security-stroke', label: 'Edge / identity / gateway' },
+  cloud: { tone: '--cloud-stroke', label: 'Platform / ops' },
+  external: { tone: '--external-stroke', label: 'User / external' },
+  ghost: { tone: '--ghost-stroke', label: 'Consideration' }
+};
+Object.keys(meta.kindLabels || {}).forEach(function (k) { if (KINDS[k]) KINDS[k].label = meta.kindLabels[k]; });
+var CLASSES = Object.assign({ public: ['Public', '--backend-stroke'], internal: ['Internal', '--external-stroke'], conf: ['Confidential', '--cloud-stroke'], pii: ['Confidential · PII', '--service-stroke'], restr: ['Restricted', '--security-stroke'] }, meta.classes || {});
+var STATUS = { confirmed: 'Confirmed', aligned: 'Aligned', consider: 'Consider', decision: 'Decision', risk: 'Risk' };
+var SIGILS = {
+  frontend: '<rect x="2" y="3" width="12" height="10" rx="2"/><path d="M2 6.5h12"/>',
+  backend: '<path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>',
+  service: '<path d="M8 2v3M8 11v3M2 8h3M11 8h3"/><circle cx="8" cy="8" r="2.5"/>',
+  database: '<ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>',
+  security: '<path d="M8 1.5 13 3.5v4c0 3-2.2 5.3-5 6.5-2.8-1.2-5-3.5-5-6.5v-4z"/>',
+  cloud: '<path d="M4.5 12h7a3 3 0 0 0 .4-6 4 4 0 0 0-7.7 1A2.5 2.5 0 0 0 4.5 12z"/>',
+  external: '<rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/><path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>',
+  ghost: '<circle cx="8" cy="8" r="5.5"/><path d="M8 5.5v3M8 10.5v.1"/>'
+};
+var nodes = M.nodes || [], edges = M.edges || [], notes = M.notes || [], flows = M.flows || {}, specs = M.specs || {};
+var byId = {}, edgeById = {};
+nodes.forEach(function (n) { byId[n.id] = n; });
+function el(tag, a, p) { var e = document.createElementNS(NS, tag); for (var k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function tone(kind) { return 'var(' + (KINDS[kind] || KINDS.external).tone + ')'; }
+// [[pii]] style tokens become classification pills anywhere text is rendered
+function rich(s) {
+  return String(s == null ? '' : s).replace(/\[\[([a-z0-9_-]+)\]\]/gi, function (m, k) {
+    var c = CLASSES[k]; if (!c) return m;
+    return '<span class="cls" style="color:var(' + c[1] + ');background:color-mix(in srgb,var(' + c[1] + ') 15%,transparent)">' + c[0] + '</span>';
+  });
+}
+function chip(st) { return '<span class="note-chip ' + st + '">' + (STATUS[st] || st) + '</span>'; }
+function list(v) { return Array.isArray(v) ? '<ul>' + v.map(function (x) { return '<li>' + rich(x) + '</li>'; }).join('') + '</ul>' : rich(v); }
+
+// ---- Header ----
+document.title = meta.title || 'Flow diagram';
+document.getElementById('title').textContent = meta.title || 'Flow diagram';
+document.getElementById('subtitle').innerHTML = rich(meta.subtitle || '');
+document.getElementById('dia-title').textContent = meta.title || '';
+document.getElementById('dia-desc').textContent = meta.description || '';
+document.getElementById('footnote').innerHTML = rich(meta.footnote || '');
+var vb = meta.viewBox || [1280, 820];
+svg.setAttribute('viewBox', '0 0 ' + vb[0] + ' ' + vb[1]);
+svg.style.minWidth = (meta.minWidth || Math.min(vb[0], 940)) + 'px';
+// Big-picture diagrams: let the page use the full window instead of the 1360px column.
+if (meta.wide) document.body.classList.add('wide');
+
+// ---- Frames (regions, lanes, sub-groups) ----
+var gF = document.getElementById('frames');
+(M.frames || []).forEach(function (f) {
+  var style = f.style || 'frame';
+  el('rect', { x: f.x, y: f.y, width: f.w, height: f.h, rx: style === 'region' ? 12 : 10, 'class': style === 'region' ? 'c-region' : 'c-frame' + (style === 'dashed' ? ' dashed' : ''), 'stroke-width': 1, style: f.tone ? 'stroke:color-mix(in srgb,' + tone(f.tone) + ' 55%,var(--lane-stroke))' : '' }, gF);
+  if (!f.label) return;
+  var ly = f.labelPos === 'bottom' ? f.y + f.h - 8 : f.y + 16, lx = f.labelX != null ? f.labelX : f.x + 10;
+  if (style === 'region') {
+    var w = f.label.length * 5.4 + 16;
+    el('rect', { x: lx - 2, y: ly - 12, width: w, height: 17, rx: 5, 'class': 'c-mask', style: 'stroke:color-mix(in srgb,var(--cloud-stroke) 38%,var(--mask));stroke-width:.8' }, gF);
+    el('text', { x: lx + 6, y: ly + 1, 'class': 't-cloud', 'font-size': 9, 'font-weight': 600 }, gF).textContent = f.label;
+  } else {
+    el('text', { x: lx, y: ly, 'class': 't-lane', 'font-size': 8.5, 'font-weight': 600 }, gF).textContent = f.label;
+  }
+});
+
+// ---- Edges (paths are pre-routed by build_diagram.py) ----
+var gE = document.getElementById('edges');
+edges.forEach(function (ed) {
+  var s = ed.s || 'default';
+  var g = el('g', { 'class': 'edge s-' + s + (ed.ghost ? ' ghost' : '') + (ed.data ? ' has-data' : ''), 'data-id': ed.id }, gE);
+  if (ed.data) { g.setAttribute('tabindex', 0); g.setAttribute('role', 'button'); }
+  el('title', {}, g).textContent = (byId[ed.from] || {}).label + ' → ' + (byId[ed.to] || {}).label + (ed.data ? ' · click for data' : '');
+  el('path', { d: ed.d, 'class': 'halo' }, g);
+  var marker = { default: 'default', dashed: 'default', emphasis: 'emphasis', security: 'security', ghost: 'ghost' }[s] || 'default';
+  el('path', { d: ed.d, 'class': 'line', 'marker-end': ed.noArrow ? '' : 'url(#ah-' + marker + ')' }, g);
+  if (ed.label) {
+    var w = ed.label.length * 4.9 + 10;
+    el('rect', { x: ed.lx - w / 2, y: ed.ly - 7, width: w, height: 13, rx: 6, 'class': 'lbl-bg' }, g);
+    el('text', { x: ed.lx, y: ed.ly + 3, 'text-anchor': 'middle', 'class': 'lbl' }, g).textContent = ed.label;
+  }
+  el('path', { d: ed.d, 'class': 'hit' }, g);
+  if (ed.data) {
+    g.addEventListener('click', function (ev) { ev.stopPropagation(); showEdge(ed.id); });
+    g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showEdge(ed.id); } });
+  }
+  ed.g = g; edgeById[ed.id] = ed;
+});
+
+// ---- Nodes ----
+var gN = document.getElementById('nodes');
+nodes.forEach(function (n) {
+  var kind = n.ghost ? 'ghost' : (n.kind || 'external'), t = tone(kind);
+  var g = el('g', { 'class': 'node k-' + kind + (n.ghost ? ' ghost' : ''), 'data-id': n.id, tabindex: 0, role: 'button', 'aria-label': n.label + (n.sub ? ', ' + n.sub : '') }, gN);
+  el('title', {}, g).textContent = n.label + (n.sub ? ' · ' + n.sub : '');
+  el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 8, 'class': 'c-mask' }, g);
+  el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 8, 'class': 'body', style: n.ghost ? 'fill:color-mix(in srgb,' + t + ' 6%,var(--mask));stroke:' + t : 'fill:color-mix(in srgb,' + t + ' 13%,var(--mask));stroke:color-mix(in srgb,' + t + ' 72%,var(--mask))' }, g);
+  if (n.h >= 40) el('g', { 'class': 'sigil', stroke: t, transform: 'translate(' + (n.x + 6) + ' ' + (n.y + 6) + ') scale(0.6875)' }, g).innerHTML = SIGILS[n.sigil || kind] || SIGILS.external;
+  var cx = n.x + n.w / 2, cy = n.y + n.h / 2, off = n.sub2 ? -8 : 0, small = n.h < 40;
+  el('text', { x: cx, y: cy - (n.sub ? 2 : -4) + off, 'text-anchor': 'middle', 'class': 't-primary', 'font-size': small ? 10 : 11, 'font-weight': 600 }, g).textContent = n.label;
+  if (n.sub) el('text', { x: cx, y: cy + (small ? 10 : 13) + off, 'text-anchor': 'middle', 'class': 't-muted', 'font-size': small ? 8 : 9 }, g).textContent = n.sub;
+  if (n.sub2) el('text', { x: cx, y: cy + 30 + off, 'text-anchor': 'middle', 'class': 't-muted', 'font-size': 7.5 }, g).textContent = n.sub2;
+  n.g = g;
+  var act = function () { if (n.flow && flows[n.flow]) showFlow(n.flow); else selectNode(n.id); };
+  g.addEventListener('click', function (ev) { ev.stopPropagation(); act(); });
+  g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); act(); } });
+});
+
+// ---- Comment pins (stacked leftwards along the node's top edge) ----
+var gP = document.getElementById('pins'), pinCount = {};
+notes.forEach(function (nt) {
+  var n = byId[nt.on]; if (!n) return;
+  var k = pinCount[nt.on] = (pinCount[nt.on] || 0) + 1;
+  var g = el('g', { 'class': 'pin ' + (nt.st || 'consider') + (n.ghost ? ' ghost' : ''), tabindex: 0, role: 'button', 'aria-label': 'Note ' + nt.id + ': ' + nt.t, transform: 'translate(' + (n.x + n.w - 6 - (k - 1) * 22) + ' ' + n.y + ')' }, gP);
+  el('title', {}, g).textContent = nt.id + ' · ' + nt.t;
+  el('circle', { r: 9 }, g);
+  el('text', { y: 3, 'text-anchor': 'middle' }, g).textContent = nt.id;
+  g.addEventListener('click', function (ev) { ev.stopPropagation(); showNote(nt.id); });
+  g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showNote(nt.id); } });
+});
+
+// ---- Legend (only what the diagram uses; legend items are not .node/.edge so they never dim) ----
+var legend = document.getElementById('legend');
+var lgY = meta.legendY != null ? meta.legendY : vb[1] - 62;
+legend.setAttribute('transform', 'translate(' + (meta.legendX || 30) + ' ' + lgY + ')');
+el('text', { x: 0, y: 0, 'class': 't-primary', 'font-size': 12, 'font-weight': 650 }, legend).textContent = 'Legend';
+var usedKinds = [], usedStyles = [], usedStatus = [];
+nodes.forEach(function (n) { var k = n.ghost ? 'ghost' : (n.kind || 'external'); if (usedKinds.indexOf(k) < 0) usedKinds.push(k); });
+edges.forEach(function (e) { var s = e.s || 'default'; if (usedStyles.indexOf(s) < 0) usedStyles.push(s); });
+notes.forEach(function (n) { var s = n.st || 'consider'; if (n.on && usedStatus.indexOf(s) < 0) usedStatus.push(s); });
+var lx = 0;
+Object.keys(KINDS).filter(function (k) { return usedKinds.indexOf(k) >= 0; }).forEach(function (k) {
+  var g = el('g', { 'class': 'lg', transform: 'translate(' + lx + ' 14)' }, legend), t = tone(k);
+  el('rect', { x: 0, y: 0, width: 14, height: 14, rx: 3, 'class': 'body', style: 'fill:color-mix(in srgb,' + t + ' 13%,var(--mask));stroke:' + t + (k === 'ghost' ? ';stroke-dasharray:3 2' : '') }, g);
+  el('text', { x: 20, y: 11, 'class': 't-muted', 'font-size': 10, 'font-weight': 500 }, g).textContent = KINDS[k].label;
+  lx += 30 + KINDS[k].label.length * 6.2;
+});
+var STYLE_LBL = Object.assign({ emphasis: 'Primary flow', default: 'Call / read-write', security: 'Auth / secrets', dashed: 'Async / deploy', ghost: 'Consideration' }, meta.edgeLabels || {});
+lx = 0;
+['emphasis', 'default', 'security', 'dashed', 'ghost'].filter(function (s) { return usedStyles.indexOf(s) >= 0; }).forEach(function (s) {
+  var g = el('g', { 'class': 'lg s-' + s, transform: 'translate(' + lx + ' 44)' }, legend);
+  el('path', { d: 'M0 0 L26 0', 'class': 'line', 'marker-end': 'url(#ah-' + (s === 'dashed' ? 'default' : s) + ')' }, g);
+  el('text', { x: 34, y: 3.5, 'class': 't-muted', 'font-size': 10 }, g).textContent = STYLE_LBL[s];
+  lx += 44 + STYLE_LBL[s].length * 6.2;
+});
+usedStatus.forEach(function (st) {
+  var g = el('g', { 'class': 'pin ' + st, transform: 'translate(' + (lx + 9) + ' 44)', style: 'cursor:default' }, legend);
+  el('circle', { r: 7 }, g);
+  el('text', { x: 14, y: 3.5, 'font-size': 10, style: 'fill:var(--text-muted);font-weight:400' }, g).textContent = STATUS[st] + ' note';
+  lx += 36 + (STATUS[st].length + 5) * 6.2;
+});
+
+// ---- Toolbar ----
+var tb = document.getElementById('toolbar');
+function tbtn(html, attrs) { var b = document.createElement('button'); b.type = 'button'; b.innerHTML = html; for (var k in attrs) b.setAttribute(k, attrs[k]); tb.appendChild(b); return b; }
+(meta.links || []).forEach(function (l) { var a = document.createElement('a'); a.href = l.href; a.textContent = l.label; tb.appendChild(a); });
+tbtn('All', { 'data-flow': 'all', 'aria-pressed': 'true' });
+Object.keys(flows).forEach(function (k) {
+  if (k === 'all') return;
+  var c = flows[k].color ? '<span class="chip-dot" style="background:' + tone(flows[k].color) + '"></span>' : '';
+  tbtn(c + (flows[k].button || flows[k].title), { 'data-flow': k, 'aria-pressed': 'false' });
+});
+var sep = document.createElement('span'); sep.className = 'sep'; tb.appendChild(sep);
+var hasPins = notes.some(function (n) { return n.on && byId[n.on]; });
+var hasGhost = nodes.some(function (n) { return n.ghost; }) || edges.some(function (e) { return e.ghost; });
+var btnPins = hasPins ? tbtn('Comments', { id: 'btn-pins', 'aria-pressed': 'true' }) : null;
+var btnGhost = hasGhost ? tbtn('Considerations', { id: 'btn-ghost', 'aria-pressed': 'false' }) : null;
+var btnTheme = tbtn('Theme', { id: 'btn-theme', title: 'Toggle theme (T)' });
+
+// ---- Side panel & interaction ----
+var side = document.getElementById('side'), badges = document.getElementById('badges'), current = 'all';
+var allFlow = Object.assign({ title: meta.title || 'Overview', intro: 'Pick a flow above, or click any component, arrow or numbered pin.', steps: [] }, flows.all || {});
+function flowOf(k) { return k === 'all' ? allFlow : flows[k]; }
+function clearHighlight() { svg.classList.remove('dim'); nodes.forEach(function (n) { n.g.classList.remove('on', 'selected'); }); edges.forEach(function (e) { e.g.classList.remove('on'); }); badges.innerHTML = ''; }
+function highlight(ids, extra) {
+  svg.classList.add('dim');
+  ids.forEach(function (id) { var e = edgeById[id]; if (!e) return; e.g.classList.add('on'); if (byId[e.from]) byId[e.from].g.classList.add('on'); if (byId[e.to]) byId[e.to].g.classList.add('on'); });
+  (extra || []).forEach(function (id) { if (byId[id]) byId[id].g.classList.add('on'); });
+}
+function badge(num, edgeId) {
+  // Badges sit just before the arrowhead: steps often share a trunk start (fan-outs, buses).
+  var e = edgeById[edgeId]; if (!e) return;
+  var path = e.g.querySelector('path.line'), p = path.getPointAtLength(Math.max(0, path.getTotalLength() - 16));
+  var g = el('g', { 'class': 'step-badge', transform: 'translate(' + p.x + ' ' + p.y + ')' }, badges);
+  el('circle', { r: 8 }, g);
+  el('text', { y: 3.2, 'text-anchor': 'middle' }, g).textContent = num;
+}
+function setGhost(on) { if (!btnGhost) return; svg.classList.toggle('show-ghost', on); btnGhost.setAttribute('aria-pressed', String(on)); }
+function specHtml(id) {
+  var s = specs[id]; if (!s) return '';
+  var rows = meta.specRows || [['host', 'Hosting'], ['trigger', 'Triggered by'], ['ops', 'Does'], ['data', 'Data'], ['nfr', 'NFR / notes']];
+  var extra = Object.keys(s).filter(function (k) { return !rows.some(function (r) { return r[0] === k; }); }).map(function (k) { return [k, k.charAt(0).toUpperCase() + k.slice(1)]; });
+  return '<dl class="spec">' + rows.concat(extra).map(function (r) { var v = s[r[0]]; return v ? '<dt>' + r[1] + '</dt><dd>' + list(v) + '</dd>' : ''; }).join('') + '</dl>';
+}
+function dataHtml(d) {
+  var rows = [['Payload', d.p], ['Format', d.f], ['Class', d.c ? rich('[[' + d.c + ']]') : ''], ['Security', d.s], ['When', d.w]].filter(function (r) { return r[1]; });
+  return '<div class="kv">' + rows.map(function (r) { return '<span>' + r[0] + '</span><span>' + rich(r[1]) + '</span>'; }).join('') + '</div>';
+}
+function showFlow(key) {
+  current = key;
+  tb.querySelectorAll('[data-flow]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.flow === key)); });
+  clearHighlight();
+  var f = flowOf(key), steps = f.steps || [];
+  if (steps.some(function (s) { return s.e.some(function (id) { return edgeById[id] && edgeById[id].ghost; }); })) setGhost(true);
+  var html = '<div class="eyebrow">' + (key === 'all' ? 'Overview' : (f.eyebrow || 'Flow')) + '</div><h2>' + rich(f.title) + '</h2>' + (f.intro ? '<p>' + rich(f.intro) + '</p>' : '');
+  if (f.tags) html += '<p>' + f.tags.map(function (t) { return '<span class="tagp">' + rich(t) + '</span>'; }).join('') + '</p>';
+  if (steps.length) {
+    var ids = [];
+    steps.forEach(function (s, i) { ids = ids.concat(s.e); badge(i + 1, s.e[0]); });
+    highlight(ids, f.nodes);
+    html += '<ol>' + steps.map(function (s) { return '<li>' + rich(s.t) + '</li>'; }).join('') + '</ol>';
+  } else if (meta.overview) {
+    html += '<div class="kv">' + meta.overview.map(function (r) { return '<span>' + rich(r[0]) + '</span><span>' + rich(r[1]) + '</span>'; }).join('') + '</div>';
+  }
+  side.innerHTML = html + '<p class="hint">Click a component, an arrow or a numbered pin · T toggles the theme · Esc resets</p>';
+}
+function selectNode(id) {
+  var n = byId[id]; clearHighlight();
+  tb.querySelectorAll('[data-flow]').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+  var vis = function (e) { return !e.ghost || svg.classList.contains('show-ghost'); };
+  var ins = edges.filter(function (e) { return e.to === id && vis(e); }), outs = edges.filter(function (e) { return e.from === id && vis(e); });
+  highlight(ins.concat(outs).map(function (e) { return e.id; }), [id]);
+  n.g.classList.add('selected');
+  function rel(e, other, arrow) { var o = byId[other] || { label: other }; return '<button type="button" data-edge="' + e.id + '">' + arrow + ' <span class="tag">' + o.label + '</span>' + (e.data && e.data.p ? ' · ' + rich(e.data.p) : (e.label ? ' · ' + e.label : '')) + '</button>'; }
+  var pins = notes.filter(function (nt) { return nt.on === id; });
+  side.innerHTML = '<div class="eyebrow">' + KINDS[n.ghost ? 'ghost' : (n.kind || 'external')].label + '</div><h2>' + n.label + '</h2>' + (n.desc ? '<p>' + rich(n.desc) + '</p>' : '') + specHtml(id) +
+    (ins.length + outs.length ? '<div class="links">' + ins.map(function (e) { return rel(e, e.from, '←'); }).join('') + outs.map(function (e) { return rel(e, e.to, '→'); }).join('') + '</div>' : '') +
+    pins.map(function (p) { return '<div class="note-box">' + chip(p.st || 'consider') + ' <b>' + p.id + ' · ' + rich(p.t) + '</b><div style="margin-top:.3rem">' + rich(p.b) + '</div></div>'; }).join('') +
+    (specs[id] ? '<p class="hint"><button class="linkish" type="button" data-goto="svc-' + id + '">Open in catalogue</button> · Esc returns</p>' : '<p class="hint">Esc returns</p>');
+}
+function showEdge(id) {
+  var e = edgeById[id]; clearHighlight(); highlight([id]);
+  side.innerHTML = '<div class="eyebrow">Connection · data contract</div><h2>' + (byId[e.from] || {}).label + ' → ' + (byId[e.to] || {}).label + '</h2>' + dataHtml(e.data || {}) + '<p class="hint">Esc returns to ' + rich(flowOf(current).title) + '</p>';
+}
+function showNote(nid) {
+  var nt = notes.filter(function (x) { return x.id === nid; })[0]; clearHighlight();
+  if (nt.on && byId[nt.on]) { highlight([], [nt.on]); byId[nt.on].g.classList.add('selected'); }
+  side.innerHTML = '<div class="eyebrow">Note ' + nt.id + '</div><h2>' + rich(nt.t) + '</h2><p>' + chip(nt.st || 'consider') + (nt.on && byId[nt.on] ? ' <span class="refs">on ' + byId[nt.on].label + '</span>' : '') + '</p><p>' + rich(nt.b) + '</p>' + (nt.r ? '<p class="refs">Refs: ' + rich(nt.r) + '</p>' : '') +
+    '<p class="hint"><button class="linkish" type="button" data-goto="note-' + nt.id + '">Show in notes list</button> · Esc returns</p>';
+}
+side.addEventListener('click', function (ev) {
+  var eb = ev.target.closest('[data-edge]'); if (eb) { if (edgeById[eb.dataset.edge].data) showEdge(eb.dataset.edge); return; }
+  var t = ev.target.closest('[data-goto]'); if (!t) return;
+  var target = document.getElementById(t.dataset.goto); if (!target) return;
+  target.hidden = false; target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  target.classList.add('flash'); setTimeout(function () { target.classList.remove('flash'); }, 1600);
+});
+tb.querySelectorAll('[data-flow]').forEach(function (b) { b.addEventListener('click', function () { showFlow(b.dataset.flow); }); });
+svg.addEventListener('click', function () { showFlow(current); });
+if (btnGhost) btnGhost.addEventListener('click', function () { setGhost(!svg.classList.contains('show-ghost')); });
+if (btnPins) btnPins.addEventListener('click', function () { var hide = !svg.classList.contains('hide-pins'); svg.classList.toggle('hide-pins', hide); btnPins.setAttribute('aria-pressed', String(!hide)); });
+function toggleTheme() { var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); try { localStorage.setItem('flow-diagram-theme', t); } catch (_) {} }
+btnTheme.addEventListener('click', toggleTheme);
+document.addEventListener('keydown', function (ev) {
+  if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA') return;
+  if (ev.key === 't' || ev.key === 'T') toggleTheme();
+  if (ev.key === 'Escape') showFlow(current);
+});
+
+// ---- Sections below the diagram ----
+var secEl = document.getElementById('sections');
+var sections = M.sections || [notes.length ? { type: 'notes' } : null, Object.keys(specs).length ? { type: 'catalogue' } : null].filter(Boolean);
+function head(s, dflt) { return '<h2 class="section-title">' + rich(s.title || dflt) + '</h2>' + (s.lead ? '<p class="section-lead">' + rich(s.lead) + '</p>' : ''); }
+sections.forEach(function (s) {
+  var wrap = document.createElement('div'), html = '';
+  if (s.type === 'notes') {
+    html = head(s, 'Design notes') + '<div class="toolbar" style="margin-bottom:.75rem" data-note-filter></div><div class="grid-cards" data-notes>' + notes.map(function (nt) {
+      return '<article class="card" id="note-' + nt.id + '" data-st="' + (nt.st || 'consider') + '"><header><h3><span>' + nt.id + '</span>' + chip(nt.st || 'consider') + '<span>' + rich(nt.t) + '</span></h3></header><div class="note-body">' + rich(nt.b) + '</div><div class="refs">' +
+        (nt.on && byId[nt.on] ? 'On: ' + byId[nt.on].label : 'Cross-cutting') + (nt.r ? ' · Refs: ' + rich(nt.r) : '') + '</div></article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'catalogue') {
+    html = head(s, 'Component catalogue') + '<div class="grid-cards">' + nodes.filter(function (n) { return specs[n.id]; }).map(function (n) {
+      var k = n.ghost ? 'ghost' : (n.kind || 'external'), pins = notes.filter(function (nt) { return nt.on === n.id; });
+      return '<article class="card lefty" id="svc-' + n.id + '" style="--tone:' + tone(k) + '"><header><h3>' + n.label + '</h3><span class="kind">' + KINDS[k].label + '</span></header>' + specHtml(n.id) +
+        (pins.length ? '<div class="card-notes">' + pins.map(function (p) { return '<a class="note-chip ' + (p.st || 'consider') + '" href="#note-' + p.id + '" style="text-decoration:none">' + p.id + ' · ' + p.t + '</a>'; }).join('') + '</div>' : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'personas') {
+    html = head(s, 'Who does what') + '<div class="grid-cards">' + (s.items || []).map(function (p) {
+      return '<article class="card toned" style="--tone:' + tone(p.tone || 'external') + '"><header><div><h3>' + rich(p.title) + '</h3>' + (p.tags ? '<div style="margin-top:.35rem">' + p.tags.map(function (t) { return '<span class="tagp">' + rich(t) + '</span>'; }).join('') + '</div>' : '') + '</div></header>' +
+        '<dl class="spec">' + (p.rows || []).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + list(r[1]) + '</dd>'; }).join('') + '</dl>' +
+        (p.flow && flows[p.flow] ? '<div class="toolbar" style="margin-top:.75rem"><button type="button" data-show="' + p.flow + '">Show on diagram</button></div>' : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'table') {
+    var cell = function (v) { v = String(v); if (s.matrix) { if (v === '✓' || v.indexOf('✓') === 0) return '<span class="y">' + v + '</span>'; if (v === '–' || v === '-' || v === 'n/a') return '<span class="n">' + v + '</span>'; return '<span class="p">' + rich(v) + '</span>'; } return rich(v); };
+    html = head(s, '') + '<div class="tbl"><table class="grid' + (s.matrix ? ' matrix' : '') + '"><thead><tr>' + (s.columns || []).map(function (c) { return '<th>' + rich(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      (s.rows || []).map(function (r) { return '<tr>' + r.map(function (c, i) { return '<td>' + (i === 0 ? rich(c) : cell(c)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
+  } else if (s.type === 'cards') {
+    html = head(s, '') + '<div class="grid-cards narrow">' + (s.items || []).map(function (c) {
+      return '<article class="card" style="--tone:' + tone(c.tone || 'external') + '"><header><h3><span class="card-dot"></span>' + rich(c.title) + '</h3></header>' + (c.bullets ? '<ul class="b">' + c.bullets.map(function (b) { return '<li>' + rich(b) + '</li>'; }).join('') + '</ul>' : '') + (c.html ? rich(c.html) : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'html') {
+    html = head(s, '') + rich(s.html || '');
+  }
+  wrap.innerHTML = html; secEl.appendChild(wrap);
+});
+secEl.addEventListener('click', function (ev) { var b = ev.target.closest('[data-show]'); if (!b) return; showFlow(b.dataset.show); document.getElementById('diagram').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+var nf = secEl.querySelector('[data-note-filter]'), nl = secEl.querySelector('[data-notes]');
+if (nf) {
+  var present = ['decision', 'risk', 'consider', 'confirmed', 'aligned'].filter(function (st) { return notes.some(function (n) { return (n.st || 'consider') === st; }); });
+  [['all', 'All']].concat(present.map(function (st) { return [st, STATUS[st]]; })).forEach(function (f, i) {
+    var b = document.createElement('button'); b.type = 'button';
+    b.textContent = f[1] + ' (' + notes.filter(function (n) { return f[0] === 'all' || (n.st || 'consider') === f[0]; }).length + ')';
+    b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      nf.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      nl.querySelectorAll('.card').forEach(function (c) { c.hidden = f[0] !== 'all' && c.dataset.st !== f[0]; });
+    });
+    nf.appendChild(b);
+  });
+}
+
+// ?flow=<key> pre-selects a flow (handy for screenshots and deep links)
+var startFlow = 'all';
+try { var qf = new URLSearchParams(location.search).get('flow'); if (qf && flows[qf]) startFlow = qf; } catch (_) {}
+showFlow(startFlow);
+})();
+</script>
+</body>
+</html>
