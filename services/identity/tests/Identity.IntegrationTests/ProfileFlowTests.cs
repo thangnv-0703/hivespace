@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Features.Profile;
+using Identity.Application.Features.Registration;
 using Identity.Infrastructure.Persistence;
 using Json.Schema;
 using Microsoft.EntityFrameworkCore;
@@ -7,7 +8,7 @@ using Xunit;
 
 namespace Identity.IntegrationTests;
 
-/// <summary>Profile handlers against a real Postgres: AC-1, AC-2, AC-3, AC-4, AC-5, AC-8 (handler level).</summary>
+/// <summary>Profile handlers against a real Postgres: AC-1, AC-2, AC-3, AC-4, AC-5, AC-8, AC-11 (handler level).</summary>
 public sealed class ProfileFlowTests(PostgresFixture postgres) : IClassFixture<PostgresFixture>
 {
     private const string Event = "UserProfileChanged";
@@ -198,6 +199,23 @@ public sealed class ProfileFlowTests(PostgresFixture postgres) : IClassFixture<P
         await rig.UpdateProfile.HandleAsync(Edit(userId, "An", "0912345678", "male", "1990-01-01"), Ct);
 
         Assert.Empty(await EventsOfAsync(userId));
+    }
+
+    [Theory]
+    [InlineData(61, true)]
+    [InlineData(80, true)]
+    [InlineData(81, false)]
+    public async Task Ac11_registration_accepts_a_display_name_of_up_to_80_characters_and_rejects_81(int length, bool accepted)
+    {
+        await using var rig = new Rig(postgres, Rig.NewClock());
+
+        var result = await rig.Register.HandleAsync(new RegisterUserCommand(Rig.NewEmail(), new string('n', length), "hello1234", "vi"), Ct);
+
+        Assert.Equal(accepted, result.IsSuccess);
+        if (!accepted)
+        {
+            Assert.Equal("identity.display_name_too_long", result.Failure!.Violations!.Single().Code);
+        }
     }
 
     private async Task<List<System.Text.Json.JsonElement>> EventsOfAsync(Guid userId)
