@@ -268,4 +268,155 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
 
         Assert.Equal(HttpStatusCode.OK, status);
     }
+
+    // ---- FEAT-002 T6: /v1/me route and POST /bff/session/refresh (AC-7, AC-9) ----
+
+    [Theory]
+    [InlineData("GET", "/v1/me/profile")]
+    [InlineData("PUT", "/v1/me/profile")]
+    [InlineData("PUT", "/v1/me/profile/language")]
+    public async Task Ac9_the_profile_endpoints_without_a_session_are_401_at_the_gateway(string method, string path)
+    {
+        using var client = _host.NewClient();
+        using var request = new HttpRequestMessage(new HttpMethod(method), path) { Content = method == "GET" ? null : JsonContent.Create(new { }) };
+        request.Headers.Add("X-HS-CSRF", "1");
+
+        var (status, body) = await SendAsync(client, request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, status);
+        Assert.Equal("common.unauthenticated", body.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task Ac9_with_a_session_the_profile_request_is_relayed_with_the_bearer_token_and_a_spoofed_identity_is_replaced()
+    {
+        using var client = _host.NewClient();
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10), subject: "alice"), UniqueRefresh());
+        using var request = Get("/v1/me/profile");
+        request.Headers.Add("X-User-Id", "bob");
+
+        var (status, body) = await SendAsync(client, request);
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.StartsWith("Bearer ", body.GetProperty("authorization").GetString(), StringComparison.Ordinal);
+        Assert.Equal("alice", body.GetProperty("userId").GetString());
+    }
+
+    [Fact]
+    public async Task A_profile_write_without_the_csrf_header_is_403()
+    {
+        using var client = _host.NewClient();
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), UniqueRefresh());
+
+        var (status, body) = await SendAsync(client, new HttpRequestMessage(HttpMethod.Put, "/v1/me/profile") { Content = JsonContent.Create(new { }) });
+
+        Assert.Equal(HttpStatusCode.Forbidden, status);
+        Assert.Equal("common.forbidden", body.GetProperty("code").GetString());
+    }
+
+    /// <summary>The fake Identity accepts any token starting with <c>good-refresh</c>; a fresh one per test keeps the single-flight cache of an earlier test out of the count.</summary>
+    private static string UniqueRefresh() => "good-refresh-" + Guid.NewGuid().ToString("N");
+
+    private static HttpRequestMessage Refresh(bool csrf = true)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Post, "/bff/session/refresh");
+        if (csrf)
+        {
+            request.Headers.Add("X-HS-CSRF", "1");
+        }
+
+        return request;
+    }
+
+    [Fact]
+    public async Task Refresh_without_the_csrf_header_is_403_and_does_not_touch_the_tokens()
+    {
+        using var client = _host.NewClient();
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), UniqueRefresh());
+        var before = _host.RefreshCalls;
+
+        var (status, body) = await SendAsync(client, Refresh(csrf: false));
+
+        Assert.Equal(HttpStatusCode.Forbidden, status);
+        Assert.Equal("common.forbidden", body.GetProperty("code").GetString());
+        Assert.Equal(before, _host.RefreshCalls);
+    }
+
+    [Fact]
+    public async Task Ac7_refresh_returns_the_new_name_and_language_at_once_and_rewrites_the_cookie()
+    {
+        using var client = _host.NewClient();
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), UniqueRefresh());
+        var (_, stale) = await SendAsync(client, Get("/bff/user"));
+        Assert.Equal(("An", "vi"), (stale.GetProperty("displayName").GetString(), stale.GetProperty("language").GetString()));
+        _host.IssuedName = "Lan Tran";
+        _host.IssuedLang = "en";
+        var before = _host.RefreshCalls;
+
+        try
+        {
+            var (status, body) = await SendAsync(client, Refresh());
+            var (_, after) = await SendAsync(client, Get("/bff/user"));
+
+            Assert.Equal(HttpStatusCode.OK, status);
+            Assert.Equal(before + 1, _host.RefreshCalls);
+            Assert.True(body.GetProperty("isAuthenticated").GetBoolean());
+            Assert.Equal(("Lan Tran", "en"), (body.GetProperty("displayName").GetString(), body.GetProperty("language").GetString()));
+            // The cookie was rewritten: /bff/user now shows the new values without another exchange.
+            Assert.Equal(("Lan Tran", "en"), (after.GetProperty("displayName").GetString(), after.GetProperty("language").GetString()));
+            Assert.Equal(before + 1, _host.RefreshCalls);
+            Assert.DoesNotContain("rotated-refresh", body.ToString(), StringComparison.Ordinal);
+        }
+        finally
+        {
+            _host.IssuedName = "An";
+            _host.IssuedLang = "vi";
+        }
+    }
+
+    [Fact]
+    public async Task Two_parallel_refresh_calls_spend_the_refresh_token_once()
+    {
+        using var client = _host.NewClient();
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), UniqueRefresh());
+        var before = _host.RefreshCalls;
+        _host.RefreshDelay = TimeSpan.FromMilliseconds(300);
+
+        try
+        {
+            var results = await Task.WhenAll(SendAsync(client, Refresh()), SendAsync(client, Refresh()));
+
+            Assert.All(results, r => Assert.True(r.Body.GetProperty("isAuthenticated").GetBoolean()));
+            Assert.Equal(before + 1, _host.RefreshCalls);
+        }
+        finally
+        {
+            _host.RefreshDelay = TimeSpan.Zero;
+        }
+    }
+
+    [Fact]
+    public async Task Refresh_with_no_session_answers_200_signed_out()
+    {
+        using var client = _host.NewClient();
+
+        var (status, body) = await SendAsync(client, Refresh());
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.False(body.GetProperty("isAuthenticated").GetBoolean());
+    }
+
+    [Fact]
+    public async Task A_failed_refresh_clears_the_cookie_and_answers_200_signed_out()
+    {
+        using var client = _host.NewClient();
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), "revoked-refresh");
+
+        var (status, body) = await SendAsync(client, Refresh());
+        var (_, after) = await SendAsync(client, Get("/bff/user"));
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.False(body.GetProperty("isAuthenticated").GetBoolean());
+        Assert.False(after.GetProperty("isAuthenticated").GetBoolean());
+    }
 }

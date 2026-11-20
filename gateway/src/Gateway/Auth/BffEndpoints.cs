@@ -1,4 +1,4 @@
-using System.Security.Claims;
+using HiveSpace.BuildingBlocks.Errors;
 using Microsoft.AspNetCore.Authentication;
 
 namespace Gateway.Auth;
@@ -15,26 +15,20 @@ public static class BffEndpoints
             .AllowAnonymous();
 
         app.MapGet("/bff/user", async (HttpContext http, SessionTokens sessions, AccessTokenValidator validator) =>
+                await UserResponseAsync(await sessions.GetFreshAsync(http), validator, http.RequestAborted))
+            .AllowAnonymous();
+
+        // After a profile change the SPA calls this so the header name and language come from a new token (D-4). Non-GET, so it needs the CSRF header
+        // like every other write; the /v1/* middleware does not cover /bff/*.
+        app.MapPost("/bff/session/refresh", async (HttpContext http, SessionTokens sessions, AccessTokenValidator validator) =>
             {
-                var tokens = await sessions.GetFreshAsync(http);
-                var validated = tokens is null ? null : await validator.ValidateAsync(tokens.AccessToken, http.RequestAborted);
-                if (validated is not { IsValid: true })
+                if (http.Request.Headers[GatewayAuth.CsrfHeader] != "1")
                 {
-                    return Results.Ok(new { isAuthenticated = false });
+                    await ApiErrorResponder.WriteAsync(http, new ApiException(ErrorCodes.Forbidden));
+                    return Results.Empty;
                 }
 
-                var claims = validated.ClaimsIdentity.Claims.ToList();
-                string? First(string type) => claims.FirstOrDefault(c => c.Type == type)?.Value;
-                return Results.Ok(new
-                {
-                    isAuthenticated = true,
-                    userId = First("sub"),
-                    email = First("email"),
-                    displayName = First("name"),
-                    emailVerified = string.Equals(First("email_verified"), "true", StringComparison.OrdinalIgnoreCase),
-                    roles = claims.Where(c => c.Type == "role").Select(c => c.Value).ToArray(),
-                    language = First("lang") ?? "vi",
-                });
+                return await UserResponseAsync(await sessions.ForceRefreshAsync(http), validator, http.RequestAborted);
             })
             .AllowAnonymous();
 
@@ -66,6 +60,29 @@ public static class BffEndpoints
             .AllowAnonymous();
 
         return app;
+    }
+
+    /// <summary>The <c>/bff/user</c> body, shared with <c>/bff/session/refresh</c>: the session's claims, never a token.</summary>
+    private static async Task<IResult> UserResponseAsync(TokenSet? tokens, AccessTokenValidator validator, CancellationToken cancellationToken)
+    {
+        var validated = tokens is null ? null : await validator.ValidateAsync(tokens.AccessToken, cancellationToken);
+        if (validated is not { IsValid: true })
+        {
+            return Results.Ok(new { isAuthenticated = false });
+        }
+
+        var claims = validated.ClaimsIdentity.Claims.ToList();
+        string? First(string type) => claims.FirstOrDefault(c => c.Type == type)?.Value;
+        return Results.Ok(new
+        {
+            isAuthenticated = true,
+            userId = First("sub"),
+            email = First("email"),
+            displayName = First("name"),
+            emailVerified = string.Equals(First("email_verified"), "true", StringComparison.OrdinalIgnoreCase),
+            roles = claims.Where(c => c.Type == "role").Select(c => c.Value).ToArray(),
+            language = First("lang") ?? "vi",
+        });
     }
 }
 

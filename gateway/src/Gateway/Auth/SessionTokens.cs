@@ -18,10 +18,18 @@ public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpCli
     private static readonly TimeSpan InFlightMemory = TimeSpan.FromSeconds(30);
 
     // Two requests carrying the same old cookie must not both spend one rotating refresh token.
-    private readonly ConcurrentDictionary<string, (Task<TokenSet?> Task, DateTimeOffset At)> _inFlight = new();
+    private readonly ConcurrentDictionary<string, (Lazy<Task<TokenSet?>> Task, DateTimeOffset At)> _inFlight = new();
 
     /// <summary>The session's tokens, refreshed when the access token expires in under 60 s. Null when there is no usable session (the cookie is cleared if the refresh failed).</summary>
-    public async Task<TokenSet?> GetFreshAsync(HttpContext http)
+    public Task<TokenSet?> GetFreshAsync(HttpContext http) => GetAsync(http, force: false);
+
+    /// <summary>
+    /// Exchanges the refresh token now, ignoring the 60 s window, so claims that changed in Identity (name, language) show up at once
+    /// (technical-design §3.2, D-4). Reuses the single-flight refresh and the cookie rewrite of <see cref="GetFreshAsync"/>.
+    /// </summary>
+    public Task<TokenSet?> ForceRefreshAsync(HttpContext http) => GetAsync(http, force: true);
+
+    private async Task<TokenSet?> GetAsync(HttpContext http, bool force)
     {
         var auth = await http.AuthenticateAsync(CookieScheme).ConfigureAwait(false);
         if (!auth.Succeeded || auth.Properties is null)
@@ -35,7 +43,7 @@ public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpCli
             return null;
         }
 
-        if (current.ExpiresAt - time.GetUtcNow() > RefreshWindow)
+        if (!force && current.ExpiresAt - time.GetUtcNow() > RefreshWindow)
         {
             return current;
         }
@@ -105,7 +113,8 @@ public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpCli
             _inFlight.TryRemove(stale, out _);
         }
 
-        return _inFlight.GetOrAdd(refreshToken, _ => (RefreshAsync(refreshToken, cancellationToken), now)).Task;
+        // Lazy: GetOrAdd may run its factory twice under contention, and a plain task would start a second exchange.
+        return _inFlight.GetOrAdd(refreshToken, _ => (new Lazy<Task<TokenSet?>>(() => RefreshAsync(refreshToken, cancellationToken)), now)).Task.Value;
     }
 
     private async Task<TokenSet?> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
