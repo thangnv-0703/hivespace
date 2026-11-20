@@ -1,0 +1,48 @@
+{
+  "profile": {
+    "title": "Hồ sơ của tôi",
+    "subtitle": "Quản lý thông tin cá nhân và ngôn ngữ của bạn.",
+    "fields": {
+      "email": "Email",
+      "displayName": "Tên hiển thị",
+      "phone": "Số điện thoại",
+      "gender": "Giới tính",
+      "dateOfBirth": "Ngày sinh",
+      "day": "Ngày",
+      "month": "Tháng",
+      "year": "Năm"
+    },
+    "help": {
+      "email": "Không thể thay đổi email đăng nhập của bạn.",
+      "displayName": "Hiển thị trên đơn hàng và đánh giá của bạn. Tối đa 80 ký tự.",
+      "phone": "Số Việt Nam, ví dụ 0912 345 678 hoặc +84 912 345 678.",
+      "language": "Dùng cho trang web và email chúng tôi gửi cho bạn."
+    },
+    "gender": {
+      "male": "Nam",
+      "female": "Nữ",
+      "other": "Khác",
+      "preferNotToSay": "Không muốn nói"
+    },
+    "language": {
+      "title": "Ngôn ngữ"
+    },
+    "actions": {
+      "save": "Lưu thay đổi",
+      "clear": "Xóa",
+      "retry": "Thử lại"
+    },
+    "errors": {
+      "displayNameRequired": "Vui lòng nhập tên hiển thị.",
+      "dateOfBirthIncomplete": "Chọn đủ ngày, tháng, năm hoặc xóa ngày sinh.",
+      "dateOfBirthInvalid": "Ngày này không tồn tại.",
+      "loadFailed": "Chúng tôi không tải được hồ sơ của bạn.",
+      "saveFailed": "Thay đổi chưa được lưu. Hãy thử lại.",
+      "summaryTitle": "Vui lòng sửa các mục sau"
+    },
+    "toasts": {
+      "saved": "Đã lưu hồ sơ",
+      "languageFailed": "Chúng tôi không lưu được ngôn ngữ của bạn. Hiện chỉ áp dụng trên thiết bị này."
+    }
+  }
+}

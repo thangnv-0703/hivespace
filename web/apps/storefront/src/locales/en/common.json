@@ -9,7 +9,11 @@
     "menu": "Open menu",
     "closeMenu": "Close menu",
     "search": "Search",
-    "searchPlaceholder": "Search products, shops..."
+    "searchPlaceholder": "Search products, shops...",
+    "account": {
+      "profile": "Profile"
+    },
+    "close": "Close"
   },
   "home": {
     "title": "Welcome to HiveSpace",

@@ -2,7 +2,7 @@
 import { DropdownMenu } from '@hivespace/ui'
 import { computed, useTemplateRef } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 
 import { useSessionStore } from './session'
 
@@ -18,7 +18,10 @@ const initials = computed(() => {
   const words = (session.user?.displayName ?? '').trim().split(/\s+/).filter(Boolean)
   return ((words[0]?.[0] ?? '') + (words.length > 1 ? (words[words.length - 1]?.[0] ?? '') : '')).toUpperCase()
 })
-const items = computed(() => [{ label: t('auth.actions.signOut'), onClick: () => logout.value?.submit() }])
+const items = computed(() => [
+  { label: t('common.account.profile'), to: '/profile' },
+  { label: t('auth.actions.signOut'), onClick: () => logout.value?.submit(), divided: true },
+])
 </script>
 
 <template>
@@ -34,7 +37,7 @@ const items = computed(() => [{ label: t('auth.actions.signOut'), onClick: () =>
 
     <template v-else>
       <span class="max-w-[20ch] truncate text-sm font-medium text-text-primary" data-testid="account-name">{{ session.user?.displayName }}</span>
-      <DropdownMenu :items="items" :label="$t('auth.menu.account')">
+      <DropdownMenu :items="items" :label="$t('auth.menu.account')" :link-as="RouterLink">
         <template #icon>
           <span class="flex size-7 items-center justify-center rounded-full bg-brand-100 text-xs font-semibold text-brand-700" aria-hidden="true">
             {{ initials }}
