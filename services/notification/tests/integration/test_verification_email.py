@@ -133,3 +133,98 @@ async def test_the_token_is_stored_nowhere(engine: AsyncEngine) -> None:
         for table in ("email_records", "contacts", "inbox", "outbox"):
             dump = (await conn.execute(text(f"SELECT t::text FROM {table} t"))).scalars().all()  # noqa: S608
             assert all(TOKEN not in row for row in dump), table
+
+
+# ---- FEAT-002: UserProfileChanged (AC-8) ----
+
+
+def _profile_event(user_id: str, *, language: str = "en", name: str = "Lan Tran") -> Envelope:
+    return Envelope.model_validate(
+        {
+            "eventId": str(uuid.uuid4()),
+            "eventType": "UserProfileChanged",
+            "eventVersion": 1,
+            "occurredAt": datetime.now(UTC).isoformat(),
+            "producer": "identity",
+            "correlationId": user_id,
+            "data": {
+                "userId": user_id,
+                "email": "an@example.com",
+                "displayName": name,
+                "language": language,
+                "changedFields": ["displayName", "language"],
+            },
+        }
+    )
+
+
+async def _contact(engine: AsyncEngine, user_id: str) -> tuple[str, str, str]:
+    async with engine.connect() as conn:
+        row = (
+            await conn.execute(
+                text("SELECT email, display_name, language FROM contacts WHERE user_id = :id"),
+                {"id": uuid.UUID(user_id)},
+            )
+        ).one()
+    return (row.email, row.display_name, row.language)
+
+
+async def test_a_profile_change_updates_the_contact_and_sends_no_email(engine: AsyncEngine) -> None:
+    sender = FakeSender()
+    handle = make_handler(engine, sender, BASE_URL)
+    registered = _event("UserRegistered", "vi")
+    user_id = registered.data["userId"]
+    await handle(registered)
+
+    await handle(_profile_event(user_id))
+
+    assert await _contact(engine, user_id) == ("an@example.com", "Lan Tran", "en")
+    assert len(sender.sent) == 1  # only the registration email
+    assert await _count(engine, "email_records") == 1
+
+
+async def test_the_same_profile_event_delivered_twice_updates_the_contact_once(engine: AsyncEngine) -> None:
+    handle = make_handler(engine, FakeSender(), BASE_URL)
+    user_id = str(uuid.uuid4())
+    event = _profile_event(user_id)
+
+    await handle(event)
+    async with engine.connect() as conn:
+        first = (await conn.execute(text("SELECT updated_at FROM contacts"))).scalar_one()
+    await handle(event)
+    async with engine.connect() as conn:
+        second = (await conn.execute(text("SELECT updated_at FROM contacts"))).scalar_one()
+
+    assert await _count(engine, "contacts") == 1
+    assert await _count(engine, "inbox") == 1
+    assert first == second  # the duplicate did not touch the row
+
+
+async def test_a_later_email_is_sent_in_the_language_saved_in_the_profile(engine: AsyncEngine) -> None:
+    sender = FakeSender()
+    handle = make_handler(engine, sender, BASE_URL)
+    registered = _event("UserRegistered", "vi")
+    user_id = registered.data["userId"]
+    await handle(registered)
+    await handle(_profile_event(user_id, language="en"))
+
+    # Identity builds the resend event from the saved profile, so it now carries "en".
+    resend = _event("VerificationEmailRequested", "en")
+    resend.data["userId"] = user_id
+    await handle(resend)
+
+    subjects = [m.subject for m in sender.sent]
+    assert subjects == ["Xác minh email HiveSpace của bạn", "Verify your HiveSpace email"]
+    assert (await _contact(engine, user_id))[2] == "en"
+
+
+async def test_an_invalid_profile_event_changes_nothing_and_leaves_no_inbox_row(engine: AsyncEngine) -> None:
+    handle = make_handler(engine, FakeSender(), BASE_URL)
+    bad = _profile_event(str(uuid.uuid4()))
+    bad.data["phone"] = "+84912345678"
+
+    with pytest.raises(ValueError, match="phone"):
+        await handle(bad)
+
+    assert await _count(engine, "contacts") == 0
+    assert await _count(engine, "inbox") == 0

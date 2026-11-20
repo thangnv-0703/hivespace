@@ -22,8 +22,8 @@ contacts = Table(
     Column("updated_at", DateTime(timezone=True), nullable=False),
 )
 
-# Events that carry the contact's details.
-CONTACT_EVENTS = frozenset({"UserRegistered", "VerificationEmailRequested"})
+# Events that carry the contact's details. UserProfileChanged brings the saved name and language (FR-LOC-005).
+CONTACT_EVENTS = frozenset({"UserRegistered", "VerificationEmailRequested", "UserProfileChanged"})
 
 
 async def upsert(conn: AsyncConnection, data: dict[str, Any]) -> None:
