@@ -40,7 +40,7 @@
 ├─ templates/                    Copier templates (section 9)
 ├─ tools/                        seed/, datagen/, eval/, k6/, scripts/ (id-resolver, i18n-parity)
 ├─ tests/
-│  ├─ e2e/                       Playwright hero flow
+│  ├─ e2e/                       Playwright hero flow (features/ Gherkin journeys, specs/ technical checks)
 │  └─ system/                    cross-service risk tests (saga failure injection, triple callback,
 │                                duplicate events), booted through Aspire.Hosting.Testing
 ├─ docs/
@@ -122,7 +122,7 @@ services/order/
 ├─ tests/
 │  ├─ Order.UnitTests/           domain and application
 │  ├─ Order.IntegrationTests/    Testcontainers (Postgres, broker)
-│  ├─ Order.ContractTests/       Reqnroll, reads contracts/features/order
+│  ├─ Order.ContractTests/       (none: contract tests run from tests/contract)
 │  └─ Order.ArchitectureTests/   NetArchTest: layer and vendor rules
 ├─ Dockerfile, README.md, Order.slnf
 ```
@@ -143,7 +143,6 @@ services/media/
 │  └─ Providers/Storage/         IObjectStorage and the Blob implementation (only place the Azure SDK appears)
 ├─ tests/
 │  ├─ Media.Tests/               unit and integration
-│  ├─ Media.ContractTests/
 │  └─ Media.ArchitectureTests/   vendor SDK only under Providers; features do not reference each other
 ├─ Dockerfile, README.md
 ```
@@ -161,8 +160,8 @@ services/inventory/                       services/cart/
 │  ├─ transport/  grpc/ http/ events/     │  ├─ store/mongo/
 │  ├─ store/postgres/ repo, tx, outbox    │  └─ platform/   config, otel, server
 │  └─ platform/   config, otel, server    ├─ migrations/    versioned MongoDB startup scripts
-├─ migrations/    golang-migrate SQL      ├─ test/contract/ (godog), test/integration/
-├─ test/contract/ (godog), test/integration/
+├─ migrations/    golang-migrate SQL      ├─ test/integration/
+├─ test/integration/
 ├─ go.mod, Dockerfile, README.md          └─ go.mod, Dockerfile, README.md
 ```
 
@@ -183,7 +182,7 @@ services/search-ai/
 │  ├─ providers/                 llm/, embeddings/ (interfaces and implementations; only place vendor SDKs appear)
 │  └─ db/                        models, session, repositories
 ├─ migrations/                   Alembic
-├─ tests/ unit/ integration/ contract/ (pytest-bdd)
+├─ tests/ unit/ integration/ (contract tests: tests/contract)
 ├─ Dockerfile, README.md
 ```
 

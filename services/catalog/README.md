@@ -10,7 +10,7 @@ System-wide setup, the local stack and conventions are in the [root README](../.
 | `Catalog.Application` | Handlers (`Features/`) and ports (`Abstractions/`) |
 | `Catalog.Infrastructure` | EF Core (`Persistence/`, migrations), gRPC clients, outbox wiring |
 | `Catalog.Api` | Composition root and endpoints |
-| `tests/` | Unit, Integration (Testcontainers Postgres), Contract (Reqnroll over `contracts/features/catalog`), Architecture (NetArchTest) |
+| `tests/` | Unit, Integration (Testcontainers Postgres), Contract (cucumber-js over `contracts/features/catalog`, in `tests/contract`), Architecture (NetArchTest) |
 
 Config: connection strings `catalogdb` and `messaging` (set by the AppHost); `Database:MigrateOnStartup` (default true, false in the container image).
 

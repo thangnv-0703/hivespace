@@ -7,5 +7,5 @@
     "types": ["node"],
     "noEmit": true
   },
-  "include": ["playwright.config.ts", "specs/**/*.ts"]
+  "include": ["playwright.config.ts", "specs/**/*.ts", "steps/**/*.ts", "support/**/*.ts"]
 }

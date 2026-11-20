@@ -125,11 +125,13 @@ The OpenAPI file for a service in `contracts/openapi/` is the source of truth. W
 4. **Style.** REST, JSON, `kebab-case` paths, `camelCase` properties, plural nouns, standard status codes, shared `components` for Money, Error, Page, and Id. Versioning by path prefix (`/v1`) on the gateway; breaking changes need a new version.
 5. **Gateway.** Clients reach services only through the gateway (EIR-COM-001); the gateway verifies tokens and forwards identity and roles (FR-AUTH-015, FR-AUTH-016).
 6. **Payment callbacks** are the only inbound external endpoints besides the gateway; each is authenticated by signature (EIR-COM-002, FR-PAY-008).
+7. **Updates use PUT, never PATCH** (decision of 2026-11-19). An update replaces the resource's full editable representation. A part the UI changes on its own (for example the language) is a PUT on a sub-resource, such as `PUT /v1/me/profile/language`.
 
 | Rule | Enforced by |
 | :-- | :-- |
 | Specs lint clean against the project ruleset (naming, Money/Error/Page refs, operation IDs, `security` set) | Spectral in CI |
 | No breaking change to a published version | oasdiff in CI against `main` |
+| No `patch` operations in any spec (rule 7) | Spectral rule `hs-no-patch` in CI |
 | Generated client is up to date with the specs | CI regenerates and fails on diff |
 | Every operation has a Gherkin feature (§9.1) | Coverage script comparing operation IDs to `@operation` tags |
 
@@ -193,7 +195,7 @@ New services are generated from `templates/` with Copier, never copied by hand. 
 | Structure | Rich: `Api`, `Application`, `Domain`, `Infrastructure`; domain has no framework or vendor references. Lean: one `Api` project with `Features/<Feature>/` folders; vendor SDKs only under `Providers/`; features do not reference each other | NetArchTest in unit tests |
 | Data access | EF Core, async only, no raw SQL without a parameter | Analyzer + SQL-injection test (NFR-SEC-006) |
 | Unit and integration tests | xUnit; integration tests use Testcontainers, not mocks, for the database and broker | `dotnet test` |
-| Contract tests | Reqnroll features from `contracts/features/<service>` | `dotnet test` |
+| Contract tests | cucumber-js over `contracts/features/<service>` | `cd tests/contract && pnpm test` |
 
 ### 8.2 Go (Inventory, Cart)
 | Area | Standard | Enforced by |
@@ -204,7 +206,7 @@ New services are generated from `templates/` with Copier, never copied by hand. 
 | Structure | `cmd/`, `internal/`, no package cycles; handlers thin. Rich (Inventory): `internal/domain` imports nothing internal, use cases in `internal/app`, adapters in `transport/` and `store/`. Lean (Cart): one package per feature (`internal/cart`); only `store/` imports a database driver | `golangci-lint` (depguard, cyclop) |
 | Tests | Table-driven tests; integration tests against a real PostgreSQL container | `go test` |
 | MongoDB (Cart) | Official Go driver behind a repository interface; single-document atomic updates only; integration tests against a MongoDB container | `go test`, Testcontainers |
-| Contract tests | godog features from `contracts/features/inventory` | `go test` |
+| Contract tests | cucumber-js over `contracts/features/inventory` | `cd tests/contract && pnpm test` |
 
 ### 8.3 Python (Search + AI, Notification, tools)
 | Area | Standard | Enforced by |
@@ -214,7 +216,7 @@ New services are generated from `templates/` with Copier, never copied by hand. 
 | Structure | `src/` layout, `pyproject.toml`, one uv workspace lockfile; scripts are run with `python -I`. Lean: `features/<feature>/`, vendor SDKs only under `providers/`, features do not import each other | CI (`import-linter`); *Review* |
 | LLM output | Parsed into a typed model (Pydantic) with a fixed schema; invalid output triggers the keyword fallback (FR-NLS-005, NFR-SEC-010) | Unit tests with malformed LLM output |
 | Tests | `pytest`; no network in unit tests | CI |
-| Contract tests | pytest-bdd features from `contracts/features/search-ai` | CI |
+| Contract tests | cucumber-js over `contracts/features/search-ai` | `cd tests/contract && pnpm test` |
 
 ### 8.4 Vue 3 + TypeScript (storefront, seller centre)
 | Area | Standard | Enforced by |
@@ -226,7 +228,7 @@ New services are generated from `templates/` with Copier, never copied by hand. 
 | i18n | All user-visible strings through `vue-i18n` keys; no literal UI text in templates | ESLint i18n rule + key-parity script |
 | States | Every list and async action has loading, empty and error states (NFR-USE-002) | *Review* + component tests |
 | Layout | Works at 360 px width and on desktop (EIR-UI-003) | Playwright viewport test on the hero flow |
-| Tests | Vitest for units; Playwright for the hero flow | CI |
+| Tests | Vitest for units; Playwright for the hero flow, with the user journeys written as Gherkin (ADR-0026) | CI |
 
 ## 9. Testing strategy
 
@@ -237,7 +239,7 @@ Risk-based. There is no global coverage percentage. Test depth follows the risk:
 - Each scenario is tagged with the operation and the requirement it verifies, for example `@operation:placeCheckout @FR-CHK-005 @UC-011`.
 - Scenarios assert status code, the stable error `code` (never the localized message) and that the response body validates against the OpenAPI schema.
 - Scenarios cover the main flow and each exception flow in the matching use case.
-- Runners: Reqnroll (.NET), godog (Go), pytest-bdd (Python). Every runner reads the same shared `.feature` files, so behaviour is defined once regardless of the implementation language.
+- Runner: cucumber-js in `tests/contract` (ADR-0025). It starts each service and its Postgres container and calls the public API, so behaviour is defined once in the shared `.feature` files regardless of the implementation language. Steps that need state the API does not expose use direct SQL on the service database.
 - The tags feed the RTM Test ref column (acceptance-verification updates it).
 
 ### 9.2 Mandatory risk tests

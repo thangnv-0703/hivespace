@@ -27,7 +27,6 @@
   </Folder>
   <Folder Name="/services/catalog/tests/">
     <Project Path="services/catalog/tests/Catalog.ArchitectureTests/Catalog.ArchitectureTests.csproj" />
-    <Project Path="services/catalog/tests/Catalog.ContractTests/Catalog.ContractTests.csproj" />
     <Project Path="services/catalog/tests/Catalog.IntegrationTests/Catalog.IntegrationTests.csproj" />
     <Project Path="services/catalog/tests/Catalog.UnitTests/Catalog.UnitTests.csproj" />
   </Folder>
@@ -39,7 +38,6 @@
     <Project Path="services/identity/src/Identity.Infrastructure/Identity.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/services/identity/tests/">
-    <Project Path="services/identity/tests/Identity.ContractTests/Identity.ContractTests.csproj" />
     <Project Path="services/identity/tests/Identity.IntegrationTests/Identity.IntegrationTests.csproj" />
     <Project Path="services/identity/tests/Identity.UnitTests/Identity.UnitTests.csproj" />
     <Project Path="services/identity/tests/Identity.Tests/Identity.Tests.csproj" />

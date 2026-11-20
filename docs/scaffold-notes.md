@@ -46,7 +46,7 @@
 | API client | `@hey-api/openapi-ts` | 0.99.0 | `@hey-api/client-fetch` plugin, one output per service spec (catalog for now) | dev-standards §6 |
 | E2E | `@playwright/test` | 1.65.1 | Chromium; desktop and 360 px projects | architecture §8.6 |
 
-Key package versions are pinned centrally in `Directory.Packages.props`, `go.mod`/`go.sum`, `uv.lock` and (later) `pnpm-lock.yaml`. Notable: Aspire 13.6.5, EF Core / Npgsql 10.0.14 / 10.0.3, Grpc 2.85.0, OpenTelemetry .NET 1.17.0, Reqnroll 3.3.4, Testcontainers 4.17.0; Go: grpc 1.85.0, otel 1.47.0, azservicebus 1.11.0, pgx 5.13.0, golang-migrate 4.20.1; Python: FastAPI 0.163, SQLAlchemy 2.1, azure-servicebus 7.15.
+Key package versions are pinned centrally in `Directory.Packages.props`, `go.mod`/`go.sum`, `uv.lock` and (later) `pnpm-lock.yaml`. Notable: Aspire 13.6.5, EF Core / Npgsql 10.0.14 / 10.0.3, Grpc 2.85.0, OpenTelemetry .NET 1.17.0, Testcontainers 4.17.0; Go: grpc 1.85.0, otel 1.47.0, azservicebus 1.11.0, pgx 5.13.0, golang-migrate 4.20.1; Python: FastAPI 0.163, SQLAlchemy 2.1, azure-servicebus 7.15.
 
 ## 4. Deviations from expectation (live reality won)
 
@@ -120,7 +120,7 @@ See `docs/.scaffold-progress.md` for the live tracker; results are recorded here
 | search-ai: ruff, mypy --strict, pytest, import-linter | pass |
 | `buf lint` | pass |
 | vi/en key parity | pass |
-| Catalog integration (Testcontainers Postgres) and contract tests (Reqnroll) | pass (2 + 1) |
+| Catalog integration (Testcontainers Postgres) | pass (2); contract tests moved to cucumber-js (ADR-0025) |
 | Inventory integration test (Testcontainers Postgres, inbox dedupe) | pass |
 | Web: `turbo run lint typecheck test build` (storefront, seller centre, core, ui) | 12/12 tasks pass |
 | Token wiring | `theme.css` byte-identical to design.md §2.4; changing `color.brand.500` changes `theme.css` and makes `ui:lint` fail; restored |

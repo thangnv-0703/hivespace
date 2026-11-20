@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
-namespace Identity.ContractTests;
+namespace Identity.IntegrationTests;
 
 /// <summary>Design §3.2 / AC-9, AC-12, AC-14, AC-15: code + PKCE, token, refresh with rotation, revoke, claims and lifetimes.</summary>
 public sealed class OidcFlowTests : IAsyncLifetime

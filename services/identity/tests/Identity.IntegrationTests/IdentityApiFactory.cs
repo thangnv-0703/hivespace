@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection.Extensions;
 using Testcontainers.PostgreSql;
 using Xunit;
 
-namespace Identity.ContractTests;
+namespace Identity.IntegrationTests;
 
 /// <summary>Boots Identity.Api against a real Postgres container; the broker is faked (the relay is removed).</summary>
 public sealed class IdentityApiFactory : WebApplicationFactory<Program>

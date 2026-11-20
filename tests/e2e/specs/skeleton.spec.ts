@@ -11,7 +11,11 @@ test('storefront shows the seeded category from the database, in vi and en', asy
   await expect(page.getByTestId('brand').getByRole('img', { name: 'HiveSpace' }).first()).toBeVisible()
   await expect(page.getByTestId('category')).toHaveText('Thời trang')
 
-  await page.getByTestId('language-switcher').click()
+  // Below md the language switcher lives in the collapsed menu; the toggle's label depends on the locale, its target does not.
+  const menuToggle = page.locator('button[aria-controls="storefront-menu"][aria-expanded="false"]')
+  if (await menuToggle.isVisible()) await menuToggle.click()
+  // The header renders one switcher per breakpoint; only one of them is visible.
+  await page.getByTestId('language-switcher').filter({ visible: true }).click()
   await page.getByRole('menuitemradio', { name: 'English' }).click()
   await expect(page.getByTestId('category')).toHaveText('Fashion')
   await expect(page.locator('html')).toHaveAttribute('lang', 'en')

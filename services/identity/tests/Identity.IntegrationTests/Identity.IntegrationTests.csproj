@@ -8,8 +8,10 @@
     <PackageReference Include="xunit.v3" />
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Testcontainers.PostgreSql" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Identity.Api\Identity.Api.csproj" />
     <ProjectReference Include="..\..\src\Identity.Infrastructure\Identity.Infrastructure.csproj" />
   </ItemGroup>
 </Project>

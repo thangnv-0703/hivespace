@@ -43,6 +43,16 @@ cd web && pnpm install && pnpm turbo run lint typecheck test build
 dotnet test --project tests/system/HiveSpace.SystemTests
 ```
 
+```bash
+cd tests/contract && pnpm install && pnpm test
+```
+Gherkin API contract tests for every service (cucumber-js over `contracts/features/`, ADR-0025). Needs Docker and the .NET SDK; it starts each service and a Postgres container itself.
+
+```bash
+cd tests/e2e && pnpm install && pnpm test
+```
+End-to-end browser tests (Playwright). User journeys are Gherkin in `tests/e2e/features/` (playwright-bdd, ADR-0026); technical checks are plain specs in `tests/e2e/specs/`. Runs against the local AppHost stack (starts it if nothing answers on `http://localhost:5080`).
+
 New service: generate it from `templates/` (see `templates/README.md`); never copy a service by hand.
 
 ## Boundary rules (enforced by tooling — do not work around them)
