@@ -47,7 +47,10 @@ Then('a toast says {string}', async ({ page }, text: string) => {
 
 // The header name must follow the save at once, not after the 15 minute token expiry (AC-7).
 Then('the account menu shows the updated name {string}', async ({ page }, name: string) => {
-  await expect(page.getByTestId('account-name')).toHaveText(name)
+  // The header and the mobile menu both render the name; every copy must carry it.
+  const names = page.getByTestId('account-name')
+  await expect(names.first()).toHaveText(name)
+  await expect(names.last()).toHaveText(name)
 })
 
 Then('the phone field shows {string}', async ({ page }, phone: string) => {
@@ -64,7 +67,13 @@ Then('the date of birth shows the error {string}', async ({ page }, message: str
 })
 
 When('the user picks {string} as the language', async ({ page }, language: string) => {
+  // The UI switches at once (AC-6); the choice is saved and the session refreshed after. Wait for both, so a following
+  // reload tests the saved profile and not a request that the reload cancelled.
+  const saved = page.waitForResponse((r) => r.url().includes('/v1/me/profile/language') && r.request().method() === 'PUT')
+  const refreshed = page.waitForResponse((r) => r.url().includes('/bff/session/refresh') && r.request().method() === 'POST')
   await page.getByRole('radio', { name: language, exact: true }).check({ force: true })
+  expect((await saved).status()).toBe(200)
+  expect((await refreshed).status()).toBe(200)
 })
 
 // A new context has no localStorage and no cookies, so the Vietnamese UI can only come from the saved profile (D-7).
