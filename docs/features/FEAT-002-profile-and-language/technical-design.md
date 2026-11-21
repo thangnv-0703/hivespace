@@ -5,6 +5,7 @@
 > Realizes: UC-027 · Screens: SCR-STF-016 (designed by ui-design)
 > Depends on: FEAT-001 (users, tokens, gateway BFF, Notification contacts)
 > Status: Draft · Date: 2026-11-19
+> Diagram: [design-flow.html](design-flow.html)
 
 ## 1. Intent
 A signed-in user opens their profile, edits display name, phone, gender and date of birth, and picks Vietnamese or English. The language switches at once and is saved to the profile, so it follows the user to other browsers and into emails. This is the first endpoint that a service protects on its own (architecture §8.1: every service validates the JWT), and the first time a token claim (`name`, `lang`) changes during a session.
