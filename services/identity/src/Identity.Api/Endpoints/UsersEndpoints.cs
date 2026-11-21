@@ -71,7 +71,7 @@ public static class UsersEndpoints
         return new ClaimsPrincipal(new ClaimsIdentity(claims, CookieScheme, "name", "role"));
     }
 
-    private static T OrThrow<T>(this Result<T> result) =>
+    internal static T OrThrow<T>(this Result<T> result) =>
         result.IsSuccess
             ? result.Value!
             : throw new ApiException(

@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My profile, validation errors</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1260px; background: #f9fafb">
+  <main style="max-width: 1440px; margin: 0 auto; padding: 32px 24px 64px; box-sizing: border-box">
+    <div style="max-width: 672px">
+      <h1 style="margin: 0 0 4px; font-size: 30px; line-height: 38px; font-weight: 600">My profile</h1>
+      <p style="margin: 0 0 24px; font-size: 14px; line-height: 20px; color: #667085">Manage your personal details and language.</p>
+
+      <section aria-label="Personal details" style="background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; box-shadow: 0 1px 3px #1018281a; padding: 24px">
+        <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid #e4e7ec">
+          <span style="display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 9999px; background: #dde9ff; color: #2a31d8; font-size: 22px; font-weight: 600" aria-hidden="true">LN</span>
+          <div>
+            <p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 600">Linh Nguyen</p>
+            <p style="margin: 0; font-size: 14px; line-height: 20px; color: #667085">linh.nguyen@example.com</p>
+          </div>
+        </div>
+
+        <div role="alert" style="display: flex; gap: 12px; padding: 16px; margin-bottom: 24px; border-radius: 8px; background: #fef3f2; color: #b42318; font-size: 14px; line-height: 20px">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d92d20" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex-shrink: 0"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+          <div>
+            <p style="margin: 0 0 4px; font-weight: 600">Fix 3 fields to save your profile</p>
+            <ul style="margin: 0; padding-left: 18px">
+              <li><a href="#name" style="color: #b42318; text-decoration: underline">Display name</a></li>
+              <li><a href="#phone" style="color: #b42318; text-decoration: underline">Phone</a></li>
+              <li><a href="#d" style="color: #b42318; text-decoration: underline">Date of birth</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <form style="display: flex; flex-direction: column; gap: 16px">
+          <div>
+            <label for="email" style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Email</label>
+            <input id="email" type="email" value="linh.nguyen@example.com" readonly aria-readonly="true" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: #f2f4f7; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #344054">
+            <p style="margin: 6px 0 0; font-size: 12px; line-height: 18px; color: #667085">Your sign-in email can't be changed.</p>
+          </div>
+          <div>
+            <label for="name" style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Display name <span style="color: #b42318" aria-hidden="true">*</span></label>
+            <input id="name" type="text" value="" autocomplete="name" aria-invalid="true" aria-describedby="name-err" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 14px; border: 1px solid #d92d20; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828; box-shadow: 0 0 0 4px #fee4e2">
+            <p id="name-err" style="display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 12px; line-height: 18px; color: #b42318">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>Enter a display name.
+            </p>
+          </div>
+          <div>
+            <label for="phone" style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Phone</label>
+            <input id="phone" type="tel" inputmode="tel" autocomplete="tel" value="12345" aria-invalid="true" aria-describedby="phone-err" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 14px; border: 1px solid #d92d20; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828; box-shadow: 0 1px 2px #1018280d">
+            <p id="phone-err" style="display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 12px; line-height: 18px; color: #b42318">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>Enter a Vietnamese phone number, for example 0912 345 678.
+            </p>
+          </div>
+          <fieldset style="margin: 0; padding: 0; border: 0">
+            <legend style="padding: 0; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Gender</legend>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px">
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="g" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Male</label>
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="g" checked style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Female</label>
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="g" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Other</label>
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="g" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Prefer not to say</label>
+            </div>
+          </fieldset>
+          <fieldset aria-describedby="dob-err" style="margin: 0; padding: 0; border: 0">
+            <legend style="padding: 0; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Date of birth</legend>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+              <label style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)" for="d">Day</label>
+              <select id="d" aria-invalid="true" style="width: 112px; height: 44px; padding: 0 12px; border: 1px solid #d92d20; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"><option>20</option></select>
+              <label style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)" for="m">Month</label>
+              <select id="m" aria-invalid="true" style="width: 112px; height: 44px; padding: 0 12px; border: 1px solid #d92d20; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"><option>November</option></select>
+              <label style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)" for="y">Year</label>
+              <select id="y" aria-invalid="true" style="width: 112px; height: 44px; padding: 0 12px; border: 1px solid #d92d20; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"><option>2026</option></select>
+            </div>
+            <p id="dob-err" style="display: flex; align-items: center; gap: 6px; margin: 6px 0 0; font-size: 12px; line-height: 18px; color: #b42318">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>Date of birth can't be in the future.
+            </p>
+          </fieldset>
+          <div style="display: flex; justify-content: flex-end; padding-top: 8px">
+            <button type="submit" style="height: 44px; padding: 0 16px; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 14px 'Outfit','Noto Sans',sans-serif; box-shadow: 0 1px 2px #1018280d">Save changes</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

@@ -8,7 +8,7 @@ const STORAGE_KEY = 'hs-locale'
 
 /**
  * Saved choice first (FR-LOC-002, signed-out users keep it in the browser), else English only when the
- * browser prefers English, else Vietnamese (FR-LOC-003). The profile-backed choice arrives with FEAT-002.
+ * browser prefers English, else Vietnamese (FR-LOC-003). For a signed-in user the profile-backed choice is applied by the app shell on session load (FEAT-002, FR-LOC-002).
  */
 export function detectLocale(saved: string | null, browserLanguages: readonly string[]): Locale {
   if (saved === 'vi' || saved === 'en') return saved

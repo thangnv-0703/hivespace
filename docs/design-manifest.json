@@ -148,6 +148,63 @@
         "canvas": "https://claude.ai/artifact/KtqAnGkhmfRHoBGsyhoUaP",
         "note": "visual reference; ui-design.md is authoritative"
       }
+    },
+    "SCR-STF-016": {
+      "name": "Profile",
+      "surface": "STF",
+      "feature": "FEAT-002",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-002-profile-and-language/ui-design.md#scr-stf-016--profile"
+      },
+      "reference": "references/hivespace.web/apps/buyer/src/pages/Profile/ProfilePage.vue",
+      "states": {
+        "covered": [
+          "default",
+          "loading",
+          "error (load, validation, save)",
+          "saving",
+          "saved",
+          "language switching"
+        ],
+        "gaps": [
+          "avatar upload and upload error (FEAT-035)"
+        ],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "GET /v1/me/profile",
+        "PUT /v1/me/profile",
+        "PUT /v1/me/profile/language",
+        "POST /bff/session/refresh"
+      ],
+      "conformance": {
+        "result": "corrected",
+        "corrections": [
+          "left label column -> labels above controls",
+          "masked email/phone with Change buttons -> read-only email, editable phone",
+          "username row removed (no contract field)",
+          "gender 3 options -> 4 with prefer not to say",
+          "avatar FileInput and ProfileSidebar deferred (FEAT-035, FEAT-003)",
+          "raw gray/white utilities -> role tokens and Card",
+          "language card added (FR-PROF-006)"
+        ],
+        "escalations": []
+      },
+      "status": "designed",
+      "designed_at": "2026-11-19",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-002-profile-and-language/mockups/Main.dc.html",
+          "docs/features/FEAT-002-profile-and-language/mockups/ProfileErrors.dc.html",
+          "docs/features/FEAT-002-profile-and-language/mockups/ProfileLoading.dc.html",
+          "docs/features/FEAT-002-profile-and-language/mockups/ProfileMobile.dc.html",
+          "docs/features/FEAT-002-profile-and-language/mockups/AccountMenu.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/NCMYCzcnfWLv2DnHMxJHG3",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
     }
   }
 }

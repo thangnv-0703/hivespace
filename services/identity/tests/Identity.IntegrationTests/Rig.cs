@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
+using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Security;
@@ -33,6 +34,9 @@ public sealed class Rig : IAsyncDisposable
         Verify = new VerifyEmailHandler(users, Tokens, clock);
         Resend = new ResendVerificationEmailHandler(users, Tokens, outbox, clock);
         SignIn = new SignInHandler(users, Hasher);
+        GetProfile = new GetMyProfileHandler(users);
+        UpdateProfile = new UpdateMyProfileHandler(users, outbox, clock);
+        UpdateLanguage = new UpdateMyLanguageHandler(users, outbox, clock);
     }
 
     public FakeClock Clock { get; }
@@ -44,6 +48,12 @@ public sealed class Rig : IAsyncDisposable
     public ResendVerificationEmailHandler Resend { get; }
 
     public SignInHandler SignIn { get; }
+
+    public GetMyProfileHandler GetProfile { get; }
+
+    public UpdateMyProfileHandler UpdateProfile { get; }
+
+    public UpdateMyLanguageHandler UpdateLanguage { get; }
 
     public static string NewEmail() => $"{Guid.NewGuid():N}@example.com";
 

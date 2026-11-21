@@ -7,6 +7,8 @@ export interface MenuItem {
   label: string
   to?: string
   onClick?: () => void
+  /** Draws a separator above the item (for example before "Sign out"). */
+  divided?: boolean
 }
 
 const props = defineProps<{
@@ -82,9 +84,12 @@ const attrs = (item: MenuItem) => (item.to ? (props.linkAs ? { to: item.to } : {
       class="absolute right-0 z-[var(--z-dropdown)] mt-2 w-44 space-y-1 rounded-xl border border-border-default bg-bg-surface p-2 shadow-lg"
       @keydown="onKeydown"
     >
-      <component :is="tag(item)" v-for="item in items" :key="item.label" ref="rows" v-bind="attrs(item)" role="menuitem" :class="row" @click="pick(item)">
-        {{ item.label }}
-      </component>
+      <template v-for="item in items" :key="item.label">
+        <div v-if="item.divided" role="separator" class="my-1 h-px bg-border-default" />
+        <component :is="tag(item)" ref="rows" v-bind="attrs(item)" role="menuitem" :class="row" @click="pick(item)">
+          {{ item.label }}
+        </component>
+      </template>
     </div>
   </div>
 </template>

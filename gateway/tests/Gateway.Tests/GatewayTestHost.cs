@@ -33,6 +33,14 @@ public sealed class GatewayTestHost : IAsyncLifetime
 
     public int RefreshCalls { get; private set; }
 
+    /// <summary>The <c>name</c> and <c>lang</c> claims of tokens the fake Identity issues on refresh, so a test can change them like a profile edit does.</summary>
+    public string IssuedName { get; set; } = "An";
+
+    public string IssuedLang { get; set; } = "vi";
+
+    /// <summary>Makes the fake token endpoint slow so parallel refreshes really overlap.</summary>
+    public TimeSpan RefreshDelay { get; set; }
+
     public WebApplicationFactory<Program> Gateway => _gateway!;
 
     public async ValueTask InitializeAsync()
@@ -61,6 +69,11 @@ public sealed class GatewayTestHost : IAsyncLifetime
             {
                 var form = await request.ReadFormAsync();
                 RefreshCalls++;
+                if (RefreshDelay > TimeSpan.Zero)
+                {
+                    await Task.Delay(RefreshDelay);
+                }
+
                 if (form["grant_type"] != "refresh_token" || !form["refresh_token"].ToString().StartsWith("good-refresh", StringComparison.Ordinal) || form["client_secret"] != "test-secret"
                     || RevokedTokens.Contains(form["refresh_token"].ToString()))
                 {
@@ -69,7 +82,7 @@ public sealed class GatewayTestHost : IAsyncLifetime
 
                 return Results.Json(new
                 {
-                    access_token = CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(15), subject: "user-1"),
+                    access_token = CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(15), subject: "user-1", name: IssuedName, lang: IssuedLang),
                     refresh_token = "rotated-refresh",
                     expires_in = 900,
                     token_type = "Bearer",
@@ -135,7 +148,7 @@ public sealed class GatewayTestHost : IAsyncLifetime
         response.EnsureSuccessStatusCode();
     }
 
-    public string CreateAccessToken(DateTimeOffset expires, string subject = "user-1", bool wrongSignature = false, string[]? roles = null) =>
+    public string CreateAccessToken(DateTimeOffset expires, string subject = "user-1", bool wrongSignature = false, string[]? roles = null, string name = "An", string lang = "vi") =>
         new JsonWebTokenHandler().CreateToken(new SecurityTokenDescriptor
         {
             Issuer = Issuer + "/",
@@ -148,8 +161,8 @@ public sealed class GatewayTestHost : IAsyncLifetime
                 ["sub"] = subject,
                 ["email"] = "an@example.com",
                 ["email_verified"] = "false",
-                ["name"] = "An",
-                ["lang"] = "vi",
+                ["name"] = name,
+                ["lang"] = lang,
                 ["role"] = roles ?? ["Buyer"],
             },
             SigningCredentials = new SigningCredentials(new ECDsaSecurityKey(wrongSignature ? _otherKey : _signingKey), SecurityAlgorithms.EcdsaSha256),

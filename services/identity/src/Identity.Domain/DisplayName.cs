@@ -1,9 +1,9 @@
 namespace Identity.Domain;
 
-/// <summary>The name shown on the account: trimmed, 1 to 60 characters (FR-AUTH-004).</summary>
+/// <summary>The name shown on the account: trimmed, 1 to 80 characters (FR-AUTH-004, FR-PROF-003).</summary>
 public sealed record DisplayName
 {
-    public const int MaxLength = 60;
+    public const int MaxLength = 80;
 
     private DisplayName(string value) => Value = value;
 

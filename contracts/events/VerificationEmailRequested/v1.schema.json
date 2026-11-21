@@ -7,7 +7,7 @@
   "properties": {
     "userId": { "type": "string", "format": "uuid" },
     "email": { "type": "string", "maxLength": 254 },
-    "displayName": { "type": "string", "maxLength": 60 },
+    "displayName": { "type": "string", "maxLength": 80 },
     "language": { "type": "string", "enum": ["vi", "en"] },
     "verificationToken": { "type": "string", "minLength": 1 },
     "verificationTokenExpiresAt": { "type": "string", "format": "date-time" }

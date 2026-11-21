@@ -17,14 +17,21 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
     {
         modelBuilder.Entity<User>(e =>
         {
-            e.ToTable("users", t => t.HasCheckConstraint("ck_users_language", "language in ('vi', 'en')"));
+            e.ToTable("users", t =>
+            {
+                t.HasCheckConstraint("ck_users_language", "language in ('vi', 'en')");
+                t.HasCheckConstraint("ck_users_gender", "gender in ('male', 'female', 'other', 'prefer_not_to_say')");
+            });
             e.HasKey(u => u.Id);
             e.Property(u => u.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(u => u.EmailAddress).HasColumnName("email").HasMaxLength(254);
             e.Property(u => u.NormalizedEmail).HasColumnName("normalized_email").HasMaxLength(254);
             e.HasIndex(u => u.NormalizedEmail).IsUnique();
-            e.Property(u => u.DisplayName).HasColumnName("display_name").HasMaxLength(60);
+            e.Property(u => u.DisplayName).HasColumnName("display_name").HasMaxLength(80);
             e.Property(u => u.Language).HasColumnName("language").HasMaxLength(2).HasDefaultValue("vi");
+            e.Property(u => u.Phone).HasColumnName("phone").HasMaxLength(16);
+            e.Property(u => u.Gender).HasColumnName("gender").HasMaxLength(20);
+            e.Property(u => u.DateOfBirth).HasColumnName("date_of_birth");
             e.Property(u => u.EmailVerifiedAt).HasColumnName("email_verified_at");
             e.Property(u => u.CreatedAt).HasColumnName("created_at");
             e.Property(u => u.UpdatedAt).HasColumnName("updated_at");

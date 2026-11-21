@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 from hivespace_common import inbox
 from hivespace_common.eventbus import Envelope
 from notification.features.contacts import repository as contacts
+from notification.features.contacts.events import UserProfileChanged
 from notification.features.emails import service as emails
 from notification.providers.email import EmailSender
 
@@ -27,6 +28,9 @@ def make_handler(
             if not await inbox.record(conn, envelope.event_id, CONSUMER):
                 log.info("duplicate event ignored", extra={"eventId": envelope.event_id})
                 return
+            if envelope.event_type == "UserProfileChanged":
+                # Validate against the contract before any write; a bad payload rolls back the inbox row too.
+                UserProfileChanged.model_validate(envelope.data)
             if envelope.event_type in contacts.CONTACT_EVENTS:
                 await contacts.upsert(conn, envelope.data)
             if envelope.event_type in emails.EMAIL_EVENTS:

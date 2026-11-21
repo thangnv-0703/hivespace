@@ -2,21 +2,18 @@
 // Storefront shell (design.md §3, ux-foundations B1): sticky header = 40 px top bar (seller centre, language, theme,
 // account) + 80 px row (logo, search, cart). Below md it collapses to a 56 px row; the top-bar items move into a panel.
 // Search and cart arrive with their slices (FEAT-018, FEAT-021); the account area is FEAT-001.
-import { setLocale, type Locale } from '@hivespace/core'
 import { BrandLogo, Input, LanguageSwitcher, ThemeToggle } from '@hivespace/ui'
 import { Menu, Search, ShoppingCart, X } from '@lucide/vue'
 import { ref } from 'vue'
 import { AccountMenu, UnverifiedBanner } from '@/features/auth'
 import { CategoryBar } from '@/features/catalog'
+import { ProfileToasts, useLanguagePreference } from '@/features/profile'
 import { useI18n } from 'vue-i18n'
 
 const i18n = useI18n()
+const { change: changeLocale } = useLanguagePreference()
 const menuOpen = ref(false)
 const searchOpen = ref(false)
-
-function changeLocale(value: string) {
-  setLocale(i18n.locale, value as Locale)
-}
 
 const iconButton =
   'inline-flex size-11 items-center justify-center rounded-lg text-text-secondary hover:bg-bg-subtle focus-visible:outline-2 focus-visible:outline-focus-ring'
@@ -89,6 +86,7 @@ const iconButton =
       </div>
       <CategoryBar />
     </header>
+    <ProfileToasts />
     <UnverifiedBanner />
     <main class="mx-auto max-w-[var(--size-container)] px-4 py-6">
       <slot />

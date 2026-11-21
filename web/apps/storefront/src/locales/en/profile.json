@@ -1,0 +1,48 @@
+{
+  "profile": {
+    "title": "My profile",
+    "subtitle": "Manage your personal details and language.",
+    "fields": {
+      "email": "Email",
+      "displayName": "Display name",
+      "phone": "Phone",
+      "gender": "Gender",
+      "dateOfBirth": "Date of birth",
+      "day": "Day",
+      "month": "Month",
+      "year": "Year"
+    },
+    "help": {
+      "email": "Your sign-in email can't be changed.",
+      "displayName": "Shown on your orders and reviews. Up to 80 characters.",
+      "phone": "Vietnamese number, for example 0912 345 678 or +84 912 345 678.",
+      "language": "Used for the site and for emails we send you."
+    },
+    "gender": {
+      "male": "Male",
+      "female": "Female",
+      "other": "Other",
+      "preferNotToSay": "Prefer not to say"
+    },
+    "language": {
+      "title": "Language"
+    },
+    "actions": {
+      "save": "Save changes",
+      "clear": "Clear",
+      "retry": "Retry"
+    },
+    "errors": {
+      "displayNameRequired": "Please enter your name.",
+      "dateOfBirthIncomplete": "Choose day, month and year, or clear the date.",
+      "dateOfBirthInvalid": "This date does not exist.",
+      "loadFailed": "We couldn't load your profile.",
+      "saveFailed": "Your changes weren't saved. Try again.",
+      "summaryTitle": "Please fix the following"
+    },
+    "toasts": {
+      "saved": "Profile saved",
+      "languageFailed": "We couldn't save your language. It applies on this device for now."
+    }
+  }
+}

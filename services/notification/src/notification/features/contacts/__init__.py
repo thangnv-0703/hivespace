@@ -1,4 +1,1 @@
-"""Contact projection (user email, language, shop owner).
-
-Skeleton: consumes Ping only; FEAT-001 adds UserRegistered.
-"""
+"""Contact projection: email, display name and language per user, from the identity events."""

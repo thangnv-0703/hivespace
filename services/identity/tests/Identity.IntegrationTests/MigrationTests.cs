@@ -62,6 +62,43 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
         Assert.Contains("users", afterUp);
     }
 
+    [Fact]
+    public async Task AddUserProfile_applies_down_and_up_after_the_initial_migration()
+    {
+        await using var db = postgres.CreateContext();
+        var migrator = db.GetService<IMigrator>();
+
+        await migrator.MigrateAsync("20261119151119_InitialIdentity", TestContext.Current.CancellationToken);
+        var before = await ListUserColumns(db);
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var after = await ListUserColumns(db);
+
+        Assert.DoesNotContain("phone", before);
+        Assert.DoesNotContain("gender", before);
+        Assert.DoesNotContain("date_of_birth", before);
+        Assert.Contains("phone", after);
+        Assert.Contains("gender", after);
+        Assert.Contains("date_of_birth", after);
+    }
+
+    [Fact]
+    public async Task Gender_is_limited_to_the_four_values()
+    {
+        await using var db = postgres.CreateContext();
+
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"""
+            insert into users (id, email, normalized_email, display_name, language, gender, created_at, updated_at)
+            values ({Guid.CreateVersion7()}, {"g@x.com"}, {"g@x.com"}, {"G"}, {"vi"}, {"x"}, now(), now())
+            """,
+            TestContext.Current.CancellationToken));
+    }
+
+    private static async Task<List<string>> ListUserColumns(DbContext db) =>
+        await db.Database
+            .SqlQuery<string>($"select column_name as \"Value\" from information_schema.columns where table_schema = 'public' and table_name = 'users'")
+            .ToListAsync(TestContext.Current.CancellationToken);
+
     private static async Task<List<string>> ListTables(DbContext db) =>
         await db.Database
             .SqlQuery<string>($"select table_name as \"Value\" from information_schema.tables where table_schema = 'public'")

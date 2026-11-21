@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My profile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1180px; background: #f9fafb">
+  <header style="background: #ffffff; border-bottom: 1px solid #e4e7ec">
+    <div style="display: flex; align-items: center; justify-content: space-between; height: 40px; padding: 0 24px; border-bottom: 1px solid #e4e7ec; font-size: 14px; color: #344054">
+      <a href="#" style="color: #344054">Seller centre</a>
+      <div style="display: flex; align-items: center; gap: 20px">
+        <span style="display: flex; align-items: center; gap: 6px">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>EN
+        </span>
+        <a href="AccountMenu.dc.html" style="display: flex; align-items: center; gap: 8px; text-decoration: none; font-weight: 500; color: #101828">
+          <span style="display: flex; align-items: center; justify-content: center; width: 28px; height: 28px; border-radius: 9999px; background: #dde9ff; color: #2a31d8; font-size: 12px; font-weight: 600" aria-hidden="true">LN</span>Linh Nguyen
+        </a>
+      </div>
+    </div>
+    <div style="display: flex; align-items: center; gap: 24px; height: 80px; padding: 0 24px">
+      <a href="#" style="display: inline-flex; align-items: center; gap: 8px; text-decoration: none; color: #101828; font: 600 20px 'Outfit',sans-serif">
+        <img src="/_blob/c782ca8a2f43fb7263575678d59e390b" alt="HiveSpace" style="height: 28px; width: auto; display: block">
+      </a>
+      <div style="flex: 1 1 0; display: flex; align-items: center; height: 44px; padding: 0 16px; border: 1px solid #667085; border-radius: 8px; font-size: 14px; color: #667085">Search products</div>
+      <span style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; color: #344054" aria-label="Cart">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
+      </span>
+    </div>
+  </header>
+  <main style="max-width: 1440px; margin: 0 auto; padding: 32px 24px 64px; box-sizing: border-box">
+    <div style="max-width: 672px">
+      <h1 style="margin: 0 0 4px; font-size: 30px; line-height: 38px; font-weight: 600">My profile</h1>
+      <p style="margin: 0 0 24px; font-size: 14px; line-height: 20px; color: #667085">Manage your personal details and language.</p>
+
+      <section aria-labelledby="details-title" style="background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; box-shadow: 0 1px 3px #1018281a; padding: 24px">
+        <h2 id="details-title" style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Personal details</h2>
+        <div style="display: flex; align-items: center; gap: 16px; padding-bottom: 24px; margin-bottom: 24px; border-bottom: 1px solid #e4e7ec">
+          <span style="display: flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 9999px; background: #dde9ff; color: #2a31d8; font-size: 22px; font-weight: 600" aria-hidden="true">LN</span>
+          <div>
+            <p style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 600">Linh Nguyen</p>
+            <p style="margin: 0; font-size: 14px; line-height: 20px; color: #667085">linh.nguyen@example.com</p>
+          </div>
+        </div>
+        <form style="display: flex; flex-direction: column; gap: 16px">
+          <div>
+            <label for="email" style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Email</label>
+            <input id="email" type="email" value="linh.nguyen@example.com" readonly aria-readonly="true" aria-describedby="email-help" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 14px; border: 0; border-radius: 8px; background: #f2f4f7; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #344054">
+            <p id="email-help" style="margin: 6px 0 0; font-size: 12px; line-height: 18px; color: #667085">Your sign-in email can't be changed.</p>
+          </div>
+          <div>
+            <label for="name" style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Display name <span style="color: #b42318" aria-hidden="true">*</span></label>
+            <input id="name" type="text" value="Linh Nguyen" autocomplete="name" aria-describedby="name-help" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 14px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828; box-shadow: 0 1px 2px #1018280d">
+            <p id="name-help" style="margin: 6px 0 0; font-size: 12px; line-height: 18px; color: #667085">Shown on your orders and reviews. Up to 80 characters.</p>
+          </div>
+          <div>
+            <label for="phone" style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Phone</label>
+            <input id="phone" type="tel" inputmode="tel" autocomplete="tel" value="+84 912 345 678" aria-describedby="phone-help" style="box-sizing: border-box; width: 100%; height: 44px; padding: 0 14px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828; box-shadow: 0 1px 2px #1018280d">
+            <p id="phone-help" style="margin: 6px 0 0; font-size: 12px; line-height: 18px; color: #667085">Vietnamese number, for example 0912 345 678 or +84 912 345 678.</p>
+          </div>
+          <fieldset style="margin: 0; padding: 0; border: 0">
+            <legend style="padding: 0; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Gender</legend>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px">
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="g" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Male</label>
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="g" checked style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Female</label>
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="g" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Other</label>
+              <label style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="g" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Prefer not to say</label>
+              <a href="#" style="font-size: 14px; text-decoration: underline">Clear</a>
+            </div>
+          </fieldset>
+          <fieldset style="margin: 0; padding: 0; border: 0">
+            <legend style="padding: 0; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Date of birth</legend>
+            <div style="display: flex; flex-wrap: wrap; align-items: center; gap: 8px">
+              <label style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)" for="d">Day</label>
+              <select id="d" style="width: 112px; height: 44px; padding: 0 12px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"><option>30</option></select>
+              <label style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)" for="m">Month</label>
+              <select id="m" style="width: 112px; height: 44px; padding: 0 12px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"><option>April</option></select>
+              <label style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)" for="y">Year</label>
+              <select id="y" style="width: 112px; height: 44px; padding: 0 12px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"><option>1995</option></select>
+              <a href="#" style="margin-left: 8px; font-size: 14px; text-decoration: underline">Clear</a>
+            </div>
+          </fieldset>
+          <div style="display: flex; justify-content: flex-end; padding-top: 8px">
+            <button type="submit" style="height: 44px; padding: 0 16px; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 14px 'Outfit','Noto Sans',sans-serif; box-shadow: 0 1px 2px #1018280d">Save changes</button>
+          </div>
+        </form>
+      </section>
+
+      <section aria-labelledby="lang-title" style="margin-top: 24px; background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; box-shadow: 0 1px 3px #1018281a; padding: 24px">
+        <h2 id="lang-title" style="margin: 0 0 4px; font-size: 18px; line-height: 28px; font-weight: 600">Language</h2>
+        <p style="margin: 0 0 12px; font-size: 14px; line-height: 20px; color: #667085">Used for the site and for emails we send you. Changes apply at once.</p>
+        <div role="radiogroup" aria-labelledby="lang-title" style="display: flex; flex-direction: column">
+          <label lang="vi" style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="lang" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Tiếng Việt</label>
+          <label lang="en" style="display: flex; align-items: center; gap: 8px; min-height: 44px; font-size: 14px"><input type="radio" name="lang" checked style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">English</label>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

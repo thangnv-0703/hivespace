@@ -90,6 +90,13 @@ public static class OpenIddictSetup
                     .EnableTokenEndpointPassthrough()
                     .EnableEndSessionEndpointPassthrough()
                     .DisableTransportSecurityRequirement();
+            })
+            .AddValidation(validation =>
+            {
+                // Identity issued the token, so the server's own keys and issuer validate it: no JWKS fetch (D-5).
+                validation.UseLocalServer();
+                validation.AddAudiences(ConnectEndpoints.ApiAudience);
+                validation.UseAspNetCore();
             });
 
         services.AddHostedService<GatewayClientSeeder>();

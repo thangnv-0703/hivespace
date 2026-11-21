@@ -1,0 +1,119 @@
+{
+ "meta": {
+  "title": "FEAT-002 · Profile and preferred language",
+  "subtitle": "Design solution from <code>technical-design.md</code>: the components this slice builds or changes, the contract on every arrow, and the decisions behind them. Pick a flow to follow one use-case path; click any arrow for its data contract.",
+  "description": "A signed-in user opens the storefront profile page. The SPA calls the gateway BFF, which relays /v1/me/* to Identity with a bearer token. Identity validates the JWT itself, takes the user from sub, saves profile fields in identitydb and writes UserProfileChanged to the outbox when display name or language changed. After a save the SPA asks the BFF to force a token refresh so the session shows the new name and language. Service Bus delivers the event to Notification, which upserts the contact's language. The language switcher applies the locale in the browser at once and stores it in localStorage.",
+  "viewBox": [1250, 680],
+  "links": [{"href": "technical-design.md", "label": "technical-design.md"}, {"href": "../FEAT-001-register-and-sign-in/design-flow.html", "label": "FEAT-001 flow"}, {"href": "../../architecture-flow.html", "label": "Architecture"}],
+  "kindLabels": {"security": "Gateway / BFF", "backend": "Event bus", "database": "Store"},
+  "edgeLabels": {"dashed": "Event", "security": "Auth / tokens"},
+  "overview": [
+   ["Implements", "FR-PROF-001 (avatar placeholder), 002, 003, 004, 006, FR-LOC-002"],
+   ["Supports", "FR-LOC-005 (language reaches Notification)"],
+   ["Realizes", "UC-027"],
+   ["Screens", "SCR-STF-016"],
+   ["Builds", "/v1/me/profile, /v1/me/profile/language, /bff/session/refresh"],
+   ["Depends on", "FEAT-001"]
+  ],
+  "footnote": "Source: <code>docs/features/FEAT-002-profile-and-language/technical-design.md</code> (§3 contracts, §4 schema, §5 components, §7 decisions, §8 open items). Generated with html-flow-diagram; edit <code>design-flow.model.json</code> and rebuild."
+ },
+ "frames": [
+  {"x": 740, "y": 90, "w": 470, "h": 230, "label": "Identity service", "style": "frame", "tone": "service", "labelPos": "bottom", "labelX": 1080},
+  {"x": 740, "y": 360, "w": 470, "h": 210, "label": "Async contact update", "style": "frame", "tone": "backend", "labelPos": "bottom", "labelX": 760},
+  {"x": 200, "y": 360, "w": 220, "h": 100, "label": "In the browser", "style": "dashed", "labelPos": "bottom"}
+ ],
+ "nodes": [
+  {"id": "browser", "kind": "external", "x": 20, "y": 230, "w": 150, "h": 50, "label": "Browser", "sub": "buyer · visitor", "flow": "edit", "desc": "The signed-in user editing their profile or a visitor picking a language. Holds only the encrypted <code>hs.bff</code> cookie; never a token."},
+  {"id": "spa", "kind": "frontend", "x": 220, "y": 110, "w": 180, "h": 56, "label": "Storefront SPA", "sub": "/profile · switcher", "desc": "<code>features/profile/</code> (<code>ProfilePage.vue</code>, <code>api.ts</code>) at <code>/profile</code>, route meta <code>requiresAuth</code>. <code>LanguageSwitcher</code> in <code>StorefrontLayout</code>. Session store gains <code>refresh()</code>. Account menu gains \"Profile\"."},
+  {"id": "storage", "kind": "database", "x": 220, "y": 380, "w": 180, "h": 56, "label": "localStorage", "sub": "hs-locale · html lang", "desc": "<code>core/i18n.ts</code> <code>setLocale</code> writes <code>hs-locale</code> and <code>&lt;html lang&gt;</code>. The only store for a visitor's choice; for a signed-in user the profile wins on session load (D-7)."},
+  {"id": "gw", "kind": "security", "x": 480, "y": 110, "w": 200, "h": 190, "label": "Gateway + BFF", "sub": "route me · CSRF", "sub2": "/bff/session/refresh", "desc": "New route <code>me</code>: <code>/v1/me/{**rest}</code> → identity, policy <code>authenticated</code>. New <code>POST /bff/session/refresh</code> forces a refresh-token exchange via <code>SessionTokens.ForceRefreshAsync</code> (single-flight) and returns the <code>/bff/user</code> body."},
+  {"id": "identity", "kind": "service", "x": 760, "y": 110, "w": 200, "h": 190, "label": "Identity", "sub": "MeEndpoints · bearer", "sub2": "/v1/me/profile*", "desc": "First endpoint a service protects itself: OpenIddict local validation, audience <code>hivespace-api</code>, policy <code>me</code> (no cookie). Handlers <code>GetMyProfile</code>, <code>UpdateMyProfile</code> (collects every violation first), <code>UpdateMyLanguage</code>. Body read as <code>JsonElement</code> so <code>email</code> becomes a field error."},
+  {"id": "idb", "kind": "database", "x": 1040, "y": 110, "w": 160, "h": 56, "label": "identitydb", "sub": "users · outbox", "desc": "Migration <code>AddUserProfile</code>: <code>display_name</code> 60 → 80, add <code>phone varchar(16)</code>, <code>gender varchar(20)</code> with <code>ck_users_gender</code>, <code>date_of_birth date</code>. No index."},
+  {"id": "bus", "kind": "backend", "x": 760, "y": 380, "w": 200, "h": 50, "label": "Service Bus", "sub": "topic hivespace-events", "sigil": "service", "desc": "Outbox relay, at least once. Notification's subscription dispatches by <code>eventType</code>."},
+  {"id": "notif", "kind": "service", "x": 1040, "y": 380, "w": 160, "h": 56, "label": "Notification", "sub": "contacts · inbox", "desc": "<code>features/contacts</code> handles <code>UserProfileChanged</code>: validates against the v1 schema, upserts the contact. Inbox makes duplicates no-ops."},
+  {"id": "ndb", "kind": "database", "x": 1040, "y": 490, "w": 160, "h": 56, "label": "notificationdb", "sub": "contacts · inbox", "desc": "No schema change: <code>contacts</code> (Alembic <code>0002</code>) already holds <code>display_name</code> and <code>language</code>."}
+ ],
+ "edges": [
+  {"id": "e1", "from": "browser", "to": "spa", "s": "emphasis", "data": {"p": "Profile form (display name, phone, gender, date of birth); language pick", "f": "SPA routes", "c": "pii", "s": "Email shown read-only"}},
+  {"id": "e2", "from": "spa", "to": "gw", "s": "emphasis", "label": "REST", "fromAt": 0.3, "toAt": 0.088, "data": {"p": "GET /v1/me/profile · PUT /v1/me/profile {displayName, phone, gender, dateOfBirth} · PUT /v1/me/profile/language {language}", "f": "REST/JSON · Accept-Language", "c": "pii", "s": "hs.bff cookie; X-HS-CSRF: 1 on PUT; no session → 401 common.unauthenticated"}},
+  {"id": "e3", "from": "spa", "to": "gw", "s": "security", "label": "refresh", "fromAt": 0.75, "toAt": 0.221, "data": {"p": "POST /bff/session/refresh → /bff/user body {isAuthenticated, name, lang, …}", "f": "REST/JSON · Set-Cookie hs.bff", "c": "conf", "s": "X-HS-CSRF: 1; refresh failure clears the cookie and returns isAuthenticated:false", "w": "After every successful profile or language save, and GET /bff/user on load"}},
+  {"id": "e4", "from": "gw", "to": "identity", "s": "emphasis", "label": "bearer", "fromAt": 0.15, "toAt": 0.15, "data": {"p": "/v1/me/profile* requests", "f": "REST/JSON · Authorization: Bearer", "c": "pii", "s": "Identity validates the JWT (audience hivespace-api); user = sub, X-User-Id never used (D-5)"}},
+  {"id": "e5", "from": "gw", "to": "identity", "s": "security", "label": "token", "fromAt": 0.85, "toAt": 0.85, "data": {"p": "refresh_token → new access/ID tokens with current name and lang", "f": "POST /connect/token", "c": "restr", "s": "Confidential client; claims re-read from the database; single-flight per refresh token"}},
+  {"id": "e6", "from": "identity", "to": "idb", "s": "default", "label": "1 tx", "fromAt": 0.15, "data": {"p": "users row (profile fields, language) + outbox UserProfileChanged when name or language changed", "f": "EF Core · SQL", "c": "pii", "s": "Phone stored E.164 +84…; unchanged values write no event"}},
+  {"id": "e7", "from": "identity", "to": "bus", "s": "dashed", "label": "event", "data": {"p": "UserProfileChanged/v1 {userId, email, displayName, language, changedFields}", "f": "Event envelope · JSON schema v1", "c": "pii", "s": "No phone, gender or date of birth (D-6, NFR-LEG-001)", "w": "After commit, relayed at least once"}},
+  {"id": "e8", "from": "bus", "to": "notif", "s": "dashed", "data": {"p": "UserProfileChanged", "f": "Service Bus subscription", "c": "pii", "s": "Inbox dedupe by eventId"}},
+  {"id": "e9", "from": "notif", "to": "ndb", "s": "default", "label": "upsert", "data": {"p": "Inbox row + contacts upsert (email, display_name, language, updated_at)", "f": "SQL · one transaction", "c": "pii", "s": "Later emails use the saved language (FR-LOC-005)"}},
+  {"id": "e10", "from": "spa", "to": "storage", "s": "default", "label": "setLocale", "data": {"p": "hs-locale = vi | en; <html lang>", "f": "localStorage", "c": "public", "s": "Applied before any request completes"}}
+ ],
+ "flows": {
+  "all": {"title": "FEAT-002 design solution", "intro": "Six paths: view, edit, invalid input, switch language signed in, switch language as a visitor, and the auth guard."},
+  "view": {"title": "View profile (UC-027 1)", "button": "View", "color": "frontend", "tags": ["UC-027 1", "FR-PROF-001, 004", "AC-1"], "steps": [
+   {"e": ["e1", "e2"], "t": "<strong>Open /profile</strong>; no session redirects to <code>/bff/login?returnUrl=/profile</code>. Otherwise <code>GET /v1/me/profile</code>."},
+   {"e": ["e4"], "t": "<strong>Relay with bearer</strong>; Identity validates the JWT and reads the user from <code>sub</code>."},
+   {"e": ["e6"], "t": "<strong>Read the user</strong>; 200 <code>Profile</code> with <code>avatarUrl: null</code> (initials shown) and email read-only."}
+  ]},
+  "edit": {"title": "Edit profile (UC-027 4)", "button": "Edit", "color": "frontend", "tags": ["UC-027 4", "FR-PROF-002, 006", "AC-2, AC-7, AC-8"], "steps": [
+   {"e": ["e1", "e2"], "t": "<strong>Save</strong>: <code>PUT /v1/me/profile</code> with all four fields; <code>null</code> clears an optional one."},
+   {"e": ["e4"], "t": "<strong>Validate every rule</strong>; phone normalized to <code>+84…</code>."},
+   {"e": ["e6"], "t": "<strong>One transaction</strong>: save, plus <code>UserProfileChanged</code> in the outbox only when the display name changed. 200 <code>Profile</code>."},
+   {"e": ["e3", "e5"], "t": "<strong>Forced session refresh</strong> so the header name is current at once, not after 15 min (D-4)."},
+   {"e": ["e7", "e8", "e9"], "t": "<strong>Notification upserts the contact</strong>; a duplicate delivery is a no-op."}
+  ]},
+  "invalid": {"title": "Invalid input (UC-027 4a)", "button": "Invalid", "color": "security", "tags": ["UC-027 4a", "FR-PROF-003, 004", "AC-3, AC-4, AC-10"], "steps": [
+   {"e": ["e2", "e4"], "t": "<strong>PUT with bad values</strong> (empty or 81-char name, phone <code>12345</code>, unknown gender, future date, <code>email</code> key)."},
+   {"e": ["e4"], "t": "<strong>400 common.validation_failed</strong> with one <code>details</code> entry per field, all at once, in the request's language. Nothing is saved, no event."}
+  ]},
+  "language": {"title": "Switch language, signed in (UC-027 3)", "button": "Language", "color": "service", "tags": ["UC-027 3", "FR-LOC-002, FR-PROF-006", "AC-5, AC-6, AC-7, AC-8"], "steps": [
+   {"e": ["e1", "e10"], "t": "<strong>Pick English</strong>: <code>setLocale('en')</code> switches the UI at once."},
+   {"e": ["e2", "e4"], "t": "<strong>PUT /v1/me/profile/language</strong> <code>{en}</code>; <code>fr</code> → <code>identity.language_unsupported</code>. A failed save keeps the UI language and shows a toast."},
+   {"e": ["e6"], "t": "<strong>Save</strong>; event only when the language changed (same value → 200, no event)."},
+   {"e": ["e3", "e5"], "t": "<strong>Refresh the session</strong> so <code>/bff/user</code> carries <code>lang=en</code>; another browser gets it on sign-in (D-7)."},
+   {"e": ["e7", "e8", "e9"], "t": "<strong>Contact language updated</strong>, so later emails are in English (FR-LOC-005)."}
+  ]},
+  "visitor": {"title": "Switch language, visitor (UC-027 3a)", "button": "Visitor", "color": "external", "tags": ["UC-027 3a", "FR-LOC-002", "AC-6"], "steps": [
+   {"e": ["e1", "e10"], "t": "<strong>Browser only</strong>: <code>setLocale</code> writes <code>hs-locale</code>; no request is sent."}
+  ]},
+  "guard": {"title": "Auth guard and session load", "button": "Auth", "color": "security", "tags": ["FR-AUTH-015, 016", "AC-9", "D-5, D-7"], "steps": [
+   {"e": ["e2"], "t": "<strong>No session</strong>: the gateway returns 401 for <code>/v1/me/*</code>."},
+   {"e": ["e4"], "t": "<strong>Direct call</strong> with no token, a tampered token or another audience → Identity returns 401. A spoofed <code>X-User-Id</code> never selects the user."},
+   {"e": ["e3", "e10"], "t": "<strong>On session load</strong>, when <code>/bff/user</code> language differs from the active locale, <code>setLocale</code> applies the profile's (D-7)."}
+  ]}
+ },
+ "notes": [
+  {"id": "N1", "on": "gw", "st": "confirmed", "t": "Forced refresh after a change", "b": "Header name and language come from token claims that would be stale up to 15 min. Rejected: reading the profile on every <code>/bff/user</code>, and a response-header trigger.", "r": "D-4, AC-7"},
+  {"id": "N2", "on": "identity", "st": "confirmed", "t": "Identity validates bearer tokens itself", "b": "OpenIddict <code>UseLocalServer()</code>, no JWKS fetch; the <code>me</code> policy never accepts the <code>hs.idp</code> cookie. Shared .NET validation comes with the first non-Identity protected endpoint.", "r": "D-5, architecture §8.1"},
+  {"id": "N3", "on": "identity", "st": "confirmed", "t": "PUT, never PATCH", "b": "Full replace of the four editable fields; language is a PUT on its own sub-resource. Enforced by Spectral <code>hs-no-patch</code>.", "r": "D-1, dev-standards §6.7"},
+  {"id": "N4", "on": "idb", "st": "confirmed", "t": "Display name 1–80 everywhere", "b": "Column widened 60 → 80; registration follows the same rule.", "r": "D-2, AC-11"},
+  {"id": "N5", "on": "idb", "st": "risk", "t": "Down migration can fail", "b": "Narrowing back to 60 is rejected by Postgres if a longer name exists; the rollback fails loudly instead of truncating.", "r": "§4"},
+  {"id": "N6", "on": "idb", "st": "confirmed", "t": "Phone stored as E.164", "b": "One canonical <code>+84…</code> form for later uses (shipping, FEAT-022); no phone library for one country.", "r": "D-3"},
+  {"id": "N7", "on": "bus", "st": "confirmed", "t": "Event carries only what consumers use", "b": "Email, display name, language. Phone, gender and date of birth never leave Identity.", "r": "D-6, NFR-LEG-001"},
+  {"id": "N8", "on": "storage", "st": "confirmed", "t": "Profile language wins after sign-in", "b": "Otherwise two browsers would disagree.", "r": "D-7"},
+  {"id": "G1", "st": "consider", "t": "Plan correction", "b": "The FEAT-002 plan row says <code>GET/PATCH /v1/me/profile</code>; it should read <code>GET/PUT /v1/me/profile</code>, <code>PUT /v1/me/profile/language</code>. Owned by implementation-planning.", "r": "§8"},
+  {"id": "G2", "st": "aligned", "t": "Deferred on purpose", "b": "Avatar upload (FEAT-035), seller-centre language persistence (FEAT-009), masked public profile (FEAT-033).", "r": "§8 deferred"},
+  {"id": "G3", "st": "aligned", "t": "Depends on FEAT-001", "b": "Gateway BFF and token relay (FEAT-001 T8) before T6; Notification contacts and dispatcher (FEAT-001 T9) before T7.", "r": "§8 dependencies"}
+ ],
+ "specs": {
+  "spa": {"host": "web/apps/storefront", "trigger": "User", "ops": ["ProfilePage at /profile (SCR-STF-016)", "LanguageSwitcher → setLocale, then PUT language when signed in", "Session store refresh()", "Account menu: Profile above Sign out"], "data": "localStorage hs-locale", "nfr": "FR-LOC-004"},
+  "gw": {"host": "Gateway (.NET, YARP)", "trigger": "SPA", "ops": ["Route me: /v1/me/{**rest} → identity", "POST /bff/session/refresh", "SessionTokens.ForceRefreshAsync"], "data": "hs.bff cookie", "nfr": "NFR-SEC-004"},
+  "identity": {"host": "Identity (rich .NET)", "trigger": "Gateway", "ops": ["getMyProfile, updateMyProfile, updateMyLanguage", "Value objects PhoneNumber, Gender, DateOfBirth, Language", "OpenIddict validation, policy me"], "data": "identitydb (AddUserProfile)", "nfr": "NFR-L10N-002, NFR-LEG-001"},
+  "notif": {"host": "Notification (lean Python)", "trigger": "Service Bus", "ops": ["contacts handles UserProfileChanged", "Schema validation, inbox dedupe"], "data": "notificationdb contacts", "nfr": "NFR-REL-005"}
+ },
+ "sections": [
+  {"type": "table", "title": "Contracts", "columns": ["Endpoint", "Auth", "Success", "Errors"], "rows": [
+   ["GET /v1/me/profile", "bearer", "200 Profile", "401 common.unauthenticated"],
+   ["PUT /v1/me/profile", "bearer", "200 Profile", "400 common.validation_failed (all fields) · 401"],
+   ["PUT /v1/me/profile/language", "bearer", "200 {language}", "400 identity.language_unsupported · 401"],
+   ["POST /bff/session/refresh", "cookie + CSRF", "200 /bff/user body", "never 401; failure → isAuthenticated:false"]
+  ]},
+  {"type": "table", "title": "Validation codes", "columns": ["Field", "Rule", "Code"], "rows": [
+   ["displayName", "trimmed 1–80 chars", "identity.display_name_required · display_name_too_long"],
+   ["phone", "0 or +84 + 9 digits, first 2/3/5/7/8/9", "identity.phone_invalid"],
+   ["gender", "male · female · other · prefer_not_to_say", "identity.gender_invalid"],
+   ["dateOfBirth", "ISO date, not future (Asia/Ho_Chi_Minh), ≤ 120 years", "date_of_birth_invalid · _in_future · _too_old"],
+   ["email", "read-only", "identity.email_read_only"],
+   ["language", "vi · en", "identity.language_unsupported"]
+  ]},
+  {"type": "notes", "title": "Decisions and open items"},
+  {"type": "catalogue", "title": "Components"}
+ ]
+}

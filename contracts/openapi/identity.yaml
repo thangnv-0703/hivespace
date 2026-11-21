@@ -145,3 +145,155 @@ paths:
             application/json:
               schema:
                 $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/me/profile:
+    get:
+      operationId: getMyProfile
+      summary: The signed-in user's profile. The user is always the token's `sub`.
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: The profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+    put:
+      operationId: updateMyProfile
+      summary: Replace the four editable fields. `null` clears phone, gender and date of birth.
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProfileUpdate'
+      responses:
+        '200':
+          description: Saved. Unchanged values also return 200.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Profile'
+        '400':
+          description: "`common.validation_failed` with one details entry per invalid field; an `email` key gives `identity.email_read_only`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/me/profile/language:
+    put:
+      operationId: updateMyLanguage
+      summary: Save the preferred language. Same value again is 200 and queues no event.
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LanguageUpdate'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LanguageUpdate'
+        '400':
+          description: "`common.validation_failed` with `identity.language_unsupported`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+components:
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Access token issued by Identity (audience `hivespace-api`). The gateway relays it from the session cookie.
+  schemas:
+    Gender:
+      type: string
+      enum: [male, female, other, prefer_not_to_say]
+    Language:
+      type: string
+      enum: [vi, en]
+    LanguageUpdate:
+      type: object
+      required: [language]
+      properties:
+        language:
+          $ref: '#/components/schemas/Language'
+    Profile:
+      type: object
+      required: [userId, email, displayName, phone, gender, dateOfBirth, avatarUrl, language]
+      properties:
+        userId:
+          $ref: './shared/components.yaml#/components/schemas/Id'
+        email:
+          type: string
+          readOnly: true
+          description: Read-only (FR-PROF-004).
+        displayName: { type: string, minLength: 1, maxLength: 80 }
+        phone:
+          type: [string, 'null']
+          description: E.164, `+84xxxxxxxxx`.
+        gender:
+          oneOf:
+            - $ref: '#/components/schemas/Gender'
+            - type: 'null'
+        dateOfBirth:
+          type: [string, 'null']
+          format: date
+        avatarUrl:
+          type: [string, 'null']
+          description: Always null until FEAT-035; the UI shows initials.
+        language:
+          $ref: '#/components/schemas/Language'
+    ProfileUpdate:
+      type: object
+      description: The full editable representation (PUT, never PATCH). All four keys are required; the last three may be null.
+      required: [displayName, phone, gender, dateOfBirth]
+      additionalProperties: false
+      properties:
+        displayName: { type: string }
+        phone:
+          type: [string, 'null']
+          description: "`0` or `+84` followed by 9 digits; spaces, dots and dashes are ignored."
+        gender:
+          oneOf:
+            - $ref: '#/components/schemas/Gender'
+            - type: 'null'
+        dateOfBirth:
+          type: [string, 'null']
+          format: date

@@ -1,6 +1,8 @@
 using HiveSpace.BuildingBlocks.Errors;
 using Identity.Api.Endpoints;
 using Identity.Api.Oidc;
+using Microsoft.AspNetCore.Authorization;
+using OpenIddict.Validation.AspNetCore;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -25,7 +27,12 @@ builder.Services.AddAuthentication(UsersEndpoints.CookieScheme)
         o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
         o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
     });
-builder.Services.AddAuthorization();
+// The protected API accepts only the bearer access token, validated locally because Identity is the issuer (D-5).
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(MeEndpoints.Policy, policy => policy
+        .AddAuthenticationSchemes(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser());
+builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiAuthorizationResultHandler>();
 builder.Services.AddIdentityOpenIddict(builder.Configuration);
 
 var app = builder.Build();
@@ -43,6 +50,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", defaultValue: true))
 }
 
 app.MapUsersEndpoints();
+app.MapMeEndpoints();
 app.MapConnectEndpoints();
 
 await app.RunAsync();

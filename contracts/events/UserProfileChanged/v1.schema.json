@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivespace.dev/events/UserProfileChanged/v1.schema.json",
+  "title": "UserProfileChanged v1 (producer: identity). Carries only what consumers use; phone, gender and date of birth never leave Identity (NFR-LEG-001).",
+  "type": "object",
+  "required": ["userId", "email", "displayName", "language", "changedFields"],
+  "properties": {
+    "userId": { "type": "string", "format": "uuid" },
+    "email": { "type": "string", "maxLength": 254 },
+    "displayName": { "type": "string", "maxLength": 80 },
+    "language": { "type": "string", "enum": ["vi", "en"] },
+    "changedFields": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": { "type": "string", "enum": ["displayName", "language"] }
+    }
+  },
+  "additionalProperties": false
+}

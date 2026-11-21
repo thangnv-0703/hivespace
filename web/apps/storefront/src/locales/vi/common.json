@@ -9,7 +9,11 @@
     "menu": "Mở menu",
     "closeMenu": "Đóng menu",
     "search": "Tìm kiếm",
-    "searchPlaceholder": "Tìm sản phẩm, cửa hàng..."
+    "searchPlaceholder": "Tìm sản phẩm, cửa hàng...",
+    "account": {
+      "profile": "Hồ sơ"
+    },
+    "close": "Đóng"
   },
   "home": {
     "title": "Chào mừng đến HiveSpace",

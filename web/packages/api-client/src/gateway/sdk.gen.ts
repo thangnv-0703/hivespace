@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BffLoginData, BffLogoutData, GetSessionData, GetSessionResponses } from './types.gen';
+import type { BffLoginData, BffLogoutData, GetSessionData, GetSessionResponses, RefreshSessionData, RefreshSessionErrors, RefreshSessionResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -22,6 +22,11 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  * Session probe. Always 200; `isAuthenticated` is false without a session (D-9).
  */
 export const getSession = <ThrowOnError extends boolean = false>(options?: Options<GetSessionData, ThrowOnError>): RequestResult<GetSessionResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetSessionResponses, unknown, ThrowOnError>({ url: '/bff/user', ...options });
+
+/**
+ * Force a refresh-token exchange so the token claims (name, language) are current, and return the `/bff/user` body. Needs `X-HS-CSRF`.
+ */
+export const refreshSession = <ThrowOnError extends boolean = false>(options: Options<RefreshSessionData, ThrowOnError>): RequestResult<RefreshSessionResponses, RefreshSessionErrors, ThrowOnError> => (options.client ?? client).post<RefreshSessionResponses, RefreshSessionErrors, ThrowOnError>({ url: '/bff/session/refresh', ...options });
 
 /**
  * Start the OIDC sign-in; browser navigation, not a fetch.
