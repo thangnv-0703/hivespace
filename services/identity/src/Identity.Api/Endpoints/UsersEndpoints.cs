@@ -21,7 +21,7 @@ public static class UsersEndpoints
     public const string CookieScheme = "hs.idp";
 
     /// <summary>The credential's <c>updated_at</c> as Unix ms: a cookie issued before a password change no longer signs in silently (D-4).</summary>
-    public const string PasswordStampClaim = "pwd_at";
+    public const string PasswordStampClaim = "pwd_at"; // pragma: allowlist secret - a claim name, not a credential
 
     public static IEndpointRouteBuilder MapUsersEndpoints(this IEndpointRouteBuilder app)
     {
