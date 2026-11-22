@@ -95,6 +95,7 @@ describe('ChangePasswordPage (SCR-STF-018)', () => {
     const wrapper = await mountPage(session)
 
     await fill(wrapper, 'hello1234', 'world5678')
+    ;(wrapper.findAll('input[autocomplete="new-password"]')[1]!.element as HTMLInputElement).focus() // the user submits from the last field
     await submit(wrapper)
 
     const put = calls.filter((c) => c.method === 'PUT' && c.path === '/v1/me/password')
@@ -108,6 +109,7 @@ describe('ChangePasswordPage (SCR-STF-018)', () => {
     expect(value(wrapper, 'input[autocomplete="new-password"]', 0)).toBe('')
     expect(value(wrapper, 'input[autocomplete="new-password"]', 1)).toBe('')
     expect(document.activeElement).toBe(wrapper.get('h1').element)
+    expect(wrapper.text()).not.toContain('Confirm your new password.') // moving focus away must not report the cleared fields
   })
 
   it('has a hidden username field with the account email for password managers', async () => {

@@ -116,11 +116,12 @@ async function submit() {
   submitting.value = false
   if (!result.ok) return applyFailure(result.failure)
 
+  // Move focus first: the blur of a filled field passes its check, whereas clearing first would report it empty.
+  heading.value?.focus()
+  await nextTick()
   reset()
   await session.refresh()
   notify({ variant: 'success', title: t('account.password.toasts.changed') })
-  await nextTick()
-  heading.value?.focus()
 }
 </script>
 
