@@ -185,7 +185,7 @@ This block lives in `web/packages/ui/src/theme.css`. Both apps import it right a
   --size-control-sm: 36px;
   --size-control-md: 44px;
   --size-container: 1440px;
-  --size-header-stf: 120px;
+  --size-header-stf: 80px;
   --size-header-sel: 72px;
   --size-sidebar-sel: 260px;
   --size-sidebar-sel-collapsed: 90px;
@@ -350,8 +350,8 @@ This block lives in `web/packages/ui/src/theme.css`. Both apps import it right a
 - **Container:** `max-w-[1440px] mx-auto px-4 md:px-6`.
 - **Product grid (STF):** 2 columns below `sm`, 3 at `sm`, 4 at `md`, 5 at `lg`, 6 at `xl`. Gap 12 px, or 16 px from `md`.
 - **STF page shell:**
-  - **Sticky header** (`--size-header-stf` 120 px on desktop): a 40 px top bar (seller centre link, language switch, theme toggle, account or sign-in; there is no notification bell, because the SRS excludes an in-app notification centre) and an 80 px row (logo, search field, cart button with count).
-  - **Header below `md`:** collapses to 56 px (logo, search icon that expands to a full-width field, cart, menu button). The top-bar items (seller centre, language, theme, account) move into a menu panel opened by the menu button. The cart is a placeholder icon until the cart slice.
+  - **Sticky header** (`--size-header-stf` 80 px on desktop): one row with the logo, the search field, then the seller centre link (from `lg`), language switch, theme toggle, account or sign-in, a 1 × 24 px `border-default` divider, and the cart button with count. The controls are the same 44 px ones as the SEL header. There is no notification bell, because the SRS excludes an in-app notification centre.
+  - **Header below `md`:** collapses to 56 px (logo, search icon that expands to a full-width field, cart, menu button). The header actions (seller centre, language, theme, account) move into a menu panel opened by the menu button. The cart is a placeholder icon until the cart slice.
   - **Footer:** links, language switch, copyright.
   - **Cart and checkout:** use a reduced header (logo plus step title, no search) to limit distraction.
 - **SEL page shell:**
@@ -496,8 +496,8 @@ Every list, table and async region defines all four states:
 ### 4.6 Navigation primitives
 
 - **DropdownMenu:** `bg-bg-surface shadow-lg border border-border-default` at radius xl, `p-1`. Items are 40 px tall at radius lg with `text-sm`, hover `bg-bg-subtle`, and the destructive item in `text-feedback-error-fg`. Keyboard: arrows, Home/End, Esc returns focus.
-- **LanguageSwitcher:** a globe icon plus the current code ("VI" / "EN"), with no flag or chevron in the trigger. `bordered` (default) is a 44 px `rounded-lg` box with `border-border-default`, used in the auth corner, the mobile menu and SEL; `plain` is borderless and compact, used in the STF top bar. The menu lists "Tiếng Việt" and "English" in their own language. Switching applies immediately (FR-LOC-002).
-- **ThemeToggler:** a 44 px `rounded-lg` bordered square icon button (sun/moon; `compact` is 32 px for the STF top bar) with `aria-label` "Switch to dark theme" or "Switch to light theme". The choice persists in the browser. The first visit follows `prefers-color-scheme`.
+- **LanguageSwitcher:** a globe icon plus the current code ("VI" / "EN"), with no flag or chevron in the trigger. One form on both surfaces: a 44 px `rounded-lg` box with `border-border-default` and `bg-surface` (STF header, auth corner, mobile menu, SEL header). The menu lists "Tiếng Việt" and "English" in their own language. Switching applies immediately (FR-LOC-002).
+- **ThemeToggler:** a 44 px `rounded-lg` bordered square icon button (sun/moon) with `aria-label` "Switch to dark theme" or "Switch to light theme". The choice persists in the browser. The first visit follows `prefers-color-scheme`.
 - **SEL sidebar item:** 44 px tall at radius lg, icon 20 px plus a `text-sm font-medium` label. Active: `bg-brand-50 text-brand-600` (dark: `bg-brand-950 text-brand-300`) with `aria-current="page"`. Section group labels are `text-xs uppercase text-text-muted`.
 
 ### 4.7 Commerce components (STF; ProductCard is also used in SEL previews)

@@ -183,17 +183,13 @@ describe('LanguageSwitcher', () => {
     wrapper.unmount()
   })
 
-  it('shows a globe and the code in the trigger (no flag), bordered by default and borderless when plain', async () => {
-    const bordered = mountSwitcher('en')
-    const trigger = bordered.get('[data-testid=language-switcher]')
+  it('shows a globe and the code in a 44 px bordered trigger (no flag)', async () => {
+    const wrapper = mountSwitcher('en')
+    const trigger = wrapper.get('[data-testid=language-switcher]')
     expect(trigger.text()).toBe('en')
     expect(trigger.find('svg').exists()).toBe(true)
-    expect(trigger.classes()).toContain('border')
-    bordered.unmount()
-
-    const plain = mount(LanguageSwitcher, { props: { modelValue: 'vi', label: 'Language', variant: 'plain' } })
-    expect(plain.get('[data-testid=language-switcher]').classes()).not.toContain('border')
-    plain.unmount()
+    expect(trigger.classes()).toEqual(expect.arrayContaining(['border', 'min-h-11']))
+    wrapper.unmount()
   })
 
   it('moves between rows with the arrow keys', async () => {

@@ -125,9 +125,9 @@ Also covers links invalidated by a newer resend (the API reports them as expired
 
 These belong to the storefront shell (`StorefrontLayout`), specified here because FEAT-001 introduces them. They use only existing components.
 
-### Header account area (design.md §3, top bar, right side)
-- **Layout:** two rows per design.md §3: a 40 px top bar (Seller centre link left; `LanguageSwitcher` plain variant, compact `ThemeToggle` and the account area right) above an 80 px row (logo, search, cart). Below `md` a 56 px row (logo, search icon, cart, menu button); the top-bar items move into a menu panel. The cart is a placeholder icon until FEAT-021.
-- **Signed out:** "Sign in" and "Register" as `text-sm` text links in the top bar; both keep the current path as `returnUrl`.
+### Header account area (design.md §3, header row, before the cart)
+- **Layout:** one 80 px row per design.md §3: logo, search, then Seller centre link, `LanguageSwitcher`, `ThemeToggle`, the account area, a divider and the cart. (Originally a 40 px top bar above an 80 px row; merged into one row so the controls match the seller centre.) Below `md` a 56 px row (logo, search icon, cart, menu button); the header actions move into a menu panel. The cart is a placeholder icon until FEAT-021.
+- **Signed out:** "Sign in" and "Register" as `text-sm` text links in the header row; both keep the current path as `returnUrl`.
 - **Signed in:** a 28 px `bg-brand-100` initials circle (first letters of the first and last word) + display name (truncate at 20 chars) → `DropdownMenu` with, for now, only "Sign out" (more items arrive with FEAT-002+). Sign out is a `<form method="post" action="/bff/logout">` button (technical-design D-4), same origin, no `fetch`.
 - **Loading the session probe (`GET /bff/user`):** reserve the area (a 32 px skeleton circle) so the header does not jump; probe failure is treated as signed out.
 
@@ -165,5 +165,5 @@ These belong to the storefront shell (`StorefrontLayout`), specified here becaus
 - **Open:** logo recolour for `BrandLogo` (design.md §9, existing item) and the brand image recolour; terms-of-service copy is out of scope since terms checkbox was dropped (no requirement).
 
 ## Mockup alignment (post-implementation)
-The committed mockups in [mockups/](mockups/) are authoritative; the screen sections above were edited to match them. Decisions from the review: panel art is the linked-hexagons illustration (`auth-hex.svg`, replacing `buyer-auth.svg`); `LanguageSwitcher` is a globe icon + code (no flag or chevron in the trigger; the menu keeps flags), `bordered` variant in the auth corner and mobile menu, `plain` variant in the storefront top bar; `ThemeToggle` is a `rounded-lg` square (a `compact` 32 px size in the top bar); the storefront header is the two-row layout of design.md §3; the unverified banner is a single-row amber strip.
+The committed mockups in [mockups/](mockups/) are authoritative; the screen sections above were edited to match them. Decisions from the review: panel art is the linked-hexagons illustration (`auth-hex.svg`, replacing `buyer-auth.svg`); `LanguageSwitcher` is a globe icon + code (no flag or chevron in the trigger; the menu keeps flags), one 44 px bordered form everywhere; `ThemeToggle` is a 44 px `rounded-lg` square; the storefront header is the one-row layout of design.md §3 (changed from two rows after FEAT-002, so the controls match the seller centre); the unverified banner is a single-row amber strip.
 Intentional deviations: the top-bar `ThemeToggle` is not drawn in the banner mockup but is kept because design.md §3 lists it; the cart is a non-interactive placeholder until FEAT-021; the `Alert` `strip` prop is no longer used by the banner.

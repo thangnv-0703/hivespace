@@ -5,8 +5,8 @@ import FlagIcon from './FlagIcon.vue'
 
 /**
  * Language dropdown: a globe icon + short code (mockups, design.md §4), and a menu with a flag and the language name
- * per row. `bordered` (default) is the 44 px boxed button for corners and touch layouts; `plain` is the compact
- * borderless form for the storefront top bar. Locale handling stays in the app (v-model); no i18n, cookie or store here.
+ * per row. One 44 px bordered form on both surfaces (storefront header, auth corner, mobile menu, seller header).
+ * Locale handling stays in the app (v-model); no i18n, cookie or store here.
  */
 export interface LanguageOption {
   code: string
@@ -14,9 +14,8 @@ export interface LanguageOption {
 }
 
 const props = withDefaults(
-  defineProps<{ modelValue: string; label: string; options?: LanguageOption[]; variant?: 'bordered' | 'plain' }>(),
+  defineProps<{ modelValue: string; label: string; options?: LanguageOption[] }>(),
   {
-    variant: 'bordered',
     options: () => [
       { code: 'vi', name: 'Tiếng Việt' },
       { code: 'en', name: 'English' },
@@ -74,17 +73,14 @@ onBeforeUnmount(() => document.removeEventListener('click', onOutside))
     <button
       ref="trigger"
       type="button"
-      :class="[
-        'inline-flex items-center rounded-lg text-sm font-medium text-text-secondary hover:bg-bg-subtle focus-visible:outline-2 focus-visible:outline-focus-ring',
-        variant === 'bordered' ? 'min-h-11 gap-2 border border-border-default bg-bg-surface px-3' : 'min-h-8 gap-1.5 px-1',
-      ]"
+      class="inline-flex min-h-11 items-center gap-2 rounded-lg border border-border-default bg-bg-surface px-3 text-sm font-medium text-text-secondary hover:bg-bg-subtle focus-visible:outline-2 focus-visible:outline-focus-ring"
       aria-haspopup="menu"
       :aria-expanded="open"
       :aria-label="label"
       data-testid="language-switcher"
       @click="open ? close() : show()"
     >
-      <Globe :class="variant === 'bordered' ? 'size-5' : 'size-4'" aria-hidden="true" />
+      <Globe class="size-5" aria-hidden="true" />
       <span class="uppercase" aria-hidden="true">{{ modelValue }}</span>
     </button>
     <div

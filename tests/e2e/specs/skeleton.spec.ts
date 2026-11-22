@@ -43,7 +43,7 @@ test('seller centre loads on its own host with its sidebar', async ({ page, view
 })
 
 test('the storefront links to the seller centre host', async ({ page, viewport }) => {
-  test.skip((viewport?.width ?? 0) < 768, 'the top bar link is in the collapsed menu below md')
+  test.skip((viewport?.width ?? 0) < 768, 'the header link is in the collapsed menu below md')
   await page.goto('/')
 
   await expect(page.getByRole('link', { name: /Kênh người bán|Seller centre/ }).first()).toHaveAttribute('href', `${sellerUrl}/`)
