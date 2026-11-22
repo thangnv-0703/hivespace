@@ -15,7 +15,7 @@ namespace Gateway.Auth;
 /// <summary>Wires the BFF (design §3.3, §3.4, §5.3): cookie + OIDC client, token validation, route policies, CSRF and the rate-limit hook.</summary>
 public static class GatewayAuth
 {
-        public const string AuthenticatedPolicy = "authenticated";
+    public const string AuthenticatedPolicy = "authenticated";
     public const string AuthRateLimitPolicy = "auth";
     public const string CsrfHeader = "X-HS-CSRF";
 
