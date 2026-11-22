@@ -234,6 +234,45 @@ paths:
             application/json:
               schema:
                 $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/me/password:
+    put:
+      operationId: changeMyPassword
+      summary: Change the password. Signs out every other session of the account and keeps this one (FR-AUTH-024).
+      description: >
+        Replaces the credential. The response carries `Set-Cookie: hs.idp` when the request had a valid `hs.idp` for the
+        same user. Repeating the call after a success fails on the current password, so clients never retry it.
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChange'
+      responses:
+        '204':
+          description: Password changed; other sessions are signed out.
+        '400':
+          description: "`common.validation_failed` with `identity.current_password_required`, `identity.current_password_incorrect` or the password rule codes on `newPassword`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '409':
+          description: "`identity.password_not_set`: the account has no password (Google-created account)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
 components:
   securitySchemes:
     bearer:
@@ -254,6 +293,13 @@ components:
       properties:
         language:
           $ref: '#/components/schemas/Language'
+    PasswordChange:
+      type: object
+      required: [currentPassword, newPassword]
+      additionalProperties: false
+      properties:
+        currentPassword: { type: string, format: password }
+        newPassword: { type: string, format: password }
     Profile:
       type: object
       required: [userId, email, displayName, phone, gender, dateOfBirth, avatarUrl, language]

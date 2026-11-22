@@ -24,3 +24,7 @@ identity.date_of_birth_in_future: "Date of birth cannot be in the future."
 identity.date_of_birth_too_old: "Date of birth cannot be more than 120 years ago."
 identity.language_unsupported: "This language is not supported. Choose Tiếng Việt or English."
 identity.email_read_only: "Your sign-in email can't be changed here."
+
+identity.current_password_required: "Enter your current password."
+identity.current_password_incorrect: "Your current password is incorrect."
+identity.password_not_set: "This account has no password yet."

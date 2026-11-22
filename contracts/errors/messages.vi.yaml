@@ -24,3 +24,7 @@ identity.date_of_birth_in_future: "Ngày sinh không thể ở tương lai."
 identity.date_of_birth_too_old: "Ngày sinh không thể cách đây quá 120 năm."
 identity.language_unsupported: "Ngôn ngữ này chưa được hỗ trợ. Hãy chọn Tiếng Việt hoặc English."
 identity.email_read_only: "Email đăng nhập không thể thay đổi tại đây."
+
+identity.current_password_required: "Nhập mật khẩu hiện tại."
+identity.current_password_incorrect: "Mật khẩu hiện tại không đúng."
+identity.password_not_set: "Tài khoản này chưa có mật khẩu."

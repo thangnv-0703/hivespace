@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivespace.dev/events/PasswordChanged/v1.schema.json",
+  "title": "PasswordChanged v1 (producer: identity, consumer: notification). Carries only what the security email needs; never a password, hash or token.",
+  "type": "object",
+  "required": ["userId", "email", "displayName", "language", "changedAt"],
+  "properties": {
+    "userId": { "type": "string", "format": "uuid" },
+    "email": { "type": "string", "maxLength": 254 },
+    "displayName": { "type": "string", "maxLength": 80 },
+    "language": { "type": "string", "enum": ["vi", "en"] },
+    "changedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

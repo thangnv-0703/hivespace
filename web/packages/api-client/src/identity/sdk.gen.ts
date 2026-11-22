@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SignInData, SignInErrors, SignInResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
+import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SignInData, SignInErrors, SignInResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -94,6 +94,22 @@ export const updateMyProfile = <ThrowOnError extends boolean = false>(options: O
 export const updateMyLanguage = <ThrowOnError extends boolean = false>(options: Options<UpdateMyLanguageData, ThrowOnError>): RequestResult<UpdateMyLanguageResponses, UpdateMyLanguageErrors, ThrowOnError> => (options.client ?? client).put<UpdateMyLanguageResponses, UpdateMyLanguageErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/me/profile/language',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Change the password. Signs out every other session of the account and keeps this one (FR-AUTH-024).
+ *
+ * Replaces the credential. The response carries `Set-Cookie: hs.idp` when the request had a valid `hs.idp` for the same user. Repeating the call after a success fails on the current password, so clients never retry it.
+ *
+ */
+export const changeMyPassword = <ThrowOnError extends boolean = false>(options: Options<ChangeMyPasswordData, ThrowOnError>): RequestResult<ChangeMyPasswordResponses, ChangeMyPasswordErrors, ThrowOnError> => (options.client ?? client).put<ChangeMyPasswordResponses, ChangeMyPasswordErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/me/password',
     ...options,
     headers: {
         'Content-Type': 'application/json',
