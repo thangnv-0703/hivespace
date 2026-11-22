@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test'
 
 // The walking skeleton's done-when, browser half (docs/implementation-plan.md §2):
 // the storefront shell renders with the design tokens and shows data that came
-// through gateway → Catalog → Postgres; the language switch works; the seller centre loads at /seller.
+// through gateway → Catalog → Postgres; the language switch works; the seller centre loads on its own host (ADR-0027).
 
 test('storefront shows the seeded category from the database, in vi and en', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('hs-locale', 'vi'))
@@ -29,12 +29,24 @@ test('the shell uses the design tokens (brand colour from tokens.json)', async (
   expect(brand500).toBe('#465fff')
 })
 
-test('seller centre loads under /seller with its sidebar', async ({ page, viewport }) => {
+const sellerUrl = process.env.SELLER_URL ?? 'http://seller.localhost:5080'
+
+test('seller centre loads on its own host with its sidebar', async ({ page, viewport }) => {
   test.skip((viewport?.width ?? 0) < 1024, 'the sidebar is off-canvas below lg')
   await page.addInitScript(() => localStorage.setItem('hs-locale', 'en'))
-  await page.goto('/seller/')
+  await page.goto(`${sellerUrl}/`)
 
   await expect(page.getByTestId('sidebar')).toContainText('Products')
+  // A deep link on the seller host is the seller app, not the storefront.
+  await page.goto(`${sellerUrl}/no-such-page`)
+  await expect(page.getByTestId('sidebar')).toBeVisible()
+})
+
+test('the storefront links to the seller centre host', async ({ page, viewport }) => {
+  test.skip((viewport?.width ?? 0) < 768, 'the top bar link is in the collapsed menu below md')
+  await page.goto('/')
+
+  await expect(page.getByRole('link', { name: /Kênh người bán|Seller centre/ }).first()).toHaveAttribute('href', `${sellerUrl}/`)
 })
 
 test('unknown storefront paths show the 404 page', async ({ page }) => {

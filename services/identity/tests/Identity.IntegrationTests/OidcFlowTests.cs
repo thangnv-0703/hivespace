@@ -16,6 +16,7 @@ namespace Identity.IntegrationTests;
 public sealed class OidcFlowTests : IAsyncLifetime
 {
     private const string RedirectUri = IdentityApiFactory.Issuer + "/bff/callback";
+    private const string SellerRedirectUri = IdentityApiFactory.SellerOrigin + "/bff/callback/seller";
     private IdentityApiFactory? _factory;
 
     private static CancellationToken Ct => TestContext.Current.CancellationToken;
@@ -152,12 +153,68 @@ public sealed class OidcFlowTests : IAsyncLifetime
         var (_, challenge) = Pkce();
         Assert.Contains("code=", (await client.GetAsync(AuthorizeUrl(challenge), Ct)).Headers.Location!.OriginalString, StringComparison.Ordinal);
 
-        using var logout = await client.GetAsync($"/connect/logout?client_id=hivespace-gateway&post_logout_redirect_uri={Uri.EscapeDataString(IdentityApiFactory.Issuer + "/")}", Ct);
+        using var logout = await client.GetAsync($"/connect/logout?client_id=hivespace-storefront&post_logout_redirect_uri={Uri.EscapeDataString(IdentityApiFactory.Issuer + "/")}", Ct);
         Assert.Equal(HttpStatusCode.Redirect, logout.StatusCode);
         Assert.StartsWith(IdentityApiFactory.Issuer + "/", logout.Headers.Location!.OriginalString, StringComparison.Ordinal);
 
         using var again = await client.GetAsync(AuthorizeUrl(Pkce().Challenge), Ct);
         Assert.StartsWith("/signin?returnUrl=", again.Headers.Location!.OriginalString, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Seller_client_reuses_the_identity_session_of_a_storefront_sign_in()
+    {
+        // ADR-0027: one Identity session (hs.idp), two clients. The seller client gets a code without a second sign-in.
+        var (client, _, _) = await SignedInClientAsync();
+        var (verifier, challenge) = Pkce();
+
+        using var response = await client.GetAsync(AuthorizeUrl(challenge, "hivespace-seller", SellerRedirectUri), Ct);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        var location = response.Headers.Location!;
+        Assert.StartsWith(SellerRedirectUri + "?", location.OriginalString, StringComparison.Ordinal);
+        var code = System.Web.HttpUtility.ParseQueryString(location.Query)["code"]!;
+        using var token = await client.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["grant_type"] = "authorization_code",
+            ["code"] = code,
+            ["code_verifier"] = verifier,
+            ["redirect_uri"] = SellerRedirectUri,
+            ["client_id"] = "hivespace-seller",
+            ["client_secret"] = IdentityApiFactory.SellerClientSecret,
+        }), Ct);
+        Assert.Equal(HttpStatusCode.OK, token.StatusCode);
+    }
+
+    [Fact]
+    public async Task Seller_client_is_refused_with_the_storefront_redirect_uri()
+    {
+        var (client, _, _) = await SignedInClientAsync();
+
+        using var response = await client.GetAsync(AuthorizeUrl(Pkce().Challenge, "hivespace-seller", RedirectUri), Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task Seller_logout_returns_to_the_seller_host()
+    {
+        var (client, _, _) = await SignedInClientAsync();
+
+        using var logout = await client.GetAsync($"/connect/logout?client_id=hivespace-seller&post_logout_redirect_uri={Uri.EscapeDataString(IdentityApiFactory.SellerOrigin + "/")}", Ct);
+
+        Assert.Equal(HttpStatusCode.Redirect, logout.StatusCode);
+        Assert.StartsWith(IdentityApiFactory.SellerOrigin + "/", logout.Headers.Location!.OriginalString, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task The_retired_single_client_no_longer_exists()
+    {
+        using var client = NewClient();
+
+        using var response = await client.GetAsync(AuthorizeUrl(Pkce().Challenge, "hivespace-gateway"), Ct);
+
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
@@ -191,10 +248,10 @@ public sealed class OidcFlowTests : IAsyncLifetime
         return (client, userId, email);
     }
 
-    private static string AuthorizeUrl(string? challenge)
+    private static string AuthorizeUrl(string? challenge, string clientId = "hivespace-storefront", string redirectUri = RedirectUri)
     {
-        var url = "/connect/authorize?client_id=hivespace-gateway&response_type=code&state=xyz"
-            + $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}&scope={Uri.EscapeDataString("openid email profile roles offline_access")}";
+        var url = $"/connect/authorize?client_id={clientId}&response_type=code&state=xyz"
+            + $"&redirect_uri={Uri.EscapeDataString(redirectUri)}&scope={Uri.EscapeDataString("openid email profile roles offline_access")}";
         return challenge is null ? url : url + $"&code_challenge={challenge}&code_challenge_method=S256";
     }
 
@@ -211,7 +268,7 @@ public sealed class OidcFlowTests : IAsyncLifetime
 
     private static FormUrlEncodedContent Form(Dictionary<string, string> fields, bool withSecret = true)
     {
-        fields["client_id"] = "hivespace-gateway";
+        fields["client_id"] = "hivespace-storefront";
         if (withSecret)
         {
             fields["client_secret"] = IdentityApiFactory.ClientSecret;

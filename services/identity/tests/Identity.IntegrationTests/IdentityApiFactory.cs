@@ -13,7 +13,9 @@ namespace Identity.IntegrationTests;
 public sealed class IdentityApiFactory : WebApplicationFactory<Program>
 {
     public const string Issuer = "http://localhost:5080";
+    public const string SellerOrigin = "http://seller.localhost:5080";
     public const string ClientSecret = "test-client-secret";
+    public const string SellerClientSecret = "test-seller-secret";
 
     /// <summary>The server's signing key, so tests can mint a token with a changed claim (wrong audience).</summary>
     public ECDsa SigningKey { get; } = ECDsa.Create(ECCurve.NamedCurves.nistP256);
@@ -31,10 +33,12 @@ public sealed class IdentityApiFactory : WebApplicationFactory<Program>
             "Endpoint=sb://localhost;SharedAccessKeyName=test;SharedAccessKey=test;UseDevelopmentEmulator=true;");
         // Fresh keys per run; production reads them from configuration (D-7).
         builder.UseSetting("Identity:Issuer", Issuer);
-        builder.UseSetting("Identity:PublicBaseUrl", Issuer);
+        builder.UseSetting("Identity:Clients:Storefront:BaseUrl", Issuer);
+        builder.UseSetting("Identity:Clients:Seller:BaseUrl", SellerOrigin);
         builder.UseSetting("Identity:SigningKeyPem", SigningKey.ExportPkcs8PrivateKeyPem());
         builder.UseSetting("Identity:EncryptionKeyPem", RSA.Create(2048).ExportPkcs8PrivateKeyPem());
-        builder.UseSetting("Identity:Gateway:ClientSecret", ClientSecret);
+        builder.UseSetting("Identity:Clients:Storefront:ClientSecret", ClientSecret);
+        builder.UseSetting("Identity:Clients:Seller:ClientSecret", SellerClientSecret);
         builder.ConfigureServices(services =>
         {
             var relay = services.Single(d => d.ImplementationType?.Name.StartsWith("OutboxRelay", StringComparison.Ordinal) == true);

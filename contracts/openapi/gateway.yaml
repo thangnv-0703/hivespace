@@ -56,7 +56,7 @@ paths:
           in: query
           required: false
           schema: { type: string }
-          description: Local path only; anything else becomes `/`.
+          description: Local path on the calling host only (storefront or seller host, ADR-0027); anything else becomes `/`.
       responses:
         '302':
           description: Redirect to the authorize endpoint.
@@ -68,7 +68,7 @@ paths:
       security: []
       responses:
         '302':
-          description: Redirect through Identity end-session back to `/`.
+          description: Redirect through Identity end-session back to `/` of the calling host (ADR-0027).
 components:
   schemas:
     SessionUser:

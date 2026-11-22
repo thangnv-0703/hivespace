@@ -40,7 +40,7 @@ internal static class GatewayTransforms
                     string.Join(',', http.User.FindAll("role").Select(c => c.Value)));
             }
 
-            // The BFF cookie is for the gateway only; Identity still needs its own hs.idp cookie.
+            // The BFF cookies (hs.bff.stf, hs.bff.sel) are for the gateway only; Identity still needs its own hs.idp cookie.
             StripBffCookie(transform.ProxyRequest);
 
             return ValueTask.CompletedTask;

@@ -16,7 +16,7 @@
 ```
 /
 ├─ apphost/                      Aspire: HiveSpace.AppHost, HiveSpace.ServiceDefaults (section 5)
-├─ gateway/                      .NET YARP gateway + BFF, serves both SPAs (section 7)
+├─ gateway/                      .NET YARP gateway + BFF, serves both SPAs, one host each (section 7)
 ├─ services/
 │  ├─ identity/ catalog/ order/ payment/ media/      .NET
 │  ├─ inventory/ cart/                               Go
@@ -239,7 +239,7 @@ gateway/
 │  ├─ Proxy/          YARP transforms: token relay, correlation ID, gRPC status to error envelope
 │  ├─ RateLimiting/
 │  ├─ Callbacks/      anonymous payment-callback route
-│  └─ Spa/            static hosting for / and /seller
+│  └─ Spa/            host-based static hosting (storefront host, seller host)
 ├─ tests/Gateway.Tests/
 └─ Dockerfile         multi-stage: builds web/apps/*, copies dist into wwwroot
 
@@ -267,7 +267,7 @@ web/
 │  │  │  └─ locales/              vi/, en/ (feature-namespaced JSON)
 │  │  ├─ tests/                   Vitest
 │  │  └─ sheriff.config.ts, vite.config.ts, tsconfig.json, package.json
-│  └─ seller-centre/              base path /seller, same shape
+│  └─ seller-centre/              own host (seller.localhost:5080 locally), same shape
 │                                 (features: shop/ products/ stock/ orders/ account/ auth/)
 ├─ packages/
 │  ├─ api-client/                 generated from contracts/openapi; never edited by hand

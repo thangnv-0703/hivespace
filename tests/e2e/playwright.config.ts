@@ -1,9 +1,10 @@
 import { defineConfig, devices } from '@playwright/test'
 import { defineBddProject } from 'playwright-bdd'
 
-// Drives the real local stack through the gateway (one origin, ADR-0008).
+// Drives the real local stack through the gateway: the storefront host, with the seller centre on its own host (ADR-0027).
 // If nothing answers on BASE_URL, Playwright starts the AppHost itself and waits for the gateway.
 const baseURL = process.env.BASE_URL ?? 'http://localhost:5080'
+process.env.SELLER_URL ??= 'http://seller.localhost:5080'
 
 const desktop = { ...devices['Desktop Chrome'] }
 // EIR-UI-003: the UI works at 360 px.

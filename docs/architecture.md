@@ -210,7 +210,7 @@ The arrows to `bus` and from it are simplified; section 5.4 lists what each serv
 
 | Block | Stack | Owns (data and behaviour) | FR areas |
 | :-- | :-- | :-- | :-- |
-| **Gateway / BFF** | .NET, YARP | Routing, the OIDC client, encrypted session cookie, token relay and refresh, rate limits, CORS-free single origin, static hosting of the two SPAs, correlation ID, the anonymous payment-callback route | FR-AUTH-015, FR-AUTH-016, EIR-COM-001, NFR-SEC-005 |
+| **Gateway / BFF** | .NET, YARP | Routing, one OIDC client and one encrypted session cookie per app host (ADR-0027), token relay and refresh, rate limits, CORS-free (each SPA calls its own host), host-based static hosting of the two SPAs, correlation ID, the anonymous payment-callback route | FR-AUTH-015, FR-AUTH-016, EIR-COM-001, NFR-SEC-005 |
 | **Identity** | .NET, OpenIddict, ASP.NET Core Identity | Users, credentials, lockout, Google and other external logins, tokens, profile, address book, shop (profile, pickup address, bank details, seller role), audit log | FR-AUTH, FR-ROLE, FR-SHOP, FR-ADDR, FR-PROF, FR-LOC-002 (profile side), NFR-SEC-002, NFR-SEC-008, NFR-SEC-009, NFR-SEC-014, NFR-SEC-015 |
 | **Catalog** | .NET | Category tree (vi, en), products, variants, attributes, product image references, deactivation, reviews and rating aggregates, a projection of completed order items (for verified purchase) | FR-CAT, FR-REV, FR-CAT-016 (seed), FR-LOC-007 |
 | **Cart** | Go | Cart lines per user, price snapshot for the changed-price flag, cart display composition (calls Catalog and Inventory), add-time checks (own shop, sold out, stock), removal after `CheckoutCompleted` | FR-CART |
@@ -221,7 +221,7 @@ The arrows to `bus` and from it are simplified; section 5.4 lists what each serv
 | **Notification** | Python | Contact projection (user email, language, shop owner), templates (vi, en), email records, retries, dedupe | FR-NOTIF, NFR-REL-004, UC-018 |
 | **Media** | .NET | Upload intents, SAS issuing, media records (pending, ready, rejected, detached), blob cleanup | FR-MEDIA, NFR-SEC-013 (policy side), NFR-MNT-010 |
 | **Image processor** | .NET Azure Function | Signature validation, re-encode, metadata strip, resize, write to the public container | FR-MEDIA-004, FR-MEDIA-006, FR-MEDIA-007, NFR-PERF-007 |
-| **Web** | Vue 3, TypeScript | Storefront (`/`) and seller centre (`/seller`), generated API client, vue-i18n | EIR-UI-001..004 |
+| **Web** | Vue 3, TypeScript | Storefront (`hivespace.vn`) and seller centre (`seller.hivespace.vn`, ADR-0027), generated API client, vue-i18n | EIR-UI-001..004 |
 
 **Allocation calls the SRS left open.**
 - **Cart is its own service (Go).** It is a separate concern with its own data and load. It composes the cart display from Catalog and Inventory by batch call. The checkout saga reads the selected lines from Cart but never trusts its prices: Order re-fetches authoritative prices from Catalog. Purchased lines are removed when Cart consumes `CheckoutCompleted`.
@@ -558,6 +558,7 @@ Each ADR is a file in `docs/adr/`.
 | [0022](adr/0022-modal-on-native-dialog.md) | Modals are built on the native `<dialog>` element | Accepted (review on trigger) |
 | [0023](adr/0023-native-date-and-time-inputs.md) | Date and time fields use native inputs first | Accepted (review on trigger) |
 | [0024](adr/0024-port-ui-subset-from-reference.md) | Port a UI subset from the reference shared package instead of consuming it | Accepted |
+| [0027](adr/0027-seller-centre-own-host-and-oidc-client.md) | Seller centre on its own host, with its own OIDC client | Accepted |
 
 ## 10. Quality scenarios
 

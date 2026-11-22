@@ -8,8 +8,20 @@ internal sealed record DotnetResources(
 
 internal static class DotnetServicesExtensions
 {
-    /// <summary>The browser-facing origin: the gateway. Identity's issuer and redirect URIs are built from it (FEAT-001 D-7).</summary>
+    /// <summary>The browser-facing storefront origin on the gateway. Identity's issuer and the storefront client's URIs are built from it (FEAT-001 D-7).</summary>
     public const string PublicOrigin = "http://localhost:5080";
+
+    /// <summary>The seller centre's own host on the same gateway port; browsers resolve *.localhost to loopback (ADR-0027).</summary>
+    public const string SellerOrigin = "http://seller.localhost:5080";
+
+    /// <summary>The per-client settings both Identity and the gateway read (Identity:Clients:*, ADR-0027).</summary>
+    public static IResourceBuilder<T> WithOidcClients<T>(this IResourceBuilder<T> resource, IdentitySecrets secrets)
+        where T : IResourceWithEnvironment =>
+        resource
+            .WithEnvironment("Identity__Clients__Storefront__BaseUrl", PublicOrigin)
+            .WithEnvironment("Identity__Clients__Storefront__ClientSecret", secrets.StorefrontClientSecret)
+            .WithEnvironment("Identity__Clients__Seller__BaseUrl", SellerOrigin)
+            .WithEnvironment("Identity__Clients__Seller__ClientSecret", secrets.SellerClientSecret);
 
     /// <summary>.NET services (ADR-0001, ADR-0020). Each gets its own database; none reads another's (ADR-0018).</summary>
     public static DotnetResources AddDotnetServices(this IDistributedApplicationBuilder builder, InfrastructureResources infra, GoResources go)
@@ -27,10 +39,9 @@ internal static class DotnetServicesExtensions
         var identity = builder.AddProject<Projects.Identity_Api>("identity")
             .WithHttpEndpoint()
             .WithEnvironment("Identity__Issuer", PublicOrigin)
-            .WithEnvironment("Identity__PublicBaseUrl", PublicOrigin)
             .WithEnvironment("Identity__SigningKeyPem", identitySecrets.SigningKeyPem)
             .WithEnvironment("Identity__EncryptionKeyPem", identitySecrets.EncryptionKeyPem)
-            .WithEnvironment("Identity__Gateway__ClientSecret", identitySecrets.GatewayClientSecret)
+            .WithOidcClients(identitySecrets)
             .WithReference(identityDb)
             .WithReference(infra.Messaging)
             .WaitFor(identityDb)

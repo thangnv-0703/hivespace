@@ -217,7 +217,7 @@ public sealed class ProfileApiTests : IAsyncLifetime
 
         var verifier = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
         var challenge = Base64Url(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
-        var authorize = "/connect/authorize?client_id=hivespace-gateway&response_type=code&state=xyz"
+        var authorize = "/connect/authorize?client_id=hivespace-storefront&response_type=code&state=xyz"
             + $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}&scope={Uri.EscapeDataString("openid email profile roles offline_access")}"
             + $"&code_challenge={challenge}&code_challenge_method=S256";
         using var redirect = await client.GetAsync(authorize, Ct);
@@ -228,7 +228,7 @@ public sealed class ProfileApiTests : IAsyncLifetime
             ["code"] = code,
             ["code_verifier"] = verifier,
             ["redirect_uri"] = RedirectUri,
-            ["client_id"] = "hivespace-gateway",
+            ["client_id"] = "hivespace-storefront",
             ["client_secret"] = IdentityApiFactory.ClientSecret,
         }), Ct);
         var accessToken = (await tokenResponse.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("access_token").GetString()!;

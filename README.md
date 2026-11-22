@@ -13,7 +13,7 @@ A Shopee-inspired multi-seller marketplace, built by one person as a learning an
 | `services/catalog`, `identity`, `order`, `payment`, `media` | .NET services | .NET 10 |
 | `services/inventory`, `cart` | Go services | Go 1.26 |
 | `services/notification`, `search-ai` | Python services | Python 3.12, FastAPI, uv |
-| `web/` | Storefront (`/`) and seller centre (`/seller`) | Vue 3, TypeScript, Tailwind v4, pnpm + turbo |
+| `web/` | Storefront and seller centre, one host each (ADR-0027) | Vue 3, TypeScript, Tailwind v4, pnpm + turbo |
 | `libs/` | Cross-cutting code per stack (Money, messaging, errors, telemetry) | — |
 | `contracts/` | OpenAPI, gRPC protos, event schemas, Gherkin features, error codes | — |
 | `templates/` | Copier templates for new services | — |
@@ -39,7 +39,7 @@ No cloud account is needed locally: every Azure dependency runs as an emulator (
 dotnet run --project apphost/HiveSpace.AppHost
 ```
 
-The Aspire dashboard opens (logs, traces, resources). The site is at http://localhost:5080 (storefront) and http://localhost:5080/seller (seller centre). Data volumes persist between runs; to reset, stop the AppHost and remove the `hivespace-*` Docker volumes.
+The Aspire dashboard opens (logs, traces, resources). The site is at http://localhost:5080 (storefront) and http://seller.localhost:5080 (seller centre). Data volumes persist between runs; to reset, stop the AppHost and remove the `hivespace-*` Docker volumes.
 
 ## Test
 

@@ -10,22 +10,38 @@ public sealed class IdentityOidcOptions
 {
     public const string Section = "Identity";
 
-    /// <summary>The public gateway origin, because browsers reach <c>/connect/*</c> through the gateway.</summary>
+    /// <summary>The public storefront origin on the gateway, because browsers reach <c>/connect/*</c> through it (ADR-0027).</summary>
     public string Issuer { get; set; } = string.Empty;
-
-    /// <summary>Origin that redirect and post-logout URIs are built from.</summary>
-    public string PublicBaseUrl { get; set; } = string.Empty;
 
     public string SigningKeyPem { get; set; } = string.Empty;
 
     public string EncryptionKeyPem { get; set; } = string.Empty;
 
-    public GatewayClientOptions Gateway { get; set; } = new();
+    /// <summary>The first-party clients, one per app host, both held by the gateway BFF (ADR-0027).</summary>
+    public OidcClientsOptions Clients { get; set; } = new();
 }
 
-public sealed class GatewayClientOptions
+public sealed class OidcClientsOptions
 {
-    public const string ClientId = "hivespace-gateway";
+    public const string StorefrontClientId = "hivespace-storefront";
+    public const string SellerClientId = "hivespace-seller";
+
+    public OidcClientOptions Storefront { get; set; } = new();
+
+    public OidcClientOptions Seller { get; set; } = new();
+
+    /// <summary>Each client with its configuration key and the gateway callback path on its host (one OIDC scheme per path).</summary>
+    public IEnumerable<(string ClientId, string Key, string CallbackPath, OidcClientOptions Options)> All()
+    {
+        yield return (StorefrontClientId, "Storefront", "/bff/callback", Storefront);
+        yield return (SellerClientId, "Seller", "/bff/callback/seller", Seller);
+    }
+}
+
+public sealed class OidcClientOptions
+{
+    /// <summary>The app's public origin; its redirect and post-logout URIs are built from it.</summary>
+    public string BaseUrl { get; set; } = string.Empty;
 
     public string ClientSecret { get; set; } = string.Empty;
 }
@@ -39,10 +55,13 @@ public static class OpenIddictSetup
     {
         var options = configuration.GetSection(IdentityOidcOptions.Section).Get<IdentityOidcOptions>() ?? new IdentityOidcOptions();
         Require(options.Issuer, "Identity:Issuer");
-        Require(options.PublicBaseUrl, "Identity:PublicBaseUrl");
         Require(options.SigningKeyPem, "Identity:SigningKeyPem");
         Require(options.EncryptionKeyPem, "Identity:EncryptionKeyPem");
-        Require(options.Gateway.ClientSecret, "Identity:Gateway:ClientSecret");
+        foreach (var client in options.Clients.All())
+        {
+            Require(client.Options.BaseUrl, $"Identity:Clients:{client.Key}:BaseUrl");
+            Require(client.Options.ClientSecret, $"Identity:Clients:{client.Key}:ClientSecret");
+        }
 
         services.Configure<IdentityOidcOptions>(configuration.GetSection(IdentityOidcOptions.Section));
 
@@ -107,30 +126,59 @@ public static class OpenIddictSetup
     {
         if (string.IsNullOrWhiteSpace(value))
         {
-            throw new InvalidOperationException($"Configuration '{name}' is required (design D-7).");
+            throw new InvalidOperationException($"Configuration '{name}' is required (design D-7, ADR-0027).");
         }
     }
 }
 
-/// <summary>Registers the one first-party client, the gateway BFF (confidential, code + refresh, PKCE) from configuration.</summary>
+/// <summary>
+/// Registers the first-party clients from configuration, one per app host (ADR-0027): confidential, code + refresh, PKCE.
+/// The storefront and seller clients share the Identity session (<c>hs.idp</c>), which is what makes sign-in carry across.
+/// </summary>
 internal sealed class GatewayClientSeeder(IServiceProvider services, Microsoft.Extensions.Options.IOptions<IdentityOidcOptions> options)
     : IHostedService
 {
+    /// <summary>The single client used before ADR-0027; removed so it cannot linger in an existing database.</summary>
+    private const string RetiredClientId = "hivespace-gateway";
+
     public async Task StartAsync(CancellationToken cancellationToken)
     {
         await using var scope = services.CreateAsyncScope();
         var manager = scope.ServiceProvider.GetRequiredService<IOpenIddictApplicationManager>();
-        var config = options.Value;
-        var baseUrl = config.PublicBaseUrl.TrimEnd('/');
 
-        var descriptor = new OpenIddictApplicationDescriptor
+        if (await manager.FindByClientIdAsync(RetiredClientId, cancellationToken) is { } retired)
         {
-            ClientId = GatewayClientOptions.ClientId,
-            ClientSecret = config.Gateway.ClientSecret,
-            DisplayName = "HiveSpace gateway",
+            await manager.DeleteAsync(retired, cancellationToken);
+        }
+
+        foreach (var client in options.Value.Clients.All())
+        {
+            var descriptor = Describe(client.ClientId, client.Key, client.CallbackPath, client.Options);
+            var existing = await manager.FindByClientIdAsync(client.ClientId, cancellationToken);
+            if (existing is null)
+            {
+                await manager.CreateAsync(descriptor, cancellationToken);
+            }
+            else
+            {
+                await manager.UpdateAsync(existing, descriptor, cancellationToken);
+            }
+        }
+    }
+
+    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+
+    private static OpenIddictApplicationDescriptor Describe(string clientId, string name, string callbackPath, OidcClientOptions client)
+    {
+        var baseUrl = client.BaseUrl.TrimEnd('/');
+        return new OpenIddictApplicationDescriptor
+        {
+            ClientId = clientId,
+            ClientSecret = client.ClientSecret,
+            DisplayName = $"HiveSpace {name.ToLowerInvariant()}",
             ClientType = OpenIddictConstants.ClientTypes.Confidential,
             ConsentType = OpenIddictConstants.ConsentTypes.Implicit,
-            RedirectUris = { new Uri($"{baseUrl}/bff/callback") },
+            RedirectUris = { new Uri(baseUrl + callbackPath) },
             PostLogoutRedirectUris = { new Uri($"{baseUrl}/") },
             Permissions =
             {
@@ -148,17 +196,5 @@ internal sealed class GatewayClientSeeder(IServiceProvider services, Microsoft.E
             },
             Requirements = { OpenIddictConstants.Requirements.Features.ProofKeyForCodeExchange },
         };
-
-        var existing = await manager.FindByClientIdAsync(GatewayClientOptions.ClientId, cancellationToken);
-        if (existing is null)
-        {
-            await manager.CreateAsync(descriptor, cancellationToken);
-        }
-        else
-        {
-            await manager.UpdateAsync(existing, descriptor, cancellationToken);
-        }
     }
-
-    public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;
 }

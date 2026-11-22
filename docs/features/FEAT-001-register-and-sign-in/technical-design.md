@@ -228,3 +228,10 @@ sequenceDiagram
 - **Deferred, named:** lockout and sign-in/resend rate limits (FEAT-005; hook only); email retries (FEAT-032); service-side JWT validation library (first protected service endpoint is FEAT-002; the gateway already forwards the bearer token); seller-centre wiring (FEAT-009); `Idempotency-Key` convention (FEAT-022).
 - **Open at implementation time:** confirm the Konscious (or Isopoh) package version and argon2 parameters on the demo container; confirm that Docker Desktop is healthy for the AppHost, system and Playwright runs (scaffold-notes §9 lists them as pending).
 - **Known gap:** until FEAT-032, a failed first verification email is not retried; the user recovers with "resend" (FR-AUTH-007). Documented, not a defect.
+
+## 9. Amendment (2026-11-21, ADR-0027)
+The seller centre moved to its own host (`seller.hivespace.vn`, locally `seller.localhost:5080`) with its own OIDC client. Read the accepted text above with these changes:
+- §3.3 and D-7: the one client `hivespace-gateway` became two, `hivespace-storefront` (redirect `{storefront}/bff/callback`) and `hivespace-seller` (redirect `{seller}/bff/callback/seller`), each with its own secret and post-logout URI `{host}/`. Identity stays on the storefront host, which is still the issuer.
+- §3.3 cookie: `hs.bff` became one host-only cookie per app, `hs.bff.stf` and `hs.bff.sel`; the proxy still strips every `hs.bff*` cookie.
+- D-1 ("the same origin, so cookies work"), D-4 and AC-17: still true per host. `returnUrl` is a local path on the calling host; sign-out returns to `/` of that host.
+- §5 (seller route, line 183): an unauthenticated seller route goes to `/bff/login` on the seller host, which signs in through the storefront host's Identity and comes back (SSO: no password if `hs.idp` is present).
