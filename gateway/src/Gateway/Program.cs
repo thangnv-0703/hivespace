@@ -18,8 +18,8 @@ var app = builder.Build();
 app.UseApiErrors();
 app.MapDefaultEndpoints();
 
-// Production: the built SPAs are copied into wwwroot by the Dockerfile and served from one origin (ADR-0008).
-// Development: the "spa-*" proxy routes forward to the Vite dev servers the AppHost starts.
+// Production: the built SPAs are copied into wwwroot by the Dockerfile and served one per host (ADR-0027).
+// Development: the "spa-*" proxy routes forward to the Vite dev servers the AppHost starts, matched by host the same way.
 app.UseSpaStaticFiles();
 app.UseGatewayAuth();
 

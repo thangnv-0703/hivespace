@@ -15,8 +15,7 @@ namespace Gateway.Auth;
 /// <summary>Wires the BFF (design §3.3, §3.4, §5.3): cookie + OIDC client, token validation, route policies, CSRF and the rate-limit hook.</summary>
 public static class GatewayAuth
 {
-    public const string OidcScheme = "oidc";
-    public const string AuthenticatedPolicy = "authenticated";
+        public const string AuthenticatedPolicy = "authenticated";
     public const string AuthRateLimitPolicy = "auth";
     public const string CsrfHeader = "X-HS-CSRF";
 
@@ -35,57 +34,68 @@ public static class GatewayAuth
 
         AddDataProtection(builder);
 
-        services.AddAuthentication(SessionTokens.CookieScheme)
-            .AddCookie(SessionTokens.CookieScheme, o =>
-            {
-                o.Cookie.Name = SessionTokens.CookieScheme;
-                o.Cookie.HttpOnly = true;
-                o.Cookie.SameSite = SameSiteMode.Lax;
-                o.Cookie.SecurePolicy = development ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
-                // Absolute 7 days, the refresh token's lifetime: no sliding.
-                o.ExpireTimeSpan = TimeSpan.FromDays(7);
-                o.SlidingExpiration = false;
-                o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
-                o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
-            })
-            .AddOpenIdConnect(OidcScheme, o =>
-            {
-                o.SignInScheme = SessionTokens.CookieScheme;
-                o.Authority = settings.PublicOrigin;
-                o.MetadataAddress = settings.InternalOrigin + "/.well-known/openid-configuration";
-                o.RequireHttpsMetadata = false;
-                o.ClientId = GatewayAuthOptions.ClientId;
-                o.ClientSecret = settings.Gateway.ClientSecret;
-                o.ResponseType = "code";
-                // Query, not form_post: the callback is then a top-level GET, so SameSite=Lax correlation cookies work over plain http in dev.
-                o.ResponseMode = "query";
-                o.UsePkce = true;
-                o.CallbackPath = "/bff/callback";
-                o.SaveTokens = true;
-                o.GetClaimsFromUserInfoEndpoint = false;
-                o.MapInboundClaims = false;
-                o.Scope.Clear();
-                foreach (var scope in new[] { "openid", "email", "profile", "roles", "offline_access" })
-                {
-                    o.Scope.Add(scope);
-                }
-
-                // Discovery is fetched on Identity's internal address, so its endpoint URLs name the internal host. The browser
-                // must go through the gateway, so the authorize redirect is always built on the public origin (D-7).
-                o.Events.OnRedirectToIdentityProvider = ctx =>
-                {
-                    ctx.ProtocolMessage.IssuerAddress = settings.PublicOrigin + "/connect/authorize";
-                    return Task.CompletedTask;
-                };
-
-                o.TokenValidationParameters.NameClaimType = "name";
-                o.TokenValidationParameters.RoleClaimType = "role";
-            })
+        // One host-only BFF cookie and one OIDC client per app host (ADR-0027). "hs.bff" is a policy scheme that forwards to
+        // the request host's cookie, so SessionTokens and the handlers stay host-agnostic.
+        var authentication = services.AddAuthentication(SessionTokens.CookieScheme)
+            .AddPolicyScheme(SessionTokens.CookieScheme, "BFF session (by host)", o =>
+                o.ForwardDefaultSelector = ctx => settings.SurfaceFor(ctx.Request).CookieScheme)
             .AddScheme<AuthenticationSchemeOptions, SessionAuthenticationHandler>(SessionAuthenticationHandler.SchemeName, _ => { });
 
-        // Server-to-server calls of the OIDC handler go straight to Identity (D-7).
-        services.AddOptions<OpenIdConnectOptions>(OidcScheme).Configure<IHttpClientFactory>((o, clients) =>
-            o.Backchannel = clients.CreateClient(IdentityBackchannel.ClientName));
+        foreach (var surface in settings.Surfaces)
+        {
+            authentication
+                .AddCookie(surface.CookieScheme, o =>
+                {
+                    o.Cookie.Name = surface.CookieScheme;
+                    o.Cookie.HttpOnly = true;
+                    o.Cookie.SameSite = SameSiteMode.Lax;
+                    o.Cookie.SecurePolicy = development ? CookieSecurePolicy.SameAsRequest : CookieSecurePolicy.Always;
+                    // Absolute 7 days, the refresh token's lifetime: no sliding.
+                    o.ExpireTimeSpan = TimeSpan.FromDays(7);
+                    o.SlidingExpiration = false;
+                    o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
+                    o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
+                })
+                .AddOpenIdConnect(surface.OidcScheme, o =>
+                {
+                    o.SignInScheme = surface.CookieScheme;
+                    o.Authority = settings.PublicOrigin;
+                    o.MetadataAddress = settings.InternalOrigin + "/.well-known/openid-configuration";
+                    o.RequireHttpsMetadata = false;
+                    o.ClientId = surface.ClientId;
+                    o.ClientSecret = surface.ClientSecret;
+                    o.ResponseType = "code";
+                    // Query, not form_post: the callback is then a top-level GET, so SameSite=Lax correlation cookies work over plain http in dev.
+                    o.ResponseMode = "query";
+                    o.UsePkce = true;
+                    // A distinct path per client: every OIDC handler claims the requests on its callback path, whatever the host.
+                    o.CallbackPath = surface.CallbackPath;
+                    o.SaveTokens = true;
+                    o.GetClaimsFromUserInfoEndpoint = false;
+                    o.MapInboundClaims = false;
+                    o.Scope.Clear();
+                    foreach (var scope in new[] { "openid", "email", "profile", "roles", "offline_access" })
+                    {
+                        o.Scope.Add(scope);
+                    }
+
+                    // Discovery is fetched on Identity's internal address, so its endpoint URLs name the internal host. The browser
+                    // must go through the gateway's storefront host, where Identity and its hs.idp cookie live, so the authorize
+                    // redirect is always built on the public origin (D-7). That shared Identity session is the SSO between hosts.
+                    o.Events.OnRedirectToIdentityProvider = ctx =>
+                    {
+                        ctx.ProtocolMessage.IssuerAddress = settings.PublicOrigin + "/connect/authorize";
+                        return Task.CompletedTask;
+                    };
+
+                    o.TokenValidationParameters.NameClaimType = "name";
+                    o.TokenValidationParameters.RoleClaimType = "role";
+                });
+
+            // Server-to-server calls of the OIDC handler go straight to Identity (D-7).
+            services.AddOptions<OpenIdConnectOptions>(surface.OidcScheme).Configure<IHttpClientFactory>((o, clients) =>
+                o.Backchannel = clients.CreateClient(IdentityBackchannel.ClientName));
+        }
 
         services.AddAuthorizationBuilder()
             .AddPolicy(AuthenticatedPolicy, p => p.AddAuthenticationSchemes(SessionAuthenticationHandler.SchemeName).RequireAuthenticatedUser());

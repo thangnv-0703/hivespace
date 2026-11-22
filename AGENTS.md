@@ -21,7 +21,7 @@ Instructions for any coding agent working in this repository. `CLAUDE.md` only p
 ```bash
 dotnet run --project apphost/HiveSpace.AppHost
 ```
-Starts everything (Postgres, MongoDB, Service Bus emulator, Azurite, Mailpit, all services, both SPAs). Gateway: http://localhost:5080. Needs Docker running.
+Starts everything (Postgres, MongoDB, Service Bus emulator, Azurite, Mailpit, all services, both SPAs). Storefront: http://localhost:5080, seller centre: http://seller.localhost:5080 (both through the gateway, ADR-0027). Needs Docker running.
 
 ```bash
 dotnet build HiveSpace.slnx && dotnet test --solution HiveSpace.slnx

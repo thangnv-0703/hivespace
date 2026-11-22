@@ -81,7 +81,7 @@ export type BffLoginData = {
     path?: never;
     query?: {
         /**
-         * Local path only; anything else becomes `/`.
+         * Local path on the calling host only (storefront or seller host, ADR-0027); anything else becomes `/`.
          */
         returnUrl?: string;
     };

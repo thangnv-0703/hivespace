@@ -8,6 +8,6 @@ import { ErrorPage } from '@hivespace/ui'
     :title="$t('errors.notFound.title')"
     :message="$t('errors.notFound.message')"
     :action-label="$t('errors.backDashboard')"
-    action-href="/seller/"
+    action-href="/"
   />
 </template>

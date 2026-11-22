@@ -1,4 +1,4 @@
-# Build context: repository root. Builds both SPAs and serves them from wwwroot (one origin, ADR-0008).
+# Build context: repository root. Builds both SPAs and serves them from wwwroot, one host each (storefront at the root, seller centre in wwwroot/seller; ADR-0027).
 #   docker build -f gateway/Dockerfile .
 FROM node:24-slim AS web
 RUN corepack enable

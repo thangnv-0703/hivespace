@@ -10,6 +10,8 @@ import { RouterLink, useRoute } from 'vue-router'
 
 const i18n = useI18n()
 const route = useRoute()
+// The storefront is another host (ADR-0027): set by the AppHost in development, by .env.production for the image.
+const storefrontOrigin = import.meta.env.VITE_STOREFRONT_ORIGIN ?? 'http://localhost:5080'
 
 const menuGroups = computed<SidebarMenuGroup[]>(() => [
   {
@@ -49,7 +51,7 @@ function changeLocale(value: string) {
     <template #actions>
       <ThemeToggle :label="$t('common.toggleTheme')" />
       <LanguageSwitcher :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
-      <a href="/" class="hidden px-2 text-sm text-text-link hover:text-text-link-hover md:inline">{{ $t('nav.storefront') }}</a>
+      <a :href="`${storefrontOrigin}/`" class="hidden px-2 text-sm text-text-link hover:text-text-link-hover md:inline">{{ $t('nav.storefront') }}</a>
       <!-- STUB: account menu arrives with sign-in (FEAT-001). -->
       <span class="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-text-secondary">
         <span class="inline-flex size-9 items-center justify-center rounded-full bg-bg-subtle">

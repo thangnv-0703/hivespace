@@ -10,7 +10,7 @@ const { t } = useI18n()
   <PageHeader
     :title="t('dashboard.title')"
     :nav-label="t('common.breadcrumb')"
-    :crumbs="[{ label: t('common.home'), to: '/seller/' }, { label: t('dashboard.title') }]"
+    :crumbs="[{ label: t('common.home'), to: '/' }, { label: t('dashboard.title') }]"
   />
   <section class="rounded-xl border border-border-default bg-bg-surface shadow-sm">
     <h2 class="border-b border-border-default px-6 py-4 font-medium">{{ t('dashboard.title') }}</h2>

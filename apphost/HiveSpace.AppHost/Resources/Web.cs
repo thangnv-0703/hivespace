@@ -12,8 +12,9 @@ internal static class WebExtensions
     private const int SellerCentrePort = 5181;
 
     /// <summary>
-    /// Vite dev servers, local only (repo-structure §5). The gateway proxies "/" and "/seller" to them,
-    /// so the browser sees one origin in development as it does in production.
+    /// Vite dev servers, local only (repo-structure §5). The gateway proxies to them by host (ADR-0027): localhost:5080 is the
+    /// storefront, seller.localhost:5080 the seller centre, so the browser sees the same hosts in development as in production.
+    /// Each app gets the other's origin for its cross-app link.
     /// </summary>
     public static WebResources AddWeb(this IDistributedApplicationBuilder builder)
     {
@@ -22,10 +23,12 @@ internal static class WebExtensions
         var storefront = builder.AddViteApp("storefront", "../../web/apps/storefront")
             .WithPnpm(install: false)
             .WithEndpoint("http", endpoint => endpoint.Port = StorefrontPort)
+            .WithEnvironment("VITE_SELLER_ORIGIN", DotnetServicesExtensions.SellerOrigin)
             .WaitForCompletion(install);
         var sellerCentre = builder.AddViteApp("seller-centre", "../../web/apps/seller-centre")
             .WithPnpm(install: false)
             .WithEndpoint("http", endpoint => endpoint.Port = SellerCentrePort)
+            .WithEnvironment("VITE_STOREFRONT_ORIGIN", DotnetServicesExtensions.PublicOrigin)
             .WaitForCompletion(install);
         return new WebResources(storefront, sellerCentre);
     }
@@ -63,7 +66,7 @@ internal static class WebExtensions
             .WithReference(dotnet.Identity)
             .WithReference(infra.Blobs)
             .WithEnvironment("Identity__Issuer", DotnetServicesExtensions.PublicOrigin)
-            .WithEnvironment("Identity__Gateway__ClientSecret", dotnet.IdentitySecrets.GatewayClientSecret)
+            .WithOidcClients(dotnet.IdentitySecrets)
             .WaitFor(infra.Blobs)
             .WithReference(go.Cart)
             .WithReference(python.SearchAi)

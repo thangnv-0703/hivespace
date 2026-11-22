@@ -7,7 +7,7 @@ namespace HiveSpace.AppHost.Resources;
 /// <c>.local/dev-secrets</c> folder at the repo root, so tokens and sessions survive AppHost restarts.
 /// Deployed environments get their own values from a vault (FEAT-037); nothing here is a real secret.
 /// </summary>
-internal sealed record IdentitySecrets(string SigningKeyPem, string EncryptionKeyPem, string GatewayClientSecret);
+internal sealed record IdentitySecrets(string SigningKeyPem, string EncryptionKeyPem, string StorefrontClientSecret, string SellerClientSecret);
 
 internal static class DevSecrets
 {
@@ -18,8 +18,11 @@ internal static class DevSecrets
         return new IdentitySecrets(
             GetOrCreate(folder, "identity-signing-key.pem", () => ECDsa.Create(ECCurve.NamedCurves.nistP256).ExportPkcs8PrivateKeyPem()),
             GetOrCreate(folder, "identity-encryption-key.pem", () => RSA.Create(2048).ExportPkcs8PrivateKeyPem()),
-            GetOrCreate(folder, "gateway-client-secret.txt", () => Convert.ToHexString(RandomNumberGenerator.GetBytes(32))));
+            GetOrCreate(folder, "storefront-client-secret.txt", NewClientSecret),
+            GetOrCreate(folder, "seller-client-secret.txt", NewClientSecret));
     }
+
+    private static string NewClientSecret() => Convert.ToHexString(RandomNumberGenerator.GetBytes(32));
 
     private static string GetOrCreate(string folder, string name, Func<string> generate)
     {

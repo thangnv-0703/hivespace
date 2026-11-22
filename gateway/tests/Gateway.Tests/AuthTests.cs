@@ -175,8 +175,77 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
         var location = response.Headers.Location!.OriginalString;
         Assert.StartsWith(GatewayTestHost.Issuer + "/connect/authorize?", location, StringComparison.Ordinal);
         Assert.Contains("code_challenge_method=S256", location, StringComparison.Ordinal);
-        Assert.Contains("client_id=hivespace-gateway", location, StringComparison.Ordinal);
+        Assert.Contains("client_id=hivespace-storefront", location, StringComparison.Ordinal);
         Assert.Contains("offline_access", location, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Bff_login_on_the_seller_host_uses_the_seller_client_and_its_own_callback()
+    {
+        // ADR-0027: the seller host has its own OIDC client; Identity (and so the authorize endpoint) stays on the storefront host.
+        using var client = _host.NewClient(GatewayTestHost.SellerOrigin);
+
+        using var response = await client.GetAsync("/bff/login?returnUrl=/products", Ct);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        var location = response.Headers.Location!.OriginalString;
+        Assert.StartsWith(GatewayTestHost.Issuer + "/connect/authorize?", location, StringComparison.Ordinal);
+        Assert.Contains("client_id=hivespace-seller", location, StringComparison.Ordinal);
+        Assert.Contains("redirect_uri=" + Uri.EscapeDataString(GatewayTestHost.SellerOrigin + "/bff/callback/seller"), location, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task An_unknown_host_is_treated_as_the_storefront()
+    {
+        using var client = _host.NewClient("http://evil.example");
+
+        using var response = await client.GetAsync("/bff/login", Ct);
+
+        Assert.Contains("client_id=hivespace-storefront", response.Headers.Location!.OriginalString, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Each_host_has_its_own_session_cookie_and_one_host_cannot_use_the_other()
+    {
+        var token = _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10));
+        using var raw = _host.Gateway.CreateClient(new Microsoft.AspNetCore.Mvc.Testing.WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = false,
+            BaseAddress = new Uri(GatewayTestHost.SellerOrigin),
+        });
+        using var planted = await raw.PostAsync($"/test/session?access={Uri.EscapeDataString(token)}&refresh=good-refresh-hosts&expires=900", null, Ct);
+        var sellerCookie = planted.Headers.GetValues("Set-Cookie").Single().Split(';')[0];
+        Assert.StartsWith("hs.bff.sel=", sellerCookie, StringComparison.Ordinal);
+
+        // The seller cookie works on the seller host...
+        using var onSeller = new HttpRequestMessage(HttpMethod.Get, "/bff/user");
+        onSeller.Headers.Add("Cookie", sellerCookie);
+        Assert.True((await SendAsync(raw, onSeller)).Body.GetProperty("isAuthenticated").GetBoolean());
+
+        // ...and means nothing on the storefront host, even if a browser sent it there.
+        using var onStorefront = new HttpRequestMessage(HttpMethod.Get, GatewayTestHost.Issuer + "/bff/user");
+        onStorefront.Headers.Add("Cookie", sellerCookie);
+        Assert.False((await SendAsync(raw, onStorefront)).Body.GetProperty("isAuthenticated").GetBoolean());
+    }
+
+    [Fact]
+    public async Task Seller_sign_out_uses_the_seller_client_and_returns_to_the_seller_host()
+    {
+        using var client = _host.NewClient(GatewayTestHost.SellerOrigin);
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), "good-refresh-seller-signout");
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, "/bff/logout");
+        request.Headers.Add("Sec-Fetch-Site", "same-origin");
+        using var response = await client.SendAsync(request, Ct);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        var location = response.Headers.Location!.OriginalString;
+        Assert.StartsWith($"{GatewayTestHost.Issuer}/connect/logout?client_id=hivespace-seller", location, StringComparison.Ordinal);
+        Assert.Contains("post_logout_redirect_uri=" + Uri.EscapeDataString(GatewayTestHost.SellerOrigin + "/"), location, StringComparison.Ordinal);
+        var revoked = _host.RevokedTokens.IndexOf("good-refresh-seller-signout");
+        Assert.True(revoked >= 0);
+        Assert.Equal("hivespace-seller", _host.RevokingClients[revoked]);
     }
 
     [Fact]
@@ -222,7 +291,7 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
         using var response = await client.SendAsync(request, Ct);
 
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
-        Assert.StartsWith($"{GatewayTestHost.Issuer}/connect/logout?client_id=hivespace-gateway", response.Headers.Location!.OriginalString, StringComparison.Ordinal);
+        Assert.StartsWith($"{GatewayTestHost.Issuer}/connect/logout?client_id=hivespace-storefront", response.Headers.Location!.OriginalString, StringComparison.Ordinal);
         Assert.Contains("good-refresh-signout", _host.RevokedTokens);
         var (status, _) = await SendAsync(client, Get("/v1/order/orders"));
         Assert.Equal(HttpStatusCode.Unauthorized, status);

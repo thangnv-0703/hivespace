@@ -8,10 +8,11 @@ public static class BffEndpoints
 {
     public static IEndpointRouteBuilder MapBffEndpoints(this IEndpointRouteBuilder app)
     {
-        app.MapGet("/bff/login", (string? returnUrl) =>
+        // The request host picks the OIDC client (ADR-0027); returnUrl is a path on that same host.
+        app.MapGet("/bff/login", (string? returnUrl, HttpRequest request, Microsoft.Extensions.Options.IOptions<GatewayAuthOptions> options) =>
                 Results.Challenge(
                     new AuthenticationProperties { RedirectUri = LocalPath.OrHome(returnUrl) },
-                    [GatewayAuth.OidcScheme]))
+                    [options.Value.SurfaceFor(request).OidcScheme]))
             .AllowAnonymous();
 
         app.MapGet("/bff/user", async (HttpContext http, SessionTokens sessions, AccessTokenValidator validator) =>
@@ -45,15 +46,16 @@ public static class BffEndpoints
                 var idToken = auth.Properties?.GetTokenValue("id_token");
                 if (refresh is not null)
                 {
-                    await sessions.RevokeAsync(refresh, http.RequestAborted);
+                    await sessions.RevokeAsync(http, refresh);
                 }
 
                 await http.SignOutAsync(SessionTokens.CookieScheme);
 
-                // The browser goes through Identity's end-session so hs.idp is cleared too, then lands on "/".
-                var origin = options.Value.PublicOrigin;
-                var end = $"{origin}/connect/logout?client_id={GatewayAuthOptions.ClientId}"
-                    + $"&post_logout_redirect_uri={Uri.EscapeDataString(origin + "/")}"
+                // The browser goes through Identity's end-session (on the storefront host) so hs.idp is cleared too, then lands
+                // on "/" of the host it signed out from. The return origin comes from configuration, never from the Host header.
+                var surface = options.Value.SurfaceFor(http.Request);
+                var end = $"{options.Value.PublicOrigin}/connect/logout?client_id={surface.ClientId}"
+                    + $"&post_logout_redirect_uri={Uri.EscapeDataString(surface.Origin + "/")}"
                     + (idToken is null ? string.Empty : $"&id_token_hint={Uri.EscapeDataString(idToken)}");
                 return Results.Redirect(end);
             })

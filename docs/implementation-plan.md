@@ -22,7 +22,7 @@ The thinnest path that touches every stack, the broker, gRPC and the deploy path
 **What is real**
 - **Repo and templates**: monorepo per [repo-structure.md](repo-structure.md); Copier templates for a rich .NET, a lean .NET, a Go and a Python service (ADR-0020).
 - **Aspire AppHost**: `dotnet run --project apphost` starts Postgres (one DB per service), MongoDB, the Service Bus emulator, Azurite and Mailpit (ADR-0015, NFR-PORT-001).
-- **Gateway/BFF** (YARP): serves both SPAs from one origin, routes `/v1/*`, rejects unauthenticated calls to protected routes and relays identity (FR-AUTH-015, FR-AUTH-016). In the skeleton the session is a stub: a dev-only fixed test user, no OpenIddict yet.
+- **Gateway/BFF** (YARP): serves both SPAs (one host each since ADR-0027), routes `/v1/*`, rejects unauthenticated calls to protected routes and relays identity (FR-AUTH-015, FR-AUTH-016). In the skeleton the session is a stub: a dev-only fixed test user, no OpenIddict yet.
 - **Web shell**: `web/apps/storefront` and `web/apps/seller-centre` with the theme from `tokens.json` (Tailwind v4, light and dark, ADR-0021), header/sidebar navigation, vi/en switcher, and the error pages **SCR-STF-019** and **SCR-SEL-009**. `web/packages/ui` and `web/packages/core` (Money, date and i18n helpers) exist.
 - **One trivial end-to-end operation**: `GET /v1/categories` → gateway → Catalog (.NET) → Postgres → back, rendered in the storefront header.
 - **One gRPC call**: Catalog → Inventory (Go) `GetAvailability` returning a stub value, with a deadline, through `contracts/proto/` and `buf` (ADR-0019).
@@ -56,7 +56,7 @@ Priority shows the highest SRS priority the slice carries. "p" after an ID means
 
 | ID | Feature | Pri | FRs | UCs | Screens | Blocks / endpoints | Data |
 | :- | :------ | :-- | :-- | :-- | :------ | :----------------- | :--- |
-| FEAT-009 | Register a shop and become a seller | Must | FR-SHOP-001..004, FR-ROLE-002, FR-ROLE-003 | UC-003 | SCR-SEL-001, SCR-SEL-002 p (setup checklist) | Identity `POST /v1/shops`; event `ShopRegistered` → Catalog, Search-AI, Notification | Shop, role grant |
+| FEAT-009 | Register a shop and become a seller | Must | FR-SHOP-001..004, FR-ROLE-002, FR-ROLE-003 | UC-003 | SCR-SEL-001, SCR-SEL-002 p (setup checklist) | Seller session on the seller host via client `hivespace-seller` (ADR-0027); Identity `POST /v1/shops`; event `ShopRegistered` → Catalog, Search-AI, Notification | Shop, role grant |
 | FEAT-010 | Shop settings: profile, pickup address, payout | Must | FR-SHOP-005..008, FR-SHOP-010 | UC-004 | SCR-SEL-007, SCR-SEL-008 | Identity `/v1/shops/me`; event `ShopChanged` | Shop, pickup address, bank details (encrypted) |
 | FEAT-011 | Public shop page | Must | FR-SHOP-009 | — | SCR-STF-004 | Catalog shop snapshot + Search-AI product list by shop | read only |
 
@@ -292,7 +292,7 @@ Stand these up with the skeleton or in the slice that first needs them. Requirem
 - [ ] **Local stack**: Aspire AppHost with Postgres per service, MongoDB, Service Bus emulator, Azurite, Mailpit; migrations run on start (NFR-PORT-001, NFR-REL-007, ADR-0015).
 - [ ] **Contracts**: OpenAPI per service with a generated web client; `contracts/proto/` with `buf` lint and breaking checks; event JSON schemas; shared `.feature` files run by cucumber-js (ADR-0025) (dev-standards §6, §9.1).
 - [ ] **Messaging**: `IEventBus`, event envelope, outbox relay and inbox dedupe in each stack (ADR-0002, NFR-REL-005, EIR-COM-003).
-- [ ] **Gateway**: single origin, routing, BFF cookie, rate-limit middleware, correlation ID (EIR-COM-001, FR-AUTH-015, FR-AUTH-016).
+- [ ] **Gateway**: one host per SPA (ADR-0027), routing, BFF cookie, rate-limit middleware, correlation ID (EIR-COM-001, FR-AUTH-015, FR-AUTH-016).
 - [ ] **Authorization**: JWT validation and ownership checks in every service; the shared cross-user authorization test suite, extended by each slice (FR-ROLE-004, FR-ROLE-005, NFR-SEC-006).
 - [ ] **Money and currency**: `Money` type in .NET, Go, Python and TS; currency table with VND only; locale formatting (FR-CUR-001..003, NFR-MNT-008, NFR-MNT-009, NFR-L10N-001, ADR-0010).
 - [ ] **Localization**: vi/en catalogs for UI and error messages, stable error codes, browser-language default, vi fallback, date/number formatting in Asia/Ho_Chi_Minh, CI key-parity check (FR-LOC-001, FR-LOC-003, FR-LOC-004, FR-LOC-006..008, NFR-L10N-002..004, EIR-UI-004).

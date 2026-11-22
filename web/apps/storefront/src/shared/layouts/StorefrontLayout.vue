@@ -13,6 +13,8 @@ import { useI18n } from 'vue-i18n'
 const i18n = useI18n()
 const { change: changeLocale } = useLanguagePreference()
 const menuOpen = ref(false)
+// The seller centre is another host (ADR-0027): set by the AppHost in development, by .env.production for the image.
+const sellerOrigin = import.meta.env.VITE_SELLER_ORIGIN ?? 'http://seller.localhost:5080'
 const searchOpen = ref(false)
 
 const iconButton =
@@ -25,7 +27,7 @@ const iconButton =
       <!-- Top bar (md and up). -->
       <div class="hidden h-10 border-b border-border-default md:block">
         <div class="mx-auto flex h-full max-w-[var(--size-container)] items-center justify-between px-6 text-sm">
-          <a href="/seller/" class="text-text-secondary hover:text-text-primary">{{ $t('common.sellerCentre') }}</a>
+          <a :href="`${sellerOrigin}/`" class="text-text-secondary hover:text-text-primary">{{ $t('common.sellerCentre') }}</a>
           <div class="flex items-center gap-5">
             <LanguageSwitcher variant="plain" :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
             <ThemeToggle compact :label="$t('common.toggleTheme')" />
@@ -77,7 +79,7 @@ const iconButton =
 
       <!-- Menu panel (below md): the top-bar items. -->
       <div v-if="menuOpen" id="storefront-menu" class="space-y-3 border-t border-border-default px-4 py-3 md:hidden">
-        <a href="/seller/" class="block py-2 text-sm text-text-secondary">{{ $t('common.sellerCentre') }}</a>
+        <a :href="`${sellerOrigin}/`" class="block py-2 text-sm text-text-secondary">{{ $t('common.sellerCentre') }}</a>
         <div class="flex items-center gap-2">
           <LanguageSwitcher :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
           <ThemeToggle :label="$t('common.toggleTheme')" />

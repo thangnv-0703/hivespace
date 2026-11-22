@@ -5,10 +5,10 @@ import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vite'
 import vueDevTools from 'vite-plugin-vue-devtools'
 
-// Seller centre is served at "/seller" (repo-structure §8). In development the gateway proxies to this server,
-// so the browser sees one origin (http://localhost:5080). PORT comes from the AppHost.
+// Seller centre is served on its own host at "/" (ADR-0027). In development the gateway proxies to this server by host,
+// so the browser sees http://seller.localhost:5080. PORT comes from the AppHost.
 export default defineConfig({
-  base: '/seller/',
+  base: '/',
   plugins: [vue(), tailwindcss(), vueDevTools()],
   resolve: {
     alias: {

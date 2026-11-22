@@ -21,7 +21,7 @@ async function signIn(world: ContractWorld, email: string, displayName: string):
   const verifier = b64url(randomBytes(32))
   const challenge = b64url(createHash('sha256').update(verifier).digest())
   const query = new URLSearchParams({
-    client_id: 'hivespace-gateway',
+    client_id: 'hivespace-storefront',
     response_type: 'code',
     state: 'xyz',
     redirect_uri: redirectUri,
@@ -40,7 +40,7 @@ async function signIn(world: ContractWorld, email: string, displayName: string):
       code,
       code_verifier: verifier,
       redirect_uri: redirectUri,
-      client_id: 'hivespace-gateway',
+      client_id: 'hivespace-storefront',
       client_secret: 'test-client-secret',
     }),
   })

@@ -7,12 +7,13 @@ using Microsoft.Extensions.Options;
 
 namespace Gateway.Auth;
 
-/// <summary>The tokens held in the encrypted <c>hs.bff</c> cookie. They never leave the gateway.</summary>
+/// <summary>The tokens held in the encrypted BFF cookie of the request's host (<c>hs.bff.*</c>). They never leave the gateway.</summary>
 public sealed record TokenSet(string AccessToken, string RefreshToken, string? IdToken, DateTimeOffset ExpiresAt);
 
 /// <summary>Reads the BFF session, refreshes tokens before they expire and revokes them on sign-out (FR-AUTH-013, FR-AUTH-014).</summary>
 public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpClientFactory clients, TimeProvider time)
 {
+    /// <summary>The policy scheme that forwards to the request host's cookie scheme (ADR-0027).</summary>
     public const string CookieScheme = "hs.bff";
     public static readonly TimeSpan RefreshWindow = TimeSpan.FromSeconds(60);
     private static readonly TimeSpan InFlightMemory = TimeSpan.FromSeconds(30);
@@ -48,7 +49,7 @@ public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpCli
             return current;
         }
 
-        var refreshed = await RefreshOnceAsync(current.RefreshToken, http.RequestAborted).ConfigureAwait(false);
+        var refreshed = await RefreshOnceAsync(options.Value.SurfaceFor(http.Request), current.RefreshToken, http.RequestAborted).ConfigureAwait(false);
         if (refreshed is null)
         {
             await http.SignOutAsync(CookieScheme).ConfigureAwait(false);
@@ -61,13 +62,13 @@ public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpCli
         return refreshed;
     }
 
-    public async Task RevokeAsync(string refreshToken, CancellationToken cancellationToken)
+    public async Task RevokeAsync(HttpContext http, string refreshToken)
     {
         try
         {
-            using var form = ClientForm(new() { ["token"] = refreshToken, ["token_type_hint"] = "refresh_token" });
+            using var form = ClientForm(options.Value.SurfaceFor(http.Request), new() { ["token"] = refreshToken, ["token_type_hint"] = "refresh_token" });
             using var response = await clients.CreateClient(IdentityBackchannel.ClientName)
-                .PostAsync(options.Value.InternalOrigin + "/connect/revoke", form, cancellationToken).ConfigureAwait(false);
+                .PostAsync(options.Value.InternalOrigin + "/connect/revoke", form, http.RequestAborted).ConfigureAwait(false);
             _ = response.IsSuccessStatusCode;
         }
         catch (HttpRequestException)
@@ -105,7 +106,7 @@ public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpCli
         return new TokenSet(access, refresh, props.GetTokenValue("id_token"), expires);
     }
 
-    private Task<TokenSet?> RefreshOnceAsync(string refreshToken, CancellationToken cancellationToken)
+    private Task<TokenSet?> RefreshOnceAsync(BffSurface surface, string refreshToken, CancellationToken cancellationToken)
     {
         var now = time.GetUtcNow();
         foreach (var stale in _inFlight.Where(e => now - e.Value.At > InFlightMemory).Select(e => e.Key).ToList())
@@ -114,14 +115,14 @@ public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpCli
         }
 
         // Lazy: GetOrAdd may run its factory twice under contention, and a plain task would start a second exchange.
-        return _inFlight.GetOrAdd(refreshToken, _ => (new Lazy<Task<TokenSet?>>(() => RefreshAsync(refreshToken, cancellationToken)), now)).Task.Value;
+        return _inFlight.GetOrAdd(refreshToken, _ => (new Lazy<Task<TokenSet?>>(() => RefreshAsync(surface, refreshToken, cancellationToken)), now)).Task.Value;
     }
 
-    private async Task<TokenSet?> RefreshAsync(string refreshToken, CancellationToken cancellationToken)
+    private async Task<TokenSet?> RefreshAsync(BffSurface surface, string refreshToken, CancellationToken cancellationToken)
     {
         try
         {
-            using var form = ClientForm(new() { ["grant_type"] = "refresh_token", ["refresh_token"] = refreshToken });
+            using var form = ClientForm(surface, new() { ["grant_type"] = "refresh_token", ["refresh_token"] = refreshToken });
             using var response = await clients.CreateClient(IdentityBackchannel.ClientName)
                 .PostAsync(options.Value.InternalOrigin + "/connect/token", form, cancellationToken).ConfigureAwait(false);
             if (!response.IsSuccessStatusCode)
@@ -150,10 +151,10 @@ public sealed class SessionTokens(IOptions<GatewayAuthOptions> options, IHttpCli
         }
     }
 
-    private FormUrlEncodedContent ClientForm(Dictionary<string, string> fields)
+    private static FormUrlEncodedContent ClientForm(BffSurface surface, Dictionary<string, string> fields)
     {
-        fields["client_id"] = GatewayAuthOptions.ClientId;
-        fields["client_secret"] = options.Value.Gateway.ClientSecret;
+        fields["client_id"] = surface.ClientId;
+        fields["client_secret"] = surface.ClientSecret;
         return new FormUrlEncodedContent(fields);
     }
 }

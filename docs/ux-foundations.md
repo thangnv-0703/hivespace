@@ -6,12 +6,12 @@
 
 ## 1. Overview
 
-HiveSpace is a multi-seller marketplace for Vietnamese shoppers. Its hero flow is register → search (including natural-language Vietnamese) → cart → split checkout → pay → track → review, and it has a seller side for listing products and fulfilling orders (SRS §1.2). Two web UI surfaces exist. Both are Vue 3 + TypeScript SPAs served by the gateway/BFF from one origin (architecture §5, container "Web"):
+HiveSpace is a multi-seller marketplace for Vietnamese shoppers. Its hero flow is register → search (including natural-language Vietnamese) → cart → split checkout → pay → track → review, and it has a seller side for listing products and fulfilling orders (SRS §1.2). Two web UI surfaces exist. Both are Vue 3 + TypeScript SPAs served by the gateway/BFF, each on its own host (architecture §5, container "Web"; ADR-0027):
 
 | Surface | Code | Route | For |
 | :-- | :-- | :-- | :-- |
 | Storefront | `STF` | `/` | Visitors and buyers: browse, search, buy, track, review, manage account (EIR-UI-001) |
-| Seller centre | `SEL` | `/seller` | Sellers: shop setup, products and stock, order processing (EIR-UI-002) |
+| Seller centre | `SEL` | `seller.hivespace.vn` (local `seller.localhost:5080`) | Sellers: shop setup, products and stock, order processing (EIR-UI-002) |
 
 There is no admin console (SRS §1.2 exclusions, architecture §11). Operator tasks (seed, eval, load test, mock-provider controls) run as scripts, except the mock payment page, which is part of STF.
 
@@ -236,11 +236,11 @@ Comfortable density: 16 px body, 48 px primary commerce CTAs, 12 to 16 px card p
 
 #### Information architecture and navigation
 
-**Navigation model.** A persistent left sidebar (collapsible to icons, an off-canvas drawer below `lg`) with four sections, a top header, and a breadcrumb plus title row on each page. A sidebar suits a work tool with a few deep sections that the seller moves between often. The seller centre requires sign-in through the same BFF session as STF. A signed-in buyer without a shop is sent to Register shop.
+**Navigation model.** A persistent left sidebar (collapsible to icons, an off-canvas drawer below `lg`) with four sections, a top header, and a breadcrumb plus title row on each page. A sidebar suits a work tool with a few deep sections that the seller moves between often. The seller centre requires sign-in. It has its own BFF session on its own host, but shares the Identity sign-in with STF, so a signed-in buyer gets in without a second password (ADR-0027). A signed-in buyer without a shop is sent to Register shop.
 
 ```mermaid
 graph TD
-    root["Seller centre /seller"]
+    root["Seller centre (seller host) /"]
     root --> onboard["Register shop"]
     root --> dash["Dashboard"]
     root --> products["Products"]
@@ -340,7 +340,7 @@ flowchart TB
 ```
 
 - **Order lifecycle:** both sides read the same status names, Badge colours and timeline (FR-ORD-004). Transactional emails (UC-018) carry the same wording in the recipient's language.
-- **Buyer to seller:** the STF account menu shows "Register a shop" (no shop yet) or "Seller centre" (has shop). SEL's header has "Go to storefront". The session, language and theme carry across, so the user is never asked to sign in twice.
+- **Buyer to seller:** the STF account menu shows "Register a shop" (no shop yet) or "Seller centre" (has shop). SEL's header has "Go to storefront". The sign-in carries across (SSO through Identity, ADR-0027), so the user is never asked for a password twice. A signed-in user's language follows the profile; theme is remembered per host.
 - **Seller as buyer:** a seller cannot add their own products to the cart (FR-CART-009). The product page replaces "Add to cart" with "Edit in seller centre" for the owner.
 
 **Consistency rules.**

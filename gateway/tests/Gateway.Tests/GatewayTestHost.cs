@@ -22,6 +22,7 @@ namespace Gateway.Tests;
 public sealed class GatewayTestHost : IAsyncLifetime
 {
     public const string Issuer = "http://localhost:5080";
+    public const string SellerOrigin = "http://seller.localhost:5080";
 
     private readonly ECDsa _signingKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
     private readonly ECDsa _otherKey = ECDsa.Create(ECCurve.NamedCurves.nistP256);
@@ -30,6 +31,9 @@ public sealed class GatewayTestHost : IAsyncLifetime
     private WebApplicationFactory<Program>? _gateway;
 
     public List<string> RevokedTokens { get; } = [];
+
+    /// <summary>The <c>client_id</c> of every revoke call, so a test can see which OIDC client signed out.</summary>
+    public List<string> RevokingClients { get; } = [];
 
     public int RefreshCalls { get; private set; }
 
@@ -90,7 +94,9 @@ public sealed class GatewayTestHost : IAsyncLifetime
             });
             app.MapPost("/connect/revoke", async (HttpRequest request) =>
             {
-                RevokedTokens.Add((await request.ReadFormAsync())["token"].ToString());
+                var form = await request.ReadFormAsync();
+                RevokedTokens.Add(form["token"].ToString());
+                RevokingClients.Add(form["client_id"].ToString());
                 return Results.Ok();
             });
         });
@@ -111,7 +117,9 @@ public sealed class GatewayTestHost : IAsyncLifetime
             b.UseEnvironment("Development");
             b.UseSetting("Identity:Issuer", Issuer);
             b.UseSetting("Identity:InternalBaseUrl", identityUrl);
-            b.UseSetting("Identity:Gateway:ClientSecret", "test-secret");
+            b.UseSetting("Identity:Clients:Storefront:ClientSecret", "test-secret");
+            b.UseSetting("Identity:Clients:Seller:ClientSecret", "test-secret");
+            b.UseSetting("Identity:Clients:Seller:BaseUrl", SellerOrigin);
             foreach (var cluster in new[] { "catalog", "order", "identity" })
             {
                 b.UseSetting($"ReverseProxy:Clusters:{cluster}:Destinations:d1:Address", downstreamUrl);
@@ -137,8 +145,14 @@ public sealed class GatewayTestHost : IAsyncLifetime
         }
     }
 
-    public HttpClient NewClient() =>
-        Gateway.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false, HandleCookies = true });
+    /// <summary>A browser on <paramref name="origin"/> (the request's Host); the default test host matches no app and falls back to the storefront.</summary>
+    public HttpClient NewClient(string? origin = null) =>
+        Gateway.CreateClient(new WebApplicationFactoryClientOptions
+        {
+            AllowAutoRedirect = false,
+            HandleCookies = true,
+            BaseAddress = origin is null ? new Uri("http://localhost") : new Uri(origin),
+        });
 
     /// <summary>Plants a BFF session. <paramref name="expiresInSeconds"/> is what the cookie claims, independent of the token's own <c>exp</c>.</summary>
     public async Task SignInAsync(HttpClient client, string accessToken, string refreshToken, int expiresInSeconds = 900)
