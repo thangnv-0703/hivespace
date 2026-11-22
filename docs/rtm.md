@@ -24,13 +24,13 @@
 | FR-AUTH-017 | a user requests a password reset for an email address, send a reset link if an a… | Could | Active | P1-6 | UC-022 | ADR-0008 | FEAT-007 | _TBD_ |
 | FR-AUTH-018 | a user submits a new compliant password through a valid reset link, update the p… | Could | Active | P1-6 | UC-022 | ADR-0008 | FEAT-007 | _TBD_ |
 | FR-AUTH-019 | a password-reset link is expired, already used, or invalid, then reject it and o… | Could | Active | P1-6 | UC-022 | ADR-0008 | FEAT-007 | _TBD_ |
-| FR-AUTH-020 | a visitor completes Google sign-in with a verified Google email address that mat… | Must | Active | CR-1 | UC-025 | ADR-0008 | FEAT-004 | _TBD_ |
-| FR-AUTH-021 | a visitor completes Google sign-in with a verified Google email address that mat… | Must | Active | CR-1 | UC-025 | ADR-0008 | FEAT-004 | _TBD_ |
-| FR-AUTH-022 | Google reports the email as unverified, the user denies consent, or the Google r… | Must | Active | CR-1 | UC-025 | ADR-0008 | FEAT-004 | _TBD_ |
-| FR-AUTH-023 | Google is unavailable, then tell the user and keep email-and-password sign-in av… | Must | Active | CR-1 | UC-025 | ADR-0008 | FEAT-004 | _TBD_ |
+| FR-AUTH-020 | a visitor completes Google sign-in with a verified Google email address that mat… | Must | Active | CR-1 | UC-025 | ADR-0008, features/FEAT-004-google-sign-in/technical-design.md, features/FEAT-004-google-sign-in/ui-design.md | FEAT-004 | _TBD_ |
+| FR-AUTH-021 | a visitor completes Google sign-in with a verified Google email address that mat… | Must | Active | CR-1 | UC-025 | ADR-0008, features/FEAT-004-google-sign-in/technical-design.md, features/FEAT-004-google-sign-in/ui-design.md | FEAT-004 | _TBD_ |
+| FR-AUTH-022 | Google reports the email as unverified, the user denies consent, or the Google r… | Must | Active | CR-1 | UC-025 | ADR-0008, features/FEAT-004-google-sign-in/technical-design.md, features/FEAT-004-google-sign-in/ui-design.md | FEAT-004 | _TBD_ |
+| FR-AUTH-023 | Google is unavailable, then tell the user and keep email-and-password sign-in av… | Must | Active | CR-1 | UC-025 | ADR-0008, features/FEAT-004-google-sign-in/technical-design.md, features/FEAT-004-google-sign-in/ui-design.md | FEAT-004 | _TBD_ |
 | FR-AUTH-024 | a signed-in user submits the correct current password and a new password that sa… | Must | Active | CR-1 | UC-026 | ADR-0008, features/FEAT-003-change-password/technical-design.md, features/FEAT-003-change-password/ui-design.md | FEAT-003 | features/FEAT-003-change-password/acceptance-report.md |
 | FR-AUTH-025 | the current password submitted for a password change is incorrect, then reject t… | Must | Active | CR-1 | UC-026 | ADR-0008, features/FEAT-003-change-password/technical-design.md, features/FEAT-003-change-password/ui-design.md | FEAT-003 | features/FEAT-003-change-password/acceptance-report.md |
-| FR-AUTH-026 | an email-and-password sign-in is attempted for an account that has no password, … | Must | Active | CR-1 | UC-002 | ADR-0008 | FEAT-004 | _TBD_ |
+| FR-AUTH-026 | an email-and-password sign-in is attempted for an account that has no password, … | Must | Active | CR-1 | UC-002 | ADR-0008, features/FEAT-004-google-sign-in/technical-design.md | FEAT-004 | _TBD_ |
 | FR-AUTH-027 | a user whose account has no password signs in with Google and submits a password… | Should | Active | CR-1, Inferred | UC-026 | ADR-0008 | FEAT-005 | _TBD_ |
 | FR-AUTH-028 | a visitor requests a sign-in code for an email address that belongs to an account… | Should | Active | CR-7 | UC-029 | ADR-0008 | FEAT-006 | _TBD_ |
 | FR-AUTH-029 | a visitor requests a sign-in code, give the same response whether or not an acco… | Should | Active | CR-7 | UC-029 | ADR-0008 | FEAT-006 | _TBD_ |
@@ -196,7 +196,7 @@
 | FR-NOTIF-012 | record each email's status (queued, sent, failed) per recipient and event. | Should | Active | Inferred | UC-018 | ADR-0016 | FEAT-032 | _TBD_ |
 | FR-NOTIF-013 | a password reset is requested for an existing account, send the reset email thro… | Could | Active | P1-6 | UC-022 | ADR-0016 | FEAT-007 | _TBD_ |
 | FR-NOTIF-014 | a user's password is changed, send the user a password-changed security email. | Should | Active | CR-1, Inferred | UC-018, UC-026 | ADR-0016, features/FEAT-003-change-password/technical-design.md | FEAT-003 | features/FEAT-003-change-password/acceptance-report.md |
-| FR-NOTIF-015 | a Google identity is linked to an existing account, send the account owner a not… | Should | Active | CR-1, Inferred | UC-018, UC-025 | ADR-0016 | FEAT-004 | _TBD_ |
+| FR-NOTIF-015 | a Google identity is linked to an existing account, send the account owner a not… | Should | Active | CR-1, Inferred | UC-018, UC-025 | ADR-0016, features/FEAT-004-google-sign-in/technical-design.md | FEAT-004 | _TBD_ |
 | FR-NOTIF-016 | a sign-in code is issued, send the account's email address a sign-in code email … | Should | Active | CR-7 | UC-029 | ADR-0016 | FEAT-006 | _TBD_ |
 | FR-LAS-001 | a seller requests an AI draft with short input text (keywords, attributes), gene… | Could | Active | P1-2 | UC-023 | ADR-0014 | FEAT-016 | _TBD_ |
 | FR-LAS-002 | present the draft as editable text and shall not save it to the product until th… | Could | Active | P1-2 | UC-023 | _TBD_ | FEAT-016 | _TBD_ |
@@ -244,7 +244,7 @@
 | EIR-SW-003 | send email through an email-provider interface, through Resend for the demo and … | Must | Active | P0-14, CR-1 | — | ADR-0015 | FEAT-001, FEAT-032 | _TBD_ |
 | EIR-SW-004 | access payment through a payment-provider interface implemented by a mock provid… | Must | Active | P0-7, P1-5 | — | _TBD_ | FEAT-029 | _TBD_ |
 | EIR-SW-005 | obtain shipping fees and status through a shipping interface implemented by a mo… | Must | Active | P0-8 | — | _TBD_ | FEAT-022, FEAT-025 | _TBD_ |
-| EIR-SW-006 | authenticate Google sign-ins through Google's OpenID Connect interface. | Must | Active | CR-1 | UC-025 | ADR-0008 | FEAT-004 | _TBD_ |
+| EIR-SW-006 | authenticate Google sign-ins through Google's OpenID Connect interface. | Must | Active | CR-1 | UC-025 | ADR-0008, features/FEAT-004-google-sign-in/technical-design.md | FEAT-004 | _TBD_ |
 | EIR-SW-007 | store uploaded images through an object-storage interface (local volume or emula… | Must | Active | CR-1 | — | ADR-0011, ADR-0015 | FEAT-035 | _TBD_ |
 | EIR-COM-001 | Clients shall reach all backend capabilities through a single HTTPS API gateway. | Must | Active | P0-1 | — | ADR-0008, ADR-0019 | Foundations | _TBD_ |
 | EIR-COM-002 | accept inbound payment-provider callbacks over HTTPS and authenticate each by si… | Must | Active | P0-7 | — | _TBD_ | FEAT-029 | _TBD_ |
@@ -282,7 +282,7 @@
 | NFR-SEC-011 | neither store nor process payment card numbers. | Must | Active | P0-7 | UC-012 | _TBD_ | FEAT-029 | _TBD_ |
 | NFR-SEC-012 | CI shall fail on known high-severity vulnerabilities in dependencies. | Should | Active | Inferred | — | _TBD_ | Foundations | _TBD_ |
 | NFR-SEC-013 | Uploaded images shall be validated by file signature rather than extension, re-e… | Must | Active | CR-1 | UC-028 | ADR-0011 | FEAT-035 | _TBD_ |
-| NFR-SEC-014 | Google sign-in shall use the authorization-code flow with PKCE, verify state and… | Must | Active | CR-1 | UC-025 | ADR-0008 | FEAT-004 | _TBD_ |
+| NFR-SEC-014 | Google sign-in shall use the authorization-code flow with PKCE, verify state and… | Must | Active | CR-1 | UC-025 | ADR-0008, features/FEAT-004-google-sign-in/technical-design.md | FEAT-004 | _TBD_ |
 | NFR-SEC-015 | After a password change or reset, refresh tokens issued before the change shall … | Must | Active | CR-1 | UC-026 | ADR-0008, features/FEAT-003-change-password/technical-design.md | FEAT-003 | features/FEAT-003-change-password/acceptance-report.md |
 | NFR-SEC-016 | Sign-in codes shall be generated with a secure random generator, stored only as … | Must | Active | CR-7 | UC-029 | ADR-0008 | FEAT-006 | _TBD_ |
 | NFR-USE-001 | The hero flow (search, cart, split checkout, pay, track, review) shall be comple… | Must | Active | P0-13, §7 | — | _TBD_ | FEAT-037 | _TBD_ |
