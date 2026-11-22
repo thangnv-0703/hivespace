@@ -49,8 +49,8 @@ function changeLocale(value: string) {
 <template>
   <AppShell :menu-groups="menuGroups" :active-path="route.path" :link-as="RouterLink" :labels="labels">
     <template #actions>
-      <ThemeToggle :label="$t('common.toggleTheme')" />
       <LanguageSwitcher :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
+      <ThemeToggle :label="$t('common.toggleTheme')" />
       <a :href="`${storefrontOrigin}/`" class="hidden px-2 text-sm text-text-link hover:text-text-link-hover md:inline">{{ $t('nav.storefront') }}</a>
       <!-- STUB: account menu arrives with sign-in (FEAT-001). -->
       <span class="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-text-secondary">

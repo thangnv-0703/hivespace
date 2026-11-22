@@ -1,6 +1,7 @@
 <script setup lang="ts">
-// Storefront shell (design.md §3, ux-foundations B1): sticky header = 40 px top bar (seller centre, language, theme,
-// account) + 80 px row (logo, search, cart). Below md it collapses to a 56 px row; the top-bar items move into a panel.
+// Storefront shell (design.md §3, ux-foundations B1): sticky header = one 80 px row (logo, search, seller centre from lg,
+// language, theme, account, divider, cart) with the same 44 px controls as the seller centre. Below md it collapses to a
+// 56 px row; the header actions move into a panel.
 // Search and cart arrive with their slices (FEAT-018, FEAT-021); the account area is FEAT-001.
 import { BrandLogo, Input, LanguageSwitcher, ThemeToggle } from '@hivespace/ui'
 import { Menu, Search, ShoppingCart, X } from '@lucide/vue'
@@ -24,18 +25,6 @@ const iconButton =
 <template>
   <div class="min-h-screen bg-bg-canvas text-text-primary">
     <header class="sticky top-0 z-[var(--z-sticky)] border-b border-border-default bg-bg-surface">
-      <!-- Top bar (md and up). -->
-      <div class="hidden h-10 border-b border-border-default md:block">
-        <div class="mx-auto flex h-full max-w-[var(--size-container)] items-center justify-between px-6 text-sm">
-          <a :href="`${sellerOrigin}/`" class="text-text-secondary hover:text-text-primary">{{ $t('common.sellerCentre') }}</a>
-          <div class="flex items-center gap-5">
-            <LanguageSwitcher variant="plain" :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
-            <ThemeToggle compact :label="$t('common.toggleTheme')" />
-            <AccountMenu />
-          </div>
-        </div>
-      </div>
-
       <!-- Main row: 56 px below md, 80 px from md. -->
       <div class="mx-auto flex h-14 max-w-[var(--size-container)] items-center gap-3 px-4 md:h-20 md:gap-6 md:px-6">
         <RouterLink to="/" class="shrink-0 rounded focus-visible:outline-2 focus-visible:outline-focus-ring">
@@ -46,6 +35,14 @@ const iconButton =
           <Input type="search" :placeholder="$t('common.searchPlaceholder')" :aria-label="$t('common.search')" />
         </div>
         <div class="ml-auto flex items-center gap-1 md:ml-0">
+          <!-- Header actions (md and up); below md they live in the menu panel. -->
+          <div class="hidden items-center gap-2 md:flex">
+            <a :href="`${sellerOrigin}/`" class="hidden px-2 text-sm text-text-secondary hover:text-text-primary lg:inline">{{ $t('common.sellerCentre') }}</a>
+            <LanguageSwitcher :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
+            <ThemeToggle :label="$t('common.toggleTheme')" />
+            <AccountMenu />
+          </div>
+          <span class="mx-2 hidden h-6 w-px bg-border-default md:block" aria-hidden="true" />
           <button
             type="button"
             :class="[iconButton, 'md:hidden']"

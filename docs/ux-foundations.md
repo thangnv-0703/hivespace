@@ -80,7 +80,7 @@ A neutral gray palette with one indigo brand scale and four feedback hues; a sin
 
 #### Information architecture and navigation
 
-**Navigation model.** A sticky top header holds the logo, a prominent search field and a cart button with count. A top utility bar holds the seller-centre link, language, theme and account menu. Below `md`, the utility items move into a menu drawer and search becomes an expanding icon. Cart and checkout use a reduced header without search, to keep focus. Account pages use a left sub-nav (top tabs on mobile). Search is the primary way in, because the hero AI feature is search.
+**Navigation model.** A sticky top header holds the logo, a prominent search field and a cart button with count. The same header row holds the seller-centre link, language, theme and account menu, with the same controls as the seller centre header. Below `md`, the utility items move into a menu drawer and search becomes an expanding icon. Cart and checkout use a reduced header without search, to keep focus. Account pages use a left sub-nav (top tabs on mobile). Search is the primary way in, because the hero AI feature is search.
 
 ```mermaid
 graph TD

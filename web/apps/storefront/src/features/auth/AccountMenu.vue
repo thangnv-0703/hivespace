@@ -25,7 +25,7 @@ const items = computed(() => [
 </script>
 
 <template>
-  <div class="flex min-h-9 items-center gap-3" data-testid="account-area">
+  <div class="flex min-h-11 items-center gap-3" data-testid="account-area">
     <span v-if="session.status === 'unknown'" class="size-8 animate-pulse rounded-full bg-bg-subtle" aria-hidden="true" />
 
     <template v-else-if="session.status === 'anonymous'">

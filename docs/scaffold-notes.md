@@ -140,7 +140,7 @@ Reviewed the copied reference package and ported a presentational subset into `w
 | :-- | :-- |
 | Button, Input, Select, Spinner, Badge, Alert, Tabs, Pagination | Semantic role tokens instead of raw `gray`/`blue` utilities (dark mode comes from the tokens); Button variants per design.md §4.1 (no `success`/`warning`); labels and error text come in as props or slots; lucide icons |
 | AppShell, AppSidebar, AppHeader, `useSidebar` | No vue-router, auth or notification code: links render through a `linkAs` prop (RouterLink in the apps), labels come from the app's i18n; 290/90 px widths from the tokens; collapse, hover-expand, mobile drawer, Escape to close, skip link |
-| Language switcher, theme toggle | Globe icon + code (bordered or plain variant) with a flag menu; `rounded-lg` square icon button (aligned to the FEAT-001 mockups) |
+| Language switcher, theme toggle | Globe icon + code in one 44 px bordered form with a flag menu; `rounded-lg` square icon button (aligned to the FEAT-001 mockups) |
 
 Left out on purpose: `useAuth` (OIDC), `utils/api.ts` (axios), SignalR notifications, payments, user-profile, media-upload, charts, date pickers, Dropzone, Modal and DropdownMenu (a focus trap is required by design.md §5, so they are rebuilt with the first screen that needs them). Reasons: our API client is generated and imported only in `api.ts`; the SRS has no in-app notification centre; the reference targets pinia 3, vue-router 4, TypeScript 5.7 and Vite 6 (ours: 4, 5, 6, 8).
 
