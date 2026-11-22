@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
+using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
 using Identity.Infrastructure.Persistence;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         var services = builder.Services;
         services.AddScoped<IUserRepository, EfUserRepository>();
         services.AddScoped<IEventOutbox, EfEventOutbox>();
+        services.AddScoped<ISessionRevoker, OpenIddictSessionRevoker>();
         services.AddSingleton<IClock, SystemClock>();
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
         services.AddSingleton<IVerificationTokenGenerator, Sha256TokenGenerator>();
@@ -37,6 +39,7 @@ public static class DependencyInjection
         services.AddScoped<VerifyEmailHandler>();
         services.AddScoped<ResendVerificationEmailHandler>();
         services.AddScoped<SignInHandler>();
+        services.AddScoped<ChangeMyPasswordHandler>();
         services.AddScoped<GetMyProfileHandler>();
         services.AddScoped<UpdateMyProfileHandler>();
         services.AddScoped<UpdateMyLanguageHandler>();

@@ -19,7 +19,7 @@ The screen is owned by ui-design's output (SCR-STF-018 and the SCR-STF-016 Passw
       - `PasswordPolicy.Evaluate(password, field = "password")`.
       (design §5.2; AC-5)
       Done when: unit tests pass for the policy reporting `newPassword` (too short + needs digit together, letters only, 129 chars, valid). Unit tests also show that the stamp changes with `ChangePassword` and survives a microsecond round trip. Registration tests and Architecture tests stay green.
-- [ ] T3 — Identity application and infrastructure:
+- [x] T3 — Identity application and infrastructure:
       - `ChangeMyPasswordHandler` (no credential → `password_not_set`; all violations at once; nothing written on failure);
       - port `ISessionRevoker` and `OpenIddictSessionRevoker` (tracked status changes on the shared `IdentityDbContext`, keep the current authorization);
       - `PasswordChanged` enqueued in the same `SaveChangesAsync`.

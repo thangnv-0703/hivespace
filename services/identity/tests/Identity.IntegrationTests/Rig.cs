@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
+using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
 using Identity.Infrastructure.Persistence;
@@ -37,7 +38,10 @@ public sealed class Rig : IAsyncDisposable
         GetProfile = new GetMyProfileHandler(users);
         UpdateProfile = new UpdateMyProfileHandler(users, outbox, clock);
         UpdateLanguage = new UpdateMyLanguageHandler(users, outbox, clock);
+        ChangePassword = new ChangeMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, clock);
     }
+
+    public ChangeMyPasswordHandler ChangePassword { get; }
 
     public FakeClock Clock { get; }
 
