@@ -29,7 +29,7 @@ The screen is owned by ui-design's output (SCR-STF-018 and the SCR-STF-016 Passw
       - a wrong or empty current password, a policy breach, or both together each write nothing (hash, authorizations and outbox unchanged);
       - a credential-less user gets 409 semantics;
       - a null keep-id revokes all.
-- [ ] T4 — Identity API and session cookie:
+- [x] T4 — Identity API and session cookie:
       - `PUT /v1/me/password` in `MeEndpoints` (typed body, `oi_au_id` as the kept authorization, `hs.idp` reissued for the same user, 204);
       - `pwd_at` in `ToPrincipal` and at sign-in;
       - the stamp check in `/connect/authorize`;
