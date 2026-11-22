@@ -1,7 +1,6 @@
 using HiveSpace.BuildingBlocks.Errors;
 using Identity.Api.Endpoints;
 using Identity.Api.Oidc;
-using Microsoft.AspNetCore.Authorization;
 using OpenIddict.Validation.AspNetCore;
 using Identity.Infrastructure;
 using Identity.Infrastructure.Persistence;
@@ -32,7 +31,7 @@ builder.Services.AddAuthorizationBuilder()
     .AddPolicy(MeEndpoints.Policy, policy => policy
         .AddAuthenticationSchemes(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)
         .RequireAuthenticatedUser());
-builder.Services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiAuthorizationResultHandler>();
+builder.Services.AddApiErrors();
 builder.Services.AddIdentityOpenIddict(builder.Configuration);
 
 var app = builder.Build();

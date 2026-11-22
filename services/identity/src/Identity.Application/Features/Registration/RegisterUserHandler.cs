@@ -1,3 +1,4 @@
+using HiveSpace.BuildingBlocks.Abstractions;
 using Identity.Application.Abstractions;
 using Identity.Domain;
 
@@ -20,7 +21,7 @@ public sealed class RegisterUserHandler(
     IPasswordHasher hasher,
     IVerificationTokenGenerator tokens,
     IEventOutbox outbox,
-    IClock clock)
+    TimeProvider clock)
 {
     public const string UserRegisteredEvent = "UserRegistered";
 
@@ -42,7 +43,7 @@ public sealed class RegisterUserHandler(
         violations.AddRange(PasswordPolicy.Evaluate(command.Password));
         if (violations.Count > 0)
         {
-            return Result<Guid>.Fail("common.validation_failed", violations);
+            return Result<Guid>.Fail(ErrorCodes.ValidationFailed, violations);
         }
 
         if (await users.EmailExistsAsync(email!.Normalized, cancellationToken).ConfigureAwait(false))
@@ -50,7 +51,7 @@ public sealed class RegisterUserHandler(
             return Result<Guid>.Fail("identity.email_in_use");
         }
 
-        var now = clock.UtcNow;
+        var now = clock.GetUtcNow();
         var user = User.Register(email, name!, command.Language, now);
         var credential = Credential.Create(user.Id, hasher.Hash(command.Password!), now);
         var generated = tokens.Generate();

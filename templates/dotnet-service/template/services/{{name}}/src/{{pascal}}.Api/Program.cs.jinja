@@ -3,6 +3,7 @@ using HiveSpace.BuildingBlocks.Errors;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.AddServiceDefaults();
+builder.Services.AddApiErrors();
 
 var app = builder.Build();
 

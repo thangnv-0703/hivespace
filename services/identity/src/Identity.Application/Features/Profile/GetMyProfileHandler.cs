@@ -1,3 +1,4 @@
+using HiveSpace.BuildingBlocks.Abstractions;
 using Identity.Application.Abstractions;
 
 namespace Identity.Application.Features.Profile;
@@ -9,7 +10,7 @@ public sealed class GetMyProfileHandler(IUserRepository users)
     {
         var user = await users.FindByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         return user is null
-            ? Result<ProfileView>.Fail("common.unauthenticated")
+            ? Result<ProfileView>.Fail(ErrorCodes.Unauthenticated)
             : Result<ProfileView>.Ok(ProfileView.From(user));
     }
 }

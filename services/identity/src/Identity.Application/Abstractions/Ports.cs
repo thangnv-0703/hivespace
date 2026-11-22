@@ -2,36 +2,6 @@ using Identity.Domain;
 
 namespace Identity.Application.Abstractions;
 
-/// <summary>Why a handler refused: a stable error code and, for validation, every unmet rule.</summary>
-public sealed record Failure(string Code, IReadOnlyList<Violation>? Violations = null);
-
-/// <summary>The outcome of a handler: a value or a <see cref="Failure"/>. The Api maps failures to the error envelope.</summary>
-public sealed record Result<T>
-{
-    private Result()
-    {
-    }
-
-    public T? Value { get; private init; }
-
-    public Failure? Failure { get; private init; }
-
-    public bool IsSuccess => Failure is null;
-
-    public static Result<T> Ok(T value) => new() { Value = value };
-
-    public static Result<T> Fail(string code, IReadOnlyList<Violation>? violations = null) =>
-        new() { Failure = new Failure(code, violations) };
-}
-
-/// <summary>Marker value for handlers that return nothing.</summary>
-public readonly record struct Unit;
-
-public interface IClock
-{
-    DateTimeOffset UtcNow { get; }
-}
-
 public interface IPasswordHasher
 {
     /// <summary>An argon2id PHC string (D-3).</summary>
@@ -52,12 +22,6 @@ public interface IVerificationTokenGenerator
     GeneratedToken Generate();
 
     byte[] Hash(string token);
-}
-
-/// <summary>Queues an event in the caller's unit of work; it commits with <see cref="IUserRepository.SaveChangesAsync"/> (ADR-0002).</summary>
-public interface IEventOutbox
-{
-    void Enqueue<T>(string eventType, int version, string correlationId, T data);
 }
 
 /// <summary>Raised by <see cref="IUserRepository.SaveChangesAsync"/> when two registrations race for one normalized email.</summary>

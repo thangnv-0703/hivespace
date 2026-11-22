@@ -4,6 +4,7 @@ using Identity.Application.Features.Registration;
 using Identity.Infrastructure.Persistence;
 using Json.Schema;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Time.Testing;
 using Xunit;
 
 namespace Identity.IntegrationTests;
@@ -77,7 +78,7 @@ public sealed class ProfileFlowTests(PostgresFixture postgres) : IClassFixture<P
     [Fact]
     public async Task Ac3_every_violation_is_reported_together_and_nothing_is_saved()
     {
-        var clock = new FakeClock(new DateTimeOffset(2026, 11, 20, 3, 0, 0, TimeSpan.Zero)); // 10:00 in Vietnam
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 11, 20, 3, 0, 0, TimeSpan.Zero)); // 10:00 in Vietnam
         await using var rig = new Rig(postgres, clock);
         var (userId, _, _) = await rig.RegisterAsync();
 
@@ -111,7 +112,7 @@ public sealed class ProfileFlowTests(PostgresFixture postgres) : IClassFixture<P
     public async Task Today_for_the_date_rule_is_the_date_in_Vietnam()
     {
         // 18:00 UTC on 19 Nov is already 01:00 on 20 Nov in Vietnam, so 20 Nov is "today", not the future.
-        var clock = new FakeClock(new DateTimeOffset(2026, 11, 19, 18, 0, 0, TimeSpan.Zero));
+        var clock = new FakeTimeProvider(new DateTimeOffset(2026, 11, 19, 18, 0, 0, TimeSpan.Zero));
         await using var rig = new Rig(postgres, clock);
         var (userId, _, _) = await rig.RegisterAsync();
 

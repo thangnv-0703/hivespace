@@ -1,7 +1,9 @@
 using System.Diagnostics;
 using Azure.Messaging.ServiceBus;
+using HiveSpace.BuildingBlocks.Abstractions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
@@ -150,7 +152,10 @@ public static class MessagingExtensions
         return modelBuilder;
     }
 
-    /// <summary>Registers the Service Bus event bus and the outbox relay for <typeparamref name="TContext"/>.</summary>
+    /// <summary>
+    /// Registers the Service Bus event bus, the outbox relay for <typeparamref name="TContext"/> and
+    /// <see cref="IEventOutbox"/> writing into <typeparamref name="TContext"/>.
+    /// </summary>
     public static IHostApplicationBuilder AddEventBus<TContext>(
         this IHostApplicationBuilder builder,
         string connectionName,
@@ -161,7 +166,22 @@ public static class MessagingExtensions
         builder.Services.AddSingleton(options);
         builder.Services.AddSingleton<IEventBus, ServiceBusEventBus>();
         builder.Services.AddHostedService<OutboxRelay<TContext>>();
+        builder.Services.AddScoped<IEventOutbox, EfEventOutbox<TContext>>();
         builder.Services.AddOpenTelemetry().WithTracing(t => t.AddSource("HiveSpace.Outbox"));
         return builder;
+    }
+
+    /// <summary>
+    /// Opt-in: deletes sent outbox rows of <typeparamref name="TContext"/> older than <paramref name="retention"/>
+    /// (default <see cref="OutboxCleanupOptions.DefaultRetention"/>).
+    /// </summary>
+    public static IServiceCollection AddOutboxCleanup<TContext>(this IServiceCollection services, TimeSpan? retention = null)
+        where TContext : DbContext
+    {
+        services.TryAddSingleton(TimeProvider.System);
+        services.AddSingleton(new OutboxCleanupOptions(retention ?? OutboxCleanupOptions.DefaultRetention));
+        services.AddSingleton<OutboxCleanup<TContext>>();
+        services.AddHostedService(sp => sp.GetRequiredService<OutboxCleanup<TContext>>());
+        return services;
     }
 }

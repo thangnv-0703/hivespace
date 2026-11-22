@@ -26,12 +26,11 @@ public static class DependencyInjection
 
         var services = builder.Services;
         services.AddScoped<IUserRepository, EfUserRepository>();
-        services.AddScoped<IEventOutbox, EfEventOutbox>();
-        services.AddSingleton<IClock, SystemClock>();
+        services.AddSingleton(TimeProvider.System);
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
         services.AddSingleton<IVerificationTokenGenerator, Sha256TokenGenerator>();
-        services.AddSingleton<OutboxCleanup>();
-        services.AddHostedService(sp => sp.GetRequiredService<OutboxCleanup>());
+        // Sent rows still hold the verification token, so they are deleted after 24 hours (R-6, AC-8).
+        services.AddOutboxCleanup<IdentityDbContext>(TimeSpan.FromHours(24));
 
         services.AddScoped<RegisterUserHandler>();
         services.AddScoped<VerifyEmailHandler>();

@@ -559,6 +559,7 @@ Each ADR is a file in `docs/adr/`.
 | [0023](adr/0023-native-date-and-time-inputs.md) | Date and time fields use native inputs first | Accepted (review on trigger) |
 | [0024](adr/0024-port-ui-subset-from-reference.md) | Port a UI subset from the reference shared package instead of consuming it | Accepted |
 | [0027](adr/0027-seller-centre-own-host-and-oidc-client.md) | Seller centre on its own host, with its own OIDC client | Accepted |
+| [0028](adr/0028-shared-dotnet-building-blocks.md) | Shared .NET building blocks (Abstractions, Errors, Messaging) taken from Identity | Accepted |
 
 ## 10. Quality scenarios
 

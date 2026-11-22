@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using HiveSpace.BuildingBlocks.Abstractions;
 using HiveSpace.BuildingBlocks.Errors;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;

@@ -1,3 +1,4 @@
+using HiveSpace.BuildingBlocks.Abstractions;
 using Identity.Application.Abstractions;
 using Identity.Domain;
 
@@ -16,18 +17,18 @@ public sealed record UpdateMyProfileCommand(
     IReadOnlyList<string> UnknownKeys);
 
 /// <summary>FR-PROF-002, FR-PROF-003: validates every field at once, then saves; queues <c>UserProfileChanged</c> only for a display name change.</summary>
-public sealed class UpdateMyProfileHandler(IUserRepository users, IEventOutbox outbox, IClock clock)
+public sealed class UpdateMyProfileHandler(IUserRepository users, IEventOutbox outbox, TimeProvider clock)
 {
     public async Task<Result<ProfileView>> HandleAsync(UpdateMyProfileCommand command, CancellationToken cancellationToken)
     {
-        var now = clock.UtcNow;
+        var now = clock.GetUtcNow();
         var violations = new List<Violation>();
 
         foreach (var key in command.UnknownKeys)
         {
             violations.Add(key == "email"
                 ? new Violation("email", "identity.email_read_only")
-                : new Violation(key, "common.validation_failed"));
+                : new Violation(key, ErrorCodes.ValidationFailed));
         }
 
         var (name, nameViolation) = DisplayName.Create(command.DisplayName);
@@ -59,13 +60,13 @@ public sealed class UpdateMyProfileHandler(IUserRepository users, IEventOutbox o
 
         if (violations.Count > 0)
         {
-            return Result<ProfileView>.Fail("common.validation_failed", violations);
+            return Result<ProfileView>.Fail(ErrorCodes.ValidationFailed, violations);
         }
 
         var user = await users.FindByIdAsync(command.UserId, cancellationToken).ConfigureAwait(false);
         if (user is null)
         {
-            return Result<ProfileView>.Fail("common.unauthenticated");
+            return Result<ProfileView>.Fail(ErrorCodes.Unauthenticated);
         }
 
         var changed = user.UpdateProfile(name!, phone, gender, dateOfBirth, now);

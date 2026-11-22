@@ -1,3 +1,4 @@
+using HiveSpace.BuildingBlocks.Abstractions;
 using Identity.Domain;
 using Xunit;
 

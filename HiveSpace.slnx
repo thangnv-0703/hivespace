@@ -12,6 +12,8 @@
   </Folder>
   <Folder Name="/libs/" />
   <Folder Name="/libs/dotnet/">
+    <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Abstractions/HiveSpace.BuildingBlocks.Abstractions.csproj" />
+    <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Abstractions.Tests/HiveSpace.BuildingBlocks.Abstractions.Tests.csproj" />
     <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Errors/HiveSpace.BuildingBlocks.Errors.csproj" />
     <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Errors.Tests/HiveSpace.BuildingBlocks.Errors.Tests.csproj" />
     <Project Path="libs/dotnet/HiveSpace.BuildingBlocks.Messaging/HiveSpace.BuildingBlocks.Messaging.csproj" />

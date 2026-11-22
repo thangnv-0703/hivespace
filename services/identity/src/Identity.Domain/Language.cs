@@ -1,3 +1,5 @@
+using HiveSpace.BuildingBlocks.Abstractions;
+
 namespace Identity.Domain;
 
 /// <summary>The preferred language: <c>vi</c> or <c>en</c> (FR-PROF-006, FR-LOC-002).</summary>

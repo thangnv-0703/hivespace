@@ -1,4 +1,5 @@
 using System.Globalization;
+using HiveSpace.BuildingBlocks.Abstractions;
 
 namespace Identity.Domain;
 

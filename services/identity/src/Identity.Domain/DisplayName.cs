@@ -1,3 +1,5 @@
+using HiveSpace.BuildingBlocks.Abstractions;
+
 namespace Identity.Domain;
 
 /// <summary>The name shown on the account: trimmed, 1 to 80 characters (FR-AUTH-004, FR-PROF-003).</summary>

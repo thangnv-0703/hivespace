@@ -1,3 +1,4 @@
+using HiveSpace.BuildingBlocks.Abstractions;
 using HiveSpace.BuildingBlocks.Errors;
 using Microsoft.AspNetCore.Authentication;
 

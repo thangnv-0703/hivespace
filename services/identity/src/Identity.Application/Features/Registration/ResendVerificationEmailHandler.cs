@@ -1,3 +1,4 @@
+using HiveSpace.BuildingBlocks.Abstractions;
 using Identity.Application.Abstractions;
 using Identity.Domain;
 
@@ -11,7 +12,7 @@ public sealed class ResendVerificationEmailHandler(
     IUserRepository users,
     IVerificationTokenGenerator tokens,
     IEventOutbox outbox,
-    IClock clock)
+    TimeProvider clock)
 {
     public const string VerificationEmailRequestedEvent = "VerificationEmailRequested";
 
@@ -20,7 +21,7 @@ public sealed class ResendVerificationEmailHandler(
         var (email, violation) = Email.Create(emailAddress);
         if (violation is not null)
         {
-            return Result<Unit>.Fail("common.validation_failed", [violation]);
+            return Result<Unit>.Fail(ErrorCodes.ValidationFailed, [violation]);
         }
 
         var user = await users.FindByEmailAsync(email!.Normalized, cancellationToken).ConfigureAwait(false);
@@ -29,7 +30,7 @@ public sealed class ResendVerificationEmailHandler(
             return Result<Unit>.Ok(default);
         }
 
-        var now = clock.UtcNow;
+        var now = clock.GetUtcNow();
         foreach (var pending in await users.FindPendingTokensAsync(user.Id, cancellationToken).ConfigureAwait(false))
         {
             pending.Invalidate(now);

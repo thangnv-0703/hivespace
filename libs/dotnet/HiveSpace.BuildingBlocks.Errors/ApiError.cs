@@ -1,3 +1,5 @@
+using HiveSpace.BuildingBlocks.Abstractions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
@@ -11,17 +13,6 @@ public sealed record FieldError(string Field, string Code, string? Message = nul
 
 /// <summary>The error envelope every REST rejection uses: <c>{ code, message, details[] }</c> (dev-standards §5, FR-LOC-004).</summary>
 public sealed record ApiError(string Code, string Message, IReadOnlyList<FieldError>? Details = null);
-
-/// <summary>Stable error codes shared by all .NET services; the full list is <c>contracts/errors/error-codes.yaml</c>.</summary>
-public static class ErrorCodes
-{
-    public const string ValidationFailed = "common.validation_failed";
-    public const string Unauthenticated = "common.unauthenticated";
-    public const string Forbidden = "common.forbidden";
-    public const string NotFound = "common.not_found";
-    public const string Internal = "common.internal";
-    public const string DependencyUnavailable = "common.dependency_unavailable";
-}
 
 /// <summary>Picks the response language from <c>Accept-Language</c>: <c>vi</c> (default) or <c>en</c> (D-2).</summary>
 public static class LanguageResolver
@@ -89,5 +80,12 @@ public static class ErrorHandlingExtensions
             ApiErrorResponder.WriteAsync(context, context.Features.Get<IExceptionHandlerFeature>()?.Error)));
 
         return app;
+    }
+
+    /// <summary>Registers <see cref="ApiAuthorizationResultHandler"/>, so 401 and 403 from authorization use the error envelope too.</summary>
+    public static IServiceCollection AddApiErrors(this IServiceCollection services)
+    {
+        services.AddSingleton<IAuthorizationMiddlewareResultHandler, ApiAuthorizationResultHandler>();
+        return services;
     }
 }

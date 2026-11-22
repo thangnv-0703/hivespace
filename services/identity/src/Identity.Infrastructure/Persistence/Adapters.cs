@@ -53,15 +53,3 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
         }
     }
 }
-
-/// <summary>Adds the outbox row to the same <see cref="IdentityDbContext"/>, so it commits with the user (ADR-0002, AC-6).</summary>
-internal sealed class EfEventOutbox(IdentityDbContext db) : IEventOutbox
-{
-    public void Enqueue<T>(string eventType, int version, string correlationId, T data) =>
-        db.Set<OutboxMessage>().Add(OutboxMessage.From(EventEnvelope.Create(eventType, version, "identity", correlationId, data)));
-}
-
-internal sealed class SystemClock : IClock
-{
-    public DateTimeOffset UtcNow => DateTimeOffset.UtcNow;
-}
