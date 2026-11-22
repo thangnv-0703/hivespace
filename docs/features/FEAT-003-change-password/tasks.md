@@ -14,7 +14,7 @@ The screen is owned by ui-design's output (SCR-STF-018 and the SCR-STF-016 Passw
       - regenerate `web/packages/api-client`.
       (design §3.1, §3.3, §3.4; D-1; AC-10, AC-12)
       Done when: Spectral shows 0 errors (`hs-no-patch` included), the vi/en key-parity check passes, the client regenerates with no manual edits, and the new feature is discovered (red) by `tests/contract`.
-- [ ] T2 — Identity domain:
+- [x] T2 — Identity domain:
       - `Credential.ChangePassword(newHash, now)` and `Credential.Stamp` (Unix ms);
       - `PasswordPolicy.Evaluate(password, field = "password")`.
       (design §5.2; AC-5)
