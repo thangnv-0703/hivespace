@@ -344,6 +344,7 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
     [InlineData("GET", "/v1/me/profile")]
     [InlineData("PUT", "/v1/me/profile")]
     [InlineData("PUT", "/v1/me/profile/language")]
+    [InlineData("PUT", "/v1/me/password")]
     public async Task Ac9_the_profile_endpoints_without_a_session_are_401_at_the_gateway(string method, string path)
     {
         using var client = _host.NewClient();
@@ -371,13 +372,15 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
         Assert.Equal("alice", body.GetProperty("userId").GetString());
     }
 
-    [Fact]
-    public async Task A_profile_write_without_the_csrf_header_is_403()
+    [Theory]
+    [InlineData("/v1/me/profile")]
+    [InlineData("/v1/me/password")]
+    public async Task A_me_write_without_the_csrf_header_is_403(string path)
     {
         using var client = _host.NewClient();
         await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), UniqueRefresh());
 
-        var (status, body) = await SendAsync(client, new HttpRequestMessage(HttpMethod.Put, "/v1/me/profile") { Content = JsonContent.Create(new { }) });
+        var (status, body) = await SendAsync(client, new HttpRequestMessage(HttpMethod.Put, path) { Content = JsonContent.Create(new { }) });
 
         Assert.Equal(HttpStatusCode.Forbidden, status);
         Assert.Equal("common.forbidden", body.GetProperty("code").GetString());
