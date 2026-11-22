@@ -1,20 +1,23 @@
-"""Verification emails: one email_records row per (event, template), sent after commit (design 5.5)."""
+"""Transactional emails: one email_records row per (event, template), sent after commit (design 5.5)."""
 
 from __future__ import annotations
 
 import logging
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
 from jinja2 import Environment, FileSystemLoader, StrictUndefined, select_autoescape
 from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, Text, Uuid, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
+from notification.features.emails.events import PasswordChanged
 from notification.providers.email import EmailMessage, EmailSender
 
 log = logging.getLogger(__name__)
@@ -37,11 +40,54 @@ email_records = Table(
     Column("last_error", Text),
 )
 
-# Events that ask for a verification email.
-EMAIL_EVENTS = frozenset({"UserRegistered", "VerificationEmailRequested"})
-TEMPLATE = "verification"
 LANGUAGES = ("vi", "en")
-SUBJECTS = {"vi": "Xác minh email HiveSpace của bạn", "en": "Verify your HiveSpace email"}
+VERIFICATION = "verification"
+PASSWORD_CHANGED = "password_changed"  # noqa: S105 - a template name, not a credential
+VIETNAM = ZoneInfo("Asia/Ho_Chi_Minh")  # NFR-L10N-002: times are shown in Vietnam time
+
+
+@dataclass(frozen=True)
+class EmailKind:
+    """One email an event asks for: the template, its subjects and how its context comes from the payload."""
+
+    template: str
+    subjects: dict[str, str]
+    context: Callable[[dict[str, Any], str], dict[str, Any]]
+
+
+def _verification_context(data: dict[str, Any], public_base_url: str) -> dict[str, Any]:
+    link = f"{public_base_url.rstrip('/')}/verify-email?token={quote(data['verificationToken'], safe='')}"
+    return {"display_name": data["displayName"], "link": link}
+
+
+def _password_changed_context(data: dict[str, Any], _public_base_url: str) -> dict[str, Any]:
+    # Validated before any write (dispatch); no link and no token in this email.
+    event = PasswordChanged.model_validate(data)
+    return {
+        "display_name": event.display_name,
+        "changed_at": event.changed_at.astimezone(VIETNAM).strftime("%H:%M %d/%m/%Y"),
+    }
+
+
+# The template table, keyed by event type.
+KINDS: dict[str, EmailKind] = {
+    "UserRegistered": EmailKind(
+        VERIFICATION,
+        {"vi": "Xác minh email HiveSpace của bạn", "en": "Verify your HiveSpace email"},
+        _verification_context,
+    ),
+    "VerificationEmailRequested": EmailKind(
+        VERIFICATION,
+        {"vi": "Xác minh email HiveSpace của bạn", "en": "Verify your HiveSpace email"},
+        _verification_context,
+    ),
+    "PasswordChanged": EmailKind(
+        PASSWORD_CHANGED,
+        {"vi": "Mật khẩu HiveSpace của bạn đã được thay đổi", "en": "Your HiveSpace password was changed"},
+        _password_changed_context,
+    ),
+}
+EMAIL_EVENTS = frozenset(KINDS)
 
 _env = Environment(
     loader=FileSystemLoader(Path(__file__).parent / "templates"),
@@ -58,25 +104,30 @@ class Outgoing:
     message: EmailMessage
 
 
-def render(language: str, display_name: str, link: str) -> tuple[str, str, str]:
+def render_kind(kind: EmailKind, language: str, context: dict[str, Any]) -> tuple[str, str, str]:
     lang = language if language in LANGUAGES else "vi"
-    ctx = {"display_name": display_name, "link": link}
-    text = _env.get_template(f"{TEMPLATE}.{lang}.txt").render(**ctx)
-    html = _env.get_template(f"{TEMPLATE}.{lang}.html").render(**ctx)
-    return SUBJECTS[lang], text, html
+    text = _env.get_template(f"{kind.template}.{lang}.txt").render(**context)
+    html = _env.get_template(f"{kind.template}.{lang}.html").render(**context)
+    return kind.subjects[lang], text, html
+
+
+def render(language: str, display_name: str, link: str) -> tuple[str, str, str]:
+    """The verification email."""
+    return render_kind(KINDS["UserRegistered"], language, {"display_name": display_name, "link": link})
 
 
 async def prepare(
-    conn: AsyncConnection, event_id: str, data: dict[str, Any], public_base_url: str
+    conn: AsyncConnection, event_type: str, event_id: str, data: dict[str, Any], public_base_url: str
 ) -> Outgoing | None:
     """Insert the pending record in the caller's transaction. None if this (event, template) has one."""
+    kind = KINDS[event_type]
     record_id = uuid.uuid4()
     stmt = (
         insert(email_records)
         .values(
             id=record_id,
             event_id=uuid.UUID(event_id),
-            template=TEMPLATE,
+            template=kind.template,
             recipient_user_id=uuid.UUID(data["userId"]),
             recipient_email=data["email"],
             language=data["language"],
@@ -89,8 +140,8 @@ async def prepare(
     # RETURNING, not rowcount: a conflict-skipped insert reports -1 on this driver.
     if (await conn.execute(stmt.returning(email_records.c.id))).scalar_one_or_none() is None:
         return None
-    link = f"{public_base_url.rstrip('/')}/verify-email?token={quote(data['verificationToken'], safe='')}"
-    subject, text, html = render(data["language"], data["displayName"], link)
+    context = kind.context(data, public_base_url)
+    subject, text, html = render_kind(kind, data["language"], context)
     return Outgoing(record_id, EmailMessage(to=data["email"], subject=subject, text=text, html=html))
 
 
@@ -102,7 +153,7 @@ async def deliver(engine: AsyncEngine, sender: EmailSender, outgoing: Outgoing) 
     except Exception as exc:  # noqa: BLE001 - any send failure is recorded; retries are FEAT-032
         # The exception type only: SMTP error text can echo the message, which carries the token.
         error = type(exc).__name__
-        log.warning("verification email failed: %s", error, extra={"recordId": str(outgoing.record_id)})
+        log.warning("email failed: %s", error, extra={"recordId": str(outgoing.record_id)})
         values = {"status": "failed", "last_error": error}
     else:
         values = {"status": "sent", "sent_at": datetime.now(UTC)}

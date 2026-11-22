@@ -40,7 +40,7 @@ The screen is owned by ui-design's output (SCR-STF-018 and the SCR-STF-016 Passw
       - an old `hs.idp` is sent to `/signin` and the reissued one signs in silently (AC-7);
       - no token, a tampered token and a spoofed `X-User-Id` behave as in AC-9.
       A log-capture test shows neither password in the output.
-- [ ] T5 — Notification:
+- [x] T5 — Notification:
       - template table by event type in `features/emails/service.py`;
       - `password_changed.{vi,en}.{txt,html}`;
       - pydantic `PasswordChanged` model mirroring the schema, validated by the dispatcher before any write.
