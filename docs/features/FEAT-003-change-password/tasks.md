@@ -50,7 +50,7 @@ The screen is owned by ui-design's output (SCR-STF-018 and the SCR-STF-016 Passw
       - a duplicate delivery that sends once;
       - a schema-sync unit test;
       - the verification email tests unchanged and green.
-- [ ] T6 — UI integration (after ui-design):
+- [x] T6 — UI integration (after ui-design):
       - move `PasswordField` to `packages/ui` and the client password rules to `packages/core`, and update FEAT-001 imports and tests (D-6);
       - `features/profile` `changePassword` in `api.ts`;
       - `ChangePasswordPage.vue` at `/profile/password` (`requiresAuth`) and the entry points ui-design names;

@@ -43,6 +43,11 @@
     "toasts": {
       "saved": "Đã lưu hồ sơ",
       "languageFailed": "Chúng tôi không lưu được ngôn ngữ của bạn. Hiện chỉ áp dụng trên thiết bị này."
+    },
+    "password": {
+      "title": "Mật khẩu",
+      "body": "Đổi mật khẩu bạn dùng để đăng nhập. Các thiết bị khác sẽ bị đăng xuất.",
+      "action": "Đổi mật khẩu"
     }
   }
 }

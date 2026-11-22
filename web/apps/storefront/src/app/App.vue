@@ -14,6 +14,7 @@ const i18n = useI18n()
 // The profile feature gets the session through this port instead of importing the auth feature (features do not import each other).
 provide(profileSessionKey, {
   isSignedIn: () => session.status === 'authenticated',
+  email: () => session.user?.email ?? '',
   refresh: () => session.refresh(),
   markSignedOut: () => session.markSignedOut(),
 })

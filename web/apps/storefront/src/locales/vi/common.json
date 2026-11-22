@@ -11,7 +11,8 @@
     "search": "Tìm kiếm",
     "searchPlaceholder": "Tìm sản phẩm, cửa hàng...",
     "account": {
-      "profile": "Hồ sơ"
+      "profile": "Hồ sơ",
+      "changePassword": "Đổi mật khẩu"
     },
     "close": "Đóng"
   },

@@ -2,6 +2,7 @@
 import { Alert, Button, Card, Input, RadioGroup, Select, type SelectOption } from '@hivespace/ui'
 import { computed, nextTick, onMounted, reactive, ref, useId } from 'vue'
 import { useI18n } from 'vue-i18n'
+import { RouterLink } from 'vue-router'
 
 import { loadProfile, saveProfile, type Failure, type Profile } from './api'
 import { checkDate, EMPTY_DATE, formatPhone, joinDate, splitDate, type DateParts } from './dateOfBirth'
@@ -16,6 +17,7 @@ const session = useProfileSession()
 const language = useLanguagePreference()
 const headingId = useId()
 const languageHeadingId = useId()
+const passwordHeadingId = useId()
 const dateErrorId = useId()
 
 type Field = 'displayName' | 'phone' | 'gender' | 'dateOfBirth'
@@ -336,6 +338,18 @@ onMounted(load)
             :options="languageOptions"
             @update:model-value="language.change(String($event))"
           />
+        </Card>
+      </section>
+
+      <section :aria-labelledby="passwordHeadingId">
+        <Card>
+          <h2 :id="passwordHeadingId" class="text-lg font-semibold text-text-primary">{{ $t('profile.password.title') }}</h2>
+          <p class="mb-3 mt-1 text-sm text-text-muted">{{ $t('profile.password.body') }}</p>
+          <RouterLink v-slot="{ href, navigate }" to="/profile/password" custom>
+            <Button variant="secondary" size="md" :href="href" class="w-full sm:w-auto" @click.prevent="navigate">
+              {{ $t('profile.password.action') }}
+            </Button>
+          </RouterLink>
         </Card>
       </section>
     </div>

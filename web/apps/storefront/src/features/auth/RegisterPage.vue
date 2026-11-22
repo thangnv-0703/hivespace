@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Mail } from '@lucide/vue'
-import { Alert, Button, Input, PasswordRules } from '@hivespace/ui'
+import { passwordChecks, passwordRules } from '@hivespace/core'
+import { Alert, Button, Input, PasswordField, PasswordRules } from '@hivespace/ui'
 import { computed, nextTick, reactive, ref, type Ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -8,9 +9,8 @@ import { useRoute } from 'vue-router'
 import { register } from './api'
 import AuthPage from './AuthPage.vue'
 import { focusTitle } from './navigation'
-import PasswordField from './PasswordField.vue'
 import ResendControl from './ResendControl.vue'
-import { DISPLAY_NAME_MAX, EMAIL_PATTERN, fieldOf, passwordChecks, passwordRules, returnUrlOf } from './validation'
+import { DISPLAY_NAME_MAX, EMAIL_PATTERN, fieldOf, returnUrlOf } from './validation'
 
 // SCR-STF-013. One route, two views: the form, then "check your email" as soon as the API answers 201 (UC-001 4a).
 const { t } = useI18n()

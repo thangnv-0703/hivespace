@@ -11,7 +11,8 @@
     "search": "Search",
     "searchPlaceholder": "Search products, shops...",
     "account": {
-      "profile": "Profile"
+      "profile": "Profile",
+      "changePassword": "Change password"
     },
     "close": "Close"
   },

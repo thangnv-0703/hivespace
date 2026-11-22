@@ -58,7 +58,7 @@ const SESSION = { isAuthenticated: true, userId: PROFILE.userId, email: PROFILE.
 type FakeSession = ProfileSession & { refresh: Mock<() => Promise<void>>; markSignedOut: Mock<() => void> }
 
 function fakeSession(signedIn = true): FakeSession {
-  return { isSignedIn: () => signedIn, refresh: vi.fn<() => Promise<void>>(async () => undefined), markSignedOut: vi.fn<() => void>() }
+  return { isSignedIn: () => signedIn, email: () => PROFILE.email, refresh: vi.fn<() => Promise<void>>(async () => undefined), markSignedOut: vi.fn<() => void>() }
 }
 
 async function mountPage(session: ProfileSession, locale: 'vi' | 'en' = 'en') {
@@ -66,9 +66,10 @@ async function mountPage(session: ProfileSession, locale: 'vi' | 'en' = 'en') {
   document.documentElement.lang = locale
   toasts.value = []
   const i18n = createHiveI18n(messages)
+  const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/:pathMatch(.*)*', component: { template: '<div />' } }] })
   const wrapper = mount(
     { components: { ProfilePage, ProfileToasts }, template: '<div><ProfilePage /><ProfileToasts /></div>' },
-    { global: { plugins: [i18n], provide: { [profileSessionKey as symbol]: session } }, attachTo: document.body },
+    { global: { plugins: [i18n, router], provide: { [profileSessionKey as symbol]: session } }, attachTo: document.body },
   )
   await flushPromises()
   return { wrapper, i18n }
@@ -123,7 +124,8 @@ describe('ProfilePage (SCR-STF-016)', () => {
       )
     })
     localStorage.setItem('hs-locale', 'en')
-    const wrapper = mount(ProfilePage, { global: { plugins: [createHiveI18n(messages)], provide: { [profileSessionKey as symbol]: fakeSession() } } })
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/:pathMatch(.*)*', component: { template: '<div />' } }] })
+    const wrapper = mount(ProfilePage, { global: { plugins: [createHiveI18n(messages), router], provide: { [profileSessionKey as symbol]: fakeSession() } } })
 
     expect(wrapper.find('[data-testid="profile-loading"]').exists()).toBe(true)
     expect(wrapper.attributes('aria-busy')).toBe('true')
@@ -365,21 +367,22 @@ describe('session store and account menu', () => {
     expect(session.status).toBe('anonymous')
   })
 
-  it('shows Profile (to /profile) above Sign out in the account menu', async () => {
+  it('shows Profile (to /profile) and Change password (to /profile/password) above Sign out in the account menu', async () => {
     mockApi({ 'GET /bff/user': () => json(200, SESSION) })
     localStorage.setItem('hs-locale', 'en')
     const pinia = createPinia()
     setActivePinia(pinia)
     await useSessionStore().load()
-    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: { template: '<div />' } }, { path: '/profile', component: { template: '<div />' } }] })
+    const router = createRouter({ history: createMemoryHistory(), routes: [{ path: '/', component: { template: '<div />' } }, { path: '/profile', component: { template: '<div />' } }, { path: '/profile/password', component: { template: '<div />' } }] })
     await router.push('/')
     const wrapper = mount(AccountMenu, { global: { plugins: [router, createHiveI18n(messages), pinia] }, attachTo: document.body })
 
     await wrapper.get('button[aria-haspopup="menu"]').trigger('click')
 
     const rows = wrapper.findAll('[role="menuitem"]')
-    expect(rows.map((r) => r.text())).toEqual(['Profile', 'Sign out'])
+    expect(rows.map((r) => r.text())).toEqual(['Profile', 'Change password', 'Sign out'])
     expect(rows[0]!.attributes('href')).toBe('/profile')
+    expect(rows[1]!.attributes('href')).toBe('/profile/password')
     expect(wrapper.find('[role="separator"]').exists()).toBe(true)
   })
 })

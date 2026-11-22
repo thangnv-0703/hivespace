@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Alert, Button, Input, Spinner } from '@hivespace/ui'
+import { Alert, Button, Input, PasswordField, Spinner } from '@hivespace/ui'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute } from 'vue-router'
@@ -7,7 +7,6 @@ import { useRoute } from 'vue-router'
 import { signInWithPassword } from './api'
 import AuthPage from './AuthPage.vue'
 import { goTo } from './navigation'
-import PasswordField from './PasswordField.vue'
 import { EMAIL_PATTERN, fieldOf, returnUrlOf } from './validation'
 
 // SCR-STF-012. Reached from Identity's authorize redirect with ?returnUrl=/connect/authorize... (passed through unchanged).
