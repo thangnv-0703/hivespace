@@ -124,7 +124,11 @@ public sealed class RegistrationFlowTests(PostgresFixture postgres) : IClassFixt
         await db.SaveChangesAsync(Ct);
 
         var services = new ServiceCollection().AddScoped(_ => postgres.CreateContext()).BuildServiceProvider();
-        var cleanup = new OutboxCleanup(services.GetRequiredService<IServiceScopeFactory>(), NullLogger<OutboxCleanup>.Instance);
+        var cleanup = new OutboxCleanup<IdentityDbContext>(
+            services.GetRequiredService<IServiceScopeFactory>(),
+            new OutboxCleanupOptions(TimeSpan.FromHours(24)),
+            TimeProvider.System,
+            NullLogger<OutboxCleanup<IdentityDbContext>>.Instance);
         await cleanup.RunOnceAsync(DateTimeOffset.UtcNow, Ct);
 
         await using var after = postgres.CreateContext();
@@ -153,10 +157,10 @@ public sealed class RegistrationFlowTests(PostgresFixture postgres) : IClassFixt
         Assert.Equal("identity.verification_token_invalid", (await rig.Verify.HandleAsync("never-issued", Ct)).Failure?.Code);
 
         var (_, _, aged) = await rig.RegisterAsync();
-        clock.UtcNow = clock.UtcNow.AddHours(25);
+        clock.Advance(TimeSpan.FromHours(25));
         Assert.Equal("identity.verification_token_expired", (await rig.Verify.HandleAsync(aged, Ct)).Failure?.Code);
 
-        clock.UtcNow = DateTimeOffset.UtcNow;
+        clock.AdjustTime(DateTimeOffset.UtcNow);
         var (_, email, first) = await rig.RegisterAsync();
         await rig.Resend.HandleAsync(email, Ct);
         Assert.Equal("identity.verification_token_expired", (await rig.Verify.HandleAsync(first, Ct)).Failure?.Code);

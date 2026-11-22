@@ -1,3 +1,5 @@
+using HiveSpace.BuildingBlocks.Abstractions;
+
 namespace Identity.Domain;
 
 /// <summary>Password rules (FR-AUTH-003, NFR-SEC-003): 8 to 128 characters with a letter and a digit. Returns every unmet rule.</summary>

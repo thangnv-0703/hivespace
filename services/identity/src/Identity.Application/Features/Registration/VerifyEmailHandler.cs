@@ -1,10 +1,11 @@
+using HiveSpace.BuildingBlocks.Abstractions;
 using Identity.Application.Abstractions;
 using Identity.Domain;
 
 namespace Identity.Application.Features.Registration;
 
 /// <summary>FR-AUTH-005, FR-AUTH-006: looks the token up by its hash and verifies the email.</summary>
-public sealed class VerifyEmailHandler(IUserRepository users, IVerificationTokenGenerator tokens, IClock clock)
+public sealed class VerifyEmailHandler(IUserRepository users, IVerificationTokenGenerator tokens, TimeProvider clock)
 {
     public async Task<Result<Unit>> HandleAsync(string? presentedToken, CancellationToken cancellationToken)
     {
@@ -19,7 +20,7 @@ public sealed class VerifyEmailHandler(IUserRepository users, IVerificationToken
             return Result<Unit>.Fail("identity.verification_token_invalid");
         }
 
-        var now = clock.UtcNow;
+        var now = clock.GetUtcNow();
         switch (token.Check(now))
         {
             case TokenCheck.AlreadyUsed:

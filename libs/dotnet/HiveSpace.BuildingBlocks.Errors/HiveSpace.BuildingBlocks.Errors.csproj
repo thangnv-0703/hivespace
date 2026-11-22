@@ -1,6 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HiveSpace.BuildingBlocks.Abstractions\HiveSpace.BuildingBlocks.Abstractions.csproj" />
   </ItemGroup>
   <!-- contracts/errors is the source of truth for codes, statuses and vi/en messages (FR-LOC-004); embedded so every service ships it. -->
   <ItemGroup>

@@ -1,3 +1,5 @@
+using HiveSpace.BuildingBlocks.Abstractions;
+
 namespace Identity.Domain;
 
 /// <summary>The optional gender choice of a profile (FR-PROF-002): four fixed values.</summary>

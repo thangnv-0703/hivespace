@@ -10,6 +10,7 @@
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="JsonSchema.Net" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Identity.Api\Identity.Api.csproj" />

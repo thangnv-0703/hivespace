@@ -25,7 +25,7 @@
 │  └─ image-processor/           .NET isolated Azure Function (section 7)
 ├─ web/                          pnpm + turbo workspace (section 8)
 ├─ libs/                         cross-cutting code per stack; no service domain concepts
-│  ├─ dotnet/                    HiveSpace.BuildingBlocks.{Messaging,Money,Errors,Grpc,Idempotency,Testing}
+│  ├─ dotnet/                    HiveSpace.BuildingBlocks.{Abstractions,Messaging,Money,Errors,Grpc,Idempotency,Testing}
 │  ├─ go/                        one module: money, eventbus, outbox, inbox, grpcx, errorsx, otelx, testkit, gen/
 │  └─ python/                    hivespace_common (money, eventbus, outbox, inbox, errors, otel),
 │                                hivespace_contracts (generated stubs)
@@ -223,6 +223,7 @@ apphost/
 
 | Library | Contents | Not allowed |
 | :-- | :-- | :-- |
+| `libs/dotnet/HiveSpace.BuildingBlocks.Abstractions` | `Result<T>`, `Failure`, `Violation`, `Unit`, `ErrorCodes`, `IEventOutbox`; Domain and Application layers may reference it (ADR-0028) | Any package or framework reference (`Microsoft.*`, EF, Azure, Grpc); enforced by its NetArchTest rule |
 | `libs/dotnet/HiveSpace.BuildingBlocks.*` | Money, error envelope and `ErrorInfo` mapping, `IEventBus`, outbox relay, inbox, idempotency key store, gRPC interceptors (deadline, auth metadata), test fixtures | Any type named after a service concept (Order, Product, Cart) |
 | `libs/go` | Same concepts in Go, plus `gen/` | Same |
 | `libs/python` | Same concepts in Python, plus generated stubs | Same |
