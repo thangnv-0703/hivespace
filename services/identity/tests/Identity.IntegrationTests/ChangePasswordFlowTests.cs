@@ -21,7 +21,7 @@ public sealed class ChangePasswordFlowTests(PostgresFixture postgres) : IClassFi
         await using var rig = new Rig(postgres, Rig.NewClock());
         var (userId, email, _) = await rig.RegisterAsync();
         var before = await CredentialAsync(userId);
-        rig.Clock.UtcNow = rig.Clock.UtcNow.AddMinutes(5);
+        rig.Clock.Advance(TimeSpan.FromMinutes(5));
 
         var result = await rig.ChangePassword.HandleAsync(new ChangeMyPasswordCommand(userId, null, "hello1234", "world5678"), Ct);
 

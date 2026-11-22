@@ -1,3 +1,4 @@
+using HiveSpace.BuildingBlocks.Abstractions;
 using Identity.Application.Abstractions;
 using Identity.Domain;
 
@@ -17,7 +18,7 @@ public sealed class ChangeMyPasswordHandler(
     IPasswordHasher hasher,
     ISessionRevoker sessions,
     IEventOutbox outbox,
-    IClock clock)
+    TimeProvider clock)
 {
     public const string PasswordChangedEvent = "PasswordChanged";
 
@@ -51,7 +52,7 @@ public sealed class ChangeMyPasswordHandler(
             return Result<long>.Fail("common.validation_failed", violations);
         }
 
-        var now = clock.UtcNow;
+        var now = clock.GetUtcNow();
         credential.ChangePassword(hasher.Hash(command.NewPassword!), now);
         await sessions.RevokeOtherSessionsAsync(user.Id, command.CurrentAuthorizationId, cancellationToken).ConfigureAwait(false);
         outbox.Enqueue(

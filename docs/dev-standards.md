@@ -29,7 +29,9 @@ services/
 functions/      image-processor (.NET isolated Azure Function)
 web/
   apps/storefront/  apps/seller-centre/  packages/       (Vue 3 + TypeScript, pnpm + turbo workspace)
-libs/           cross-cutting code per stack (dotnet/, go/, python/); no service domain concepts
+libs/           cross-cutting code per stack (dotnet/, go/, python/); no service domain concepts.
+                .NET: HiveSpace.BuildingBlocks.Abstractions (Result, Violation, ErrorCodes, IEventOutbox) has no
+                framework reference, so Domain and Application may use it; Errors and Messaging build on it (ADR-0028)
 templates/      Copier templates per stack (ADR-0020)
 tests/          e2e/ (Playwright) and system/ (cross-service risk tests)
 contracts/

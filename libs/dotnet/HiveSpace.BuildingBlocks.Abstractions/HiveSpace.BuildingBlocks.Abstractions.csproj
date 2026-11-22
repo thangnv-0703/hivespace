@@ -1,0 +1,3 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Contracts only: no package or framework references, so Domain and Application layers can use it (ADR-0028). -->
+</Project>

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using System.Text.Json;
+using HiveSpace.BuildingBlocks.Abstractions;
 using HiveSpace.BuildingBlocks.Errors;
 using Identity.Application.Abstractions;
 using Identity.Application.Features.Password;
@@ -28,12 +29,12 @@ public static class MeEndpoints
         var me = app.MapGroup("/v1/me").RequireAuthorization(Policy);
 
         me.MapGet("/profile", async (ClaimsPrincipal user, GetMyProfileHandler handler, CancellationToken ct) =>
-                Results.Ok((await handler.HandleAsync(UserId(user), ct)).OrThrow()))
+                Results.Ok((await handler.HandleAsync(user.GetUserId(), ct)).OrThrow()))
             .WithName("getMyProfile");
 
         me.MapPut("/profile", async (ClaimsPrincipal user, JsonElement body, UpdateMyProfileHandler handler, CancellationToken ct) =>
             {
-                var command = ToCommand(UserId(user), body);
+                var command = ToCommand(user.GetUserId(), body);
                 return Results.Ok((await handler.HandleAsync(command, ct)).OrThrow());
             })
             .WithName("updateMyProfile");
@@ -43,7 +44,7 @@ public static class MeEndpoints
                 var language = body.ValueKind == JsonValueKind.Object && body.TryGetProperty("language", out var value) && value.ValueKind == JsonValueKind.String
                     ? value.GetString()
                     : null;
-                var saved = (await handler.HandleAsync(new UpdateMyLanguageCommand(UserId(user), language), ct)).OrThrow();
+                var saved = (await handler.HandleAsync(new UpdateMyLanguageCommand(user.GetUserId(), language), ct)).OrThrow();
                 return Results.Ok(new { language = saved });
             })
             .WithName("updateMyLanguage");
@@ -56,7 +57,7 @@ public static class MeEndpoints
                 IUserRepository users,
                 CancellationToken ct) =>
             {
-                var userId = UserId(user);
+                var userId = user.GetUserId();
                 var command = new ChangeMyPasswordCommand(userId, user.FindFirstValue("oi_au_id"), body.CurrentPassword, body.NewPassword);
                 var stamp = (await handler.HandleAsync(command, ct)).OrThrow();
 
@@ -74,9 +75,6 @@ public static class MeEndpoints
 
         return app;
     }
-
-    private static Guid UserId(ClaimsPrincipal user) =>
-        Guid.TryParse(user.FindFirstValue("sub"), out var id) ? id : throw new ApiException(ErrorCodes.Unauthenticated);
 
     /// <summary>
     /// Reads the body as a <see cref="JsonElement"/> so an unknown key (notably <c>email</c>) becomes a field error instead of being
@@ -113,31 +111,5 @@ public static class MeEndpoints
         }
 
         return new UpdateMyProfileCommand(userId, Read("displayName"), Read("phone"), Read("gender"), Read("dateOfBirth"), invalid);
-    }
-}
-
-/// <summary>Writes the standard error envelope for 401 and 403 from authorization, in the request language (FR-LOC-004).</summary>
-internal sealed class ApiAuthorizationResultHandler : Microsoft.AspNetCore.Authorization.IAuthorizationMiddlewareResultHandler
-{
-    private readonly Microsoft.AspNetCore.Authorization.Policy.AuthorizationMiddlewareResultHandler _default = new();
-
-    public Task HandleAsync(
-        RequestDelegate next,
-        HttpContext context,
-        AuthorizationPolicy policy,
-        Microsoft.AspNetCore.Authorization.Policy.PolicyAuthorizationResult authorizeResult)
-    {
-        if (authorizeResult.Challenged)
-        {
-            context.Response.Headers.WWWAuthenticate = "Bearer";
-            return ApiErrorResponder.WriteAsync(context, new ApiException(ErrorCodes.Unauthenticated));
-        }
-
-        if (authorizeResult.Forbidden)
-        {
-            return ApiErrorResponder.WriteAsync(context, new ApiException(ErrorCodes.Forbidden));
-        }
-
-        return _default.HandleAsync(next, context, policy, authorizeResult);
     }
 }

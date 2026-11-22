@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using HiveSpace.BuildingBlocks.Abstractions;
 
 namespace Identity.Domain;
 

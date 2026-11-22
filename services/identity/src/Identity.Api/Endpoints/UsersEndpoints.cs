@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using HiveSpace.BuildingBlocks.Errors;
-using Identity.Application.Abstractions;
 using Identity.Application.Features.Registration;
 using Identity.Domain;
 using Microsoft.AspNetCore.Authentication;
@@ -78,11 +77,4 @@ public static class UsersEndpoints
         claims.AddRange(user.Roles.Select(r => new Claim("role", r.Role.ToString())));
         return new ClaimsPrincipal(new ClaimsIdentity(claims, CookieScheme, "name", "role"));
     }
-
-    internal static T OrThrow<T>(this Result<T> result) =>
-        result.IsSuccess
-            ? result.Value!
-            : throw new ApiException(
-                result.Failure!.Code,
-                result.Failure.Violations?.Select(v => new FieldError(v.Field, v.Code)).ToList());
 }

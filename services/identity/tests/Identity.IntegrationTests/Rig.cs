@@ -1,19 +1,14 @@
 using HiveSpace.BuildingBlocks.Messaging;
-using Identity.Application.Abstractions;
 using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Time.Testing;
 using Xunit;
 
 namespace Identity.IntegrationTests;
-
-public sealed class FakeClock(DateTimeOffset start) : IClock
-{
-    public DateTimeOffset UtcNow { get; set; } = start;
-}
 
 /// <summary>The handlers wired to real adapters over one fresh DbContext, like one request scope.</summary>
 public sealed class Rig : IAsyncDisposable
@@ -24,13 +19,13 @@ public sealed class Rig : IAsyncDisposable
     private readonly PostgresFixture _postgres;
     private readonly IdentityDbContext _db;
 
-    public Rig(PostgresFixture postgres, FakeClock clock)
+    public Rig(PostgresFixture postgres, FakeTimeProvider clock)
     {
         _postgres = postgres;
         _db = postgres.CreateContext();
         Clock = clock;
         var users = new EfUserRepository(_db);
-        var outbox = new EfEventOutbox(_db);
+        var outbox = new EfEventOutbox<IdentityDbContext>(_db, new MessagingOptions("hivespace-events", "identity"));
         Register = new RegisterUserHandler(users, Hasher, Tokens, outbox, clock);
         Verify = new VerifyEmailHandler(users, Tokens, clock);
         Resend = new ResendVerificationEmailHandler(users, Tokens, outbox, clock);
@@ -43,7 +38,7 @@ public sealed class Rig : IAsyncDisposable
 
     public ChangeMyPasswordHandler ChangePassword { get; }
 
-    public FakeClock Clock { get; }
+    public FakeTimeProvider Clock { get; }
 
     public RegisterUserHandler Register { get; }
 
@@ -61,7 +56,7 @@ public sealed class Rig : IAsyncDisposable
 
     public static string NewEmail() => $"{Guid.NewGuid():N}@example.com";
 
-    public static FakeClock NewClock() => new(DateTimeOffset.UtcNow);
+    public static FakeTimeProvider NewClock() => new(DateTimeOffset.UtcNow);
 
     /// <summary>Registers a user and returns its id plus the token that went into the outbox event.</summary>
     public async Task<(Guid UserId, string Email, string Token)> RegisterAsync(string? email = null, string password = "hello1234")

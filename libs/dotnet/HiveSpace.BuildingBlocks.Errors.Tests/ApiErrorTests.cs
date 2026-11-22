@@ -1,4 +1,5 @@
 using System.Text.Json;
+using HiveSpace.BuildingBlocks.Abstractions;
 using HiveSpace.BuildingBlocks.Errors;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;

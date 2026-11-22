@@ -1,3 +1,5 @@
+using HiveSpace.BuildingBlocks.Abstractions;
+
 namespace HiveSpace.BuildingBlocks.Errors;
 
 /// <summary>
