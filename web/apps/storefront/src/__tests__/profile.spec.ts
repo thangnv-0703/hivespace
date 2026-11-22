@@ -72,7 +72,7 @@ async function mountPage(session: ProfileSession, locale: 'vi' | 'en' = 'en') {
     { global: { plugins: [i18n, router], provide: { [profileSessionKey as symbol]: session } }, attachTo: document.body },
   )
   await flushPromises()
-  return { wrapper, i18n }
+  return { wrapper, i18n, router }
 }
 
 const calledWith = (method: string, path: string) => calls.filter((c) => c.method === method && c.path === path)
@@ -94,6 +94,15 @@ describe('copy', () => {
 describe('ProfilePage (SCR-STF-016)', () => {
   beforeEach(() => {
     mockApi({ 'GET /v1/me/profile': () => json(200, PROFILE) })
+  })
+
+  it('goes to the change password page when the Password card button is clicked', async () => {
+    const { wrapper, router } = await mountPage(fakeSession())
+
+    await wrapper.get('a[href="/profile/password"]').trigger('click')
+    await flushPromises()
+
+    expect(router.currentRoute.value.fullPath).toBe('/profile/password')
   })
 
   it('shows the profile: read-only email, name, phone read as +84 912 345 678, gender and the date split in three', async () => {

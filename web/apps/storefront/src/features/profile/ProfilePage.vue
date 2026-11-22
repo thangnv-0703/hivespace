@@ -346,7 +346,7 @@ onMounted(load)
           <h2 :id="passwordHeadingId" class="text-lg font-semibold text-text-primary">{{ $t('profile.password.title') }}</h2>
           <p class="mb-3 mt-1 text-sm text-text-muted">{{ $t('profile.password.body') }}</p>
           <RouterLink v-slot="{ href, navigate }" to="/profile/password" custom>
-            <Button variant="secondary" size="md" :href="href" class="w-full sm:w-auto" @click.prevent="navigate">
+            <Button variant="secondary" size="md" :href="href" class="w-full sm:w-auto" @click="navigate">
               {{ $t('profile.password.action') }}
             </Button>
           </RouterLink>
