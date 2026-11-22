@@ -2,10 +2,15 @@ using System.Security.Claims;
 using System.Text.Json;
 using HiveSpace.BuildingBlocks.Abstractions;
 using HiveSpace.BuildingBlocks.Errors;
+using Identity.Application.Abstractions;
+using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Identity.Api.Endpoints;
+
+public sealed record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
 
 /// <summary>
 /// The signed-in user's own profile (<c>contracts/openapi/identity.yaml</c>, technical-design §3.1). The user is always the
@@ -43,6 +48,30 @@ public static class MeEndpoints
                 return Results.Ok(new { language = saved });
             })
             .WithName("updateMyLanguage");
+
+        me.MapPut("/password", async (
+                HttpContext http,
+                ClaimsPrincipal user,
+                ChangePasswordRequest body,
+                ChangeMyPasswordHandler handler,
+                IUserRepository users,
+                CancellationToken ct) =>
+            {
+                var userId = user.GetUserId();
+                var command = new ChangeMyPasswordCommand(userId, user.FindFirstValue("oi_au_id"), body.CurrentPassword, body.NewPassword);
+                var stamp = (await handler.HandleAsync(command, ct)).OrThrow();
+
+                // Keep this browser signed in: reissue hs.idp for the same user with the new stamp (D-4).
+                var session = await http.AuthenticateAsync(UsersEndpoints.CookieScheme);
+                if (session.Succeeded && session.Principal?.FindFirstValue("sub") == userId.ToString()
+                    && await users.FindByIdAsync(userId, ct) is { } current)
+                {
+                    await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(current, stamp));
+                }
+
+                return Results.NoContent();
+            })
+            .WithName("changeMyPassword");
 
         return app;
     }

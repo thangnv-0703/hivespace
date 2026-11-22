@@ -1,0 +1,699 @@
+{
+ "meta": {
+  "title": "FEAT-003 · Change password",
+  "subtitle": "Design solution from <code>technical-design.md</code>: the components this slice changes, the contract on every arrow, and the decisions behind them. Pick a flow to follow one use-case path; click any arrow for its data contract.",
+  "description": "A signed-in user submits the current and a new password on the storefront. The gateway relays PUT /v1/me/password to Identity with the bearer token. Identity checks the current password and the policy, then in one transaction stores the new argon2id hash, revokes every OpenIddict authorization of the user except the current one, and writes PasswordChanged to the outbox. It reissues the hs.idp cookie with the new password stamp. The SPA then forces a session refresh, which spends the pre-change refresh token. Other sessions fail their next refresh and their old hs.idp cookie no longer signs them in. Notification sends the password-changed email.",
+  "viewBox": [
+   1250,
+   680
+  ],
+  "links": [
+   {
+    "href": "technical-design.md",
+    "label": "technical-design.md"
+   },
+   {
+    "href": "../FEAT-002-profile-and-language/design-flow.html",
+    "label": "FEAT-002 flow"
+   },
+   {
+    "href": "../../architecture-flow.html",
+    "label": "Architecture"
+   }
+  ],
+  "kindLabels": {
+   "security": "Gateway / BFF",
+   "backend": "Event bus",
+   "database": "Store"
+  },
+  "edgeLabels": {
+   "dashed": "Event",
+   "security": "Auth / tokens"
+  },
+  "overview": [
+   [
+    "Implements",
+    "FR-AUTH-024, FR-AUTH-025, FR-AUTH-003 p, FR-NOTIF-014, NFR-SEC-015"
+   ],
+   [
+    "Realizes",
+    "UC-026 (main, 2a, 2b; 1a is FEAT-005)"
+   ],
+   [
+    "Screens",
+    "SCR-STF-018"
+   ],
+   [
+    "Builds",
+    "PUT /v1/me/password, event PasswordChanged, hs.idp pwd_at stamp"
+   ],
+   [
+    "Schema",
+    "none (credentials.updated_at, OpenIddict Status columns)"
+   ],
+   [
+    "Depends on",
+    "FEAT-001, FEAT-002"
+   ]
+  ],
+  "footnote": "Source: <code>docs/features/FEAT-003-change-password/technical-design.md</code> (§3 contracts, §5 components, §7 decisions, §8 open items). Generated with html-flow-diagram; edit <code>design-flow.model.json</code> and rebuild."
+ },
+ "frames": [
+  {
+   "x": 740,
+   "y": 90,
+   "w": 470,
+   "h": 230,
+   "label": "Identity service",
+   "style": "frame",
+   "tone": "service",
+   "labelPos": "bottom",
+   "labelX": 1080
+  },
+  {
+   "x": 740,
+   "y": 360,
+   "w": 470,
+   "h": 210,
+   "label": "Async security email",
+   "style": "frame",
+   "tone": "backend",
+   "labelPos": "bottom",
+   "labelX": 760
+  }
+ ],
+ "nodes": [
+  {
+   "id": "browser",
+   "kind": "external",
+   "x": 20,
+   "y": 120,
+   "w": 150,
+   "h": 50,
+   "label": "Browser A",
+   "sub": "current session",
+   "desc": "The signed-in user changing the password. Holds the encrypted <code>hs.bff</code> cookie and the Identity <code>hs.idp</code> cookie; never a token."
+  },
+  {
+   "id": "other",
+   "kind": "external",
+   "x": 20,
+   "y": 420,
+   "w": 150,
+   "h": 50,
+   "label": "Session B",
+   "sub": "other browser · seller",
+   "desc": "Any other authorization of the same user: another browser, or the seller centre in the same browser (its own OIDC client, ADR-0027). Signed out after the change."
+  },
+  {
+   "id": "spa",
+   "kind": "frontend",
+   "x": 220,
+   "y": 110,
+   "w": 180,
+   "h": 56,
+   "label": "Storefront SPA",
+   "sub": "/profile/password",
+   "desc": "<code>features/profile/ChangePasswordPage.vue</code> (SCR-STF-018), <code>api.ts</code> <code>changePassword</code>. After 204: <code>ProfileSession.refresh()</code>, clear form, toast. 401 → <code>markSignedOut()</code>; 409 shows the message. Button disabled while in flight. <code>PasswordField</code> and rules move to <code>packages/</code> (D-6)."
+  },
+  {
+   "id": "gw",
+   "kind": "security",
+   "x": 480,
+   "y": 110,
+   "w": 200,
+   "h": 380,
+   "label": "Gateway + BFF",
+   "sub": "route me · CSRF",
+   "sub2": "no change",
+   "desc": "Existing route <code>/v1/me/{**rest}</code> → identity (<code>authenticated</code>), CSRF <code>X-HS-CSRF: 1</code>, <code>POST /bff/session/refresh</code> (FEAT-002). Strips only <code>hs.bff*</code>, so <code>hs.idp</code> reaches Identity. A failed refresh clears the session cookie."
+  },
+  {
+   "id": "identity",
+   "kind": "service",
+   "x": 760,
+   "y": 110,
+   "w": 200,
+   "h": 190,
+   "label": "Identity",
+   "sub": "ChangeMyPassword",
+   "sub2": "/connect/authorize stamp",
+   "desc": "<code>PUT /v1/me/password</code> in <code>MeEndpoints</code> (bearer, policy <code>me</code>). <code>ChangeMyPasswordHandler</code> collects every violation, then hashes, calls <code>ISessionRevoker</code> keeping <code>oi_au_id</code>, enqueues <code>PasswordChanged</code>, one <code>SaveChangesAsync</code>. Reissues <code>hs.idp</code> with <code>pwd_at</code>. <code>/connect/authorize</code> rejects a stale stamp."
+  },
+  {
+   "id": "idb",
+   "kind": "database",
+   "x": 1040,
+   "y": 110,
+   "w": 160,
+   "h": 70,
+   "label": "identitydb",
+   "sub": "credentials · outbox",
+   "sub2": "OpenIddict tables",
+   "desc": "No migration. <code>credentials.password_hash</code> and <code>updated_at</code> (the stamp); <code>OpenIddictAuthorizations</code> / <code>OpenIddictTokens</code> <code>Status</code> set to <code>revoked</code>; <code>outbox</code> row."
+  },
+  {
+   "id": "bus",
+   "kind": "backend",
+   "x": 760,
+   "y": 380,
+   "w": 200,
+   "h": 50,
+   "label": "Service Bus",
+   "sub": "topic hivespace-events",
+   "sigil": "service",
+   "desc": "Outbox relay, at least once. Notification's subscription dispatches by <code>eventType</code>."
+  },
+  {
+   "id": "notif",
+   "kind": "service",
+   "x": 1040,
+   "y": 380,
+   "w": 160,
+   "h": 56,
+   "label": "Notification",
+   "sub": "emails · inbox",
+   "desc": "<code>features/emails</code> becomes a table keyed by event type; <code>PasswordChanged</code> → template <code>password_changed</code> (vi/en, time in Asia/Ho_Chi_Minh, no link). Payload validated by a pydantic model mirroring the schema."
+  },
+  {
+   "id": "ndb",
+   "kind": "database",
+   "x": 1040,
+   "y": 490,
+   "w": 160,
+   "h": 56,
+   "label": "notificationdb",
+   "sub": "inbox · email_records",
+   "desc": "No schema change. <code>email_records</code> unique on <code>(event_id, template)</code> makes the email idempotent."
+  },
+  {
+   "id": "mail",
+   "kind": "external",
+   "x": 760,
+   "y": 490,
+   "w": 200,
+   "h": 50,
+   "label": "Email provider",
+   "sub": "Mailpit locally",
+   "desc": "SMTP (Mailpit locally, Resend in the cloud). Sent after commit; a failure is recorded as <code>failed</code> (retries are FEAT-032)."
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "from": "browser",
+   "to": "spa",
+   "s": "emphasis",
+   "data": {
+    "p": "Current password, new password",
+    "f": "SPA form",
+    "c": "restr",
+    "s": "Never stored in the browser"
+   }
+  },
+  {
+   "id": "e2",
+   "from": "spa",
+   "to": "gw",
+   "s": "emphasis",
+   "label": "PUT",
+   "fromAt": 0.3,
+   "toAt": 0.044,
+   "data": {
+    "p": "PUT /v1/me/password {currentPassword, newPassword} → 204 | 400 | 401 | 409",
+    "f": "REST/JSON · Accept-Language",
+    "c": "restr",
+    "s": "hs.bff + hs.idp cookies; X-HS-CSRF: 1; no session → 401; body never logged"
+   }
+  },
+  {
+   "id": "e3",
+   "from": "spa",
+   "to": "gw",
+   "s": "security",
+   "fromAt": 0.75,
+   "toAt": 0.11,
+   "data": {
+    "p": "POST /bff/session/refresh → /bff/user body",
+    "f": "REST/JSON · Set-Cookie hs.bff",
+    "c": "conf",
+    "s": "X-HS-CSRF: 1",
+    "w": "Right after the 204 (D-3)"
+   }
+  },
+  {
+   "id": "e4",
+   "from": "gw",
+   "to": "identity",
+   "s": "emphasis",
+   "label": "bearer",
+   "fromAt": 0.075,
+   "toAt": 0.15,
+   "data": {
+    "p": "PUT /v1/me/password; response 204 + Set-Cookie hs.idp (new pwd_at)",
+    "f": "REST/JSON · Authorization: Bearer",
+    "c": "restr",
+    "s": "User = sub; kept session = oi_au_id; X-User-Id never used"
+   }
+  },
+  {
+   "id": "e5",
+   "from": "gw",
+   "to": "identity",
+   "s": "security",
+   "label": "token",
+   "fromAt": 0.42,
+   "toAt": 0.85,
+   "data": {
+    "p": "refresh_token grant → new tokens, or invalid_grant when the authorization is revoked",
+    "f": "POST /connect/token",
+    "c": "restr",
+    "s": "Rotation, zero reuse leeway: the pre-change token is spent (NFR-SEC-015)"
+   }
+  },
+  {
+   "id": "e6",
+   "from": "identity",
+   "to": "idb",
+   "s": "default",
+   "label": "1 tx",
+   "fromAt": 0.15,
+   "data": {
+    "p": "credentials (new argon2id hash, updated_at) + OpenIddict authorizations/tokens of other sessions → revoked + outbox PasswordChanged",
+    "f": "EF Core · one SaveChanges",
+    "c": "restr",
+    "s": "Nothing written when any rule fails (D-2)"
+   }
+  },
+  {
+   "id": "e7",
+   "from": "identity",
+   "to": "bus",
+   "s": "dashed",
+   "label": "event",
+   "data": {
+    "p": "PasswordChanged/v1 {userId, email, displayName, language, changedAt}",
+    "f": "Event envelope · JSON schema v1",
+    "c": "pii",
+    "s": "No password, hash or token (D-5)",
+    "w": "After commit, relayed at least once"
+   }
+  },
+  {
+   "id": "e8",
+   "from": "bus",
+   "to": "notif",
+   "s": "dashed",
+   "data": {
+    "p": "PasswordChanged",
+    "f": "Service Bus subscription",
+    "c": "pii",
+    "s": "Inbox dedupe by eventId"
+   }
+  },
+  {
+   "id": "e9",
+   "from": "notif",
+   "to": "ndb",
+   "s": "default",
+   "label": "record",
+   "data": {
+    "p": "Inbox row + email_records (template password_changed, pending)",
+    "f": "SQL · one transaction",
+    "c": "pii",
+    "s": "Unique (event_id, template)"
+   }
+  },
+  {
+   "id": "e10",
+   "from": "notif",
+   "to": "mail",
+   "s": "default",
+   "label": "send",
+   "data": {
+    "p": "Password-changed email (vi/en), time in Asia/Ho_Chi_Minh",
+    "f": "SMTP",
+    "c": "pii",
+    "s": "After commit; no link, no token",
+    "w": "Failure recorded as failed"
+   },
+   "fromSide": "left",
+   "toSide": "right"
+  },
+  {
+   "id": "e11",
+   "from": "other",
+   "to": "gw",
+   "s": "security",
+   "label": "session B",
+   "toAt": 0.82,
+   "data": {
+    "p": "Any call with B's hs.bff; /bff/login with B's old hs.idp",
+    "f": "REST · OIDC",
+    "c": "conf",
+    "s": "Access token valid ≤ 15 min; next refresh → invalid_grant → cookie cleared; stale pwd_at → /signin"
+   }
+  }
+ ],
+ "flows": {
+  "all": {
+   "title": "FEAT-003 design solution",
+   "intro": "Five paths: change the password, wrong current password, policy breach, another session signed out, and the guards."
+  },
+  "change": {
+   "title": "Change password (UC-026 main)",
+   "button": "Change",
+   "color": "frontend",
+   "tags": [
+    "UC-026 1–4",
+    "FR-AUTH-024, NFR-SEC-015, FR-NOTIF-014",
+    "AC-1, AC-3, AC-6, AC-11"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e1",
+      "e2"
+     ],
+     "t": "<strong>Submit</strong> current and new password: <code>PUT /v1/me/password</code>."
+    },
+    {
+     "e": [
+      "e4"
+     ],
+     "t": "<strong>Relay with bearer</strong>; Identity verifies the current password and the policy."
+    },
+    {
+     "e": [
+      "e6"
+     ],
+     "t": "<strong>One transaction</strong>: new argon2id hash, other authorizations and their tokens revoked (current <code>oi_au_id</code> kept), <code>PasswordChanged</code> in the outbox."
+    },
+    {
+     "e": [
+      "e4",
+      "e2"
+     ],
+     "t": "<strong>204</strong> with <code>hs.idp</code> reissued carrying the new <code>pwd_at</code> (D-4)."
+    },
+    {
+     "e": [
+      "e3",
+      "e5"
+     ],
+     "t": "<strong>Forced session refresh</strong> spends the pre-change refresh token; the session continues on a new one (D-3)."
+    },
+    {
+     "e": [
+      "e7",
+      "e8",
+      "e9",
+      "e10"
+     ],
+     "t": "<strong>Password-changed email</strong> in the user's language; a duplicate delivery sends once."
+    }
+   ]
+  },
+  "wrong": {
+   "title": "Wrong current password (UC-026 2a)",
+   "button": "Wrong",
+   "color": "security",
+   "tags": [
+    "UC-026 2a",
+    "FR-AUTH-025",
+    "AC-4, AC-10"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e2",
+      "e4"
+     ],
+     "t": "<strong>PUT with a wrong or empty current password</strong>."
+    },
+    {
+     "e": [
+      "e4"
+     ],
+     "t": "<strong>400 common.validation_failed</strong> with <code>currentPassword</code> <code>identity.current_password_incorrect</code> (or <code>_required</code>). Hash, sessions and outbox unchanged."
+    }
+   ]
+  },
+  "policy": {
+   "title": "New password breaks the policy (UC-026 2b)",
+   "button": "Policy",
+   "color": "security",
+   "tags": [
+    "UC-026 2b",
+    "FR-AUTH-003, NFR-SEC-003",
+    "AC-5"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e2",
+      "e4"
+     ],
+     "t": "<strong>PUT with</strong> <code>newPassword: abc</code>."
+    },
+    {
+     "e": [
+      "e4"
+     ],
+     "t": "<strong>400</strong> listing every unmet rule for <code>newPassword</code> (too short, needs a digit) together with any current-password error. Nothing changes."
+    }
+   ]
+  },
+  "other": {
+   "title": "Other session signed out",
+   "button": "Session B",
+   "color": "external",
+   "tags": [
+    "FR-AUTH-024, NFR-SEC-015",
+    "AC-2, AC-7",
+    "D-2, D-4"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e11"
+     ],
+     "t": "<strong>Session B</strong> keeps its access token until it expires (≤ 15 min, FR-AUTH-015 note)."
+    },
+    {
+     "e": [
+      "e5"
+     ],
+     "t": "<strong>B's refresh</strong> gets <code>invalid_grant</code>: its authorization is revoked. The gateway clears B's cookie."
+    },
+    {
+     "e": [
+      "e11",
+      "e5"
+     ],
+     "t": "<strong>B signs in again</strong>: its old <code>hs.idp</code> has a stale <code>pwd_at</code>, so <code>/connect/authorize</code> sends it to <code>/signin</code> for the new password."
+    }
+   ]
+  },
+  "guard": {
+   "title": "Guards",
+   "button": "Guards",
+   "color": "security",
+   "tags": [
+    "FR-AUTH-015, 016",
+    "AC-8, AC-9"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e2"
+     ],
+     "t": "<strong>No session</strong> → 401 at the gateway; no CSRF header → 403."
+    },
+    {
+     "e": [
+      "e4"
+     ],
+     "t": "<strong>Direct call</strong> without a valid token → 401; a spoofed <code>X-User-Id</code> never selects the user."
+    },
+    {
+     "e": [
+      "e4"
+     ],
+     "t": "<strong>No password on the account</strong> (Google-created, FEAT-004) → 409 <code>identity.password_not_set</code>; setting one is FEAT-005."
+    }
+   ]
+  }
+ },
+ "notes": [
+  {
+   "id": "N1",
+   "on": "identity",
+   "st": "decision",
+   "t": "PUT /v1/me/password",
+   "b": "Plan said POST; project rule makes updates PUT. A retried request after success fails on the current password, so the UI never retries.",
+   "r": "D-1"
+  },
+  {
+   "id": "N2",
+   "on": "idb",
+   "st": "decision",
+   "t": "Revoke in Identity's transaction",
+   "b": "Tracked status changes on OpenIddict's own tables, committed with the hash and the outbox. Rejected: manager API (saves per call), a deny-list or token version.",
+   "r": "D-2"
+  },
+  {
+   "id": "N3",
+   "on": "gw",
+   "st": "decision",
+   "t": "Current session survives through rotation",
+   "b": "The forced refresh spends the pre-change refresh token. Residual: if that request is lost, the token stays redeemable once, held only in this session's own encrypted cookie.",
+   "r": "D-3, NFR-SEC-015"
+  },
+  {
+   "id": "N4",
+   "on": "identity",
+   "st": "decision",
+   "t": "hs.idp password stamp",
+   "b": "<code>pwd_at</code> = credential <code>updated_at</code> (Unix ms). Without it another browser's 7-day <code>hs.idp</code> would sign it back in silently. Pre-feature cookies stop working once.",
+   "r": "D-4"
+  },
+  {
+   "id": "N5",
+   "on": "notif",
+   "st": "decision",
+   "t": "Email rendered from the event",
+   "b": "Same pattern as UserRegistered; the contacts projection may lag.",
+   "r": "D-5"
+  },
+  {
+   "id": "N6",
+   "on": "spa",
+   "st": "decision",
+   "t": "Shared password field moves to packages/",
+   "b": "Features cannot import each other; one copy of the client policy hints.",
+   "r": "D-6"
+  },
+  {
+   "id": "N7",
+   "on": "identity",
+   "st": "risk",
+   "t": "No attempt limit yet",
+   "b": "Lockout counting (FR-AUTH-011) and a rate limit arrive with FEAT-005; until then a valid session is required.",
+   "r": "§8"
+  },
+  {
+   "id": "G1",
+   "st": "consider",
+   "t": "Plan correction",
+   "b": "The FEAT-003 plan row says <code>POST /v1/me/password</code>; it should read <code>PUT</code>. Owned by implementation-planning.",
+   "r": "§8"
+  },
+  {
+   "id": "G2",
+   "st": "aligned",
+   "t": "Deferred on purpose",
+   "b": "Set a first password for Google accounts (UC-026 1a, FR-AUTH-027, OQ-33) → FEAT-005; email retries → FEAT-032.",
+   "r": "§8 deferred"
+  },
+  {
+   "id": "G3",
+   "st": "consider",
+   "t": "For ui-design",
+   "b": "SCR-STF-018 entry points (profile page and/or account menu), success toast copy, and the 409 state.",
+   "r": "§8"
+  }
+ ],
+ "specs": {
+  "spa": {
+   "host": "web/apps/storefront",
+   "trigger": "User",
+   "ops": [
+    "ChangePasswordPage at /profile/password (SCR-STF-018)",
+    "changePassword in features/profile/api.ts",
+    "refresh() after 204"
+   ],
+   "data": "none stored",
+   "nfr": "FR-LOC-004"
+  },
+  "gw": {
+   "host": "Gateway (.NET, YARP)",
+   "trigger": "SPA",
+   "ops": [
+    "Existing route me",
+    "Existing POST /bff/session/refresh"
+   ],
+   "data": "hs.bff cookie",
+   "nfr": "NFR-SEC-004"
+  },
+  "identity": {
+   "host": "Identity (rich .NET)",
+   "trigger": "Gateway",
+   "ops": [
+    "changeMyPassword",
+    "ISessionRevoker → OpenIddictSessionRevoker",
+    "hs.idp pwd_at at sign-in and after change",
+    "Stamp check in /connect/authorize"
+   ],
+   "data": "identitydb (no migration)",
+   "nfr": "NFR-SEC-002, NFR-SEC-003, NFR-SEC-015"
+  },
+  "notif": {
+   "host": "Notification (lean Python)",
+   "trigger": "Service Bus",
+   "ops": [
+    "Template table by event type",
+    "password_changed vi/en",
+    "Schema validation, inbox dedupe"
+   ],
+   "data": "notificationdb email_records",
+   "nfr": "NFR-REL-005, NFR-L10N-002"
+  }
+ },
+ "sections": [
+  {
+   "type": "table",
+   "title": "Contract",
+   "columns": [
+    "Outcome",
+    "Status",
+    "Code / detail"
+   ],
+   "rows": [
+    [
+     "Changed",
+     "204",
+     "Set-Cookie hs.idp (new pwd_at)"
+    ],
+    [
+     "Current password empty / wrong",
+     "400",
+     "currentPassword: identity.current_password_required / _incorrect"
+    ],
+    [
+     "Policy breach",
+     "400",
+     "newPassword: identity.password_too_short · _too_long · _needs_letter · _needs_digit"
+    ],
+    [
+     "No password on account",
+     "409",
+     "identity.password_not_set"
+    ],
+    [
+     "No session / bad token",
+     "401",
+     "common.unauthenticated"
+    ]
+   ]
+  },
+  {
+   "type": "notes",
+   "title": "Decisions and open items"
+  },
+  {
+   "type": "catalogue",
+   "title": "Components"
+  }
+ ]
+}

@@ -34,6 +34,44 @@ public sealed class DomainTests
     public void Password_with_letters_only_needs_a_digit() =>
         Assert.Equal(["identity.password_needs_digit"], PasswordPolicy.Evaluate("abcdefgh").Select(v => v.Code));
 
+    [Fact]
+    public void Ac5_policy_reports_the_given_field_for_every_rule()
+    {
+        var violations = PasswordPolicy.Evaluate("abc", "newPassword");
+
+        Assert.All(violations, v => Assert.Equal("newPassword", v.Field));
+        Assert.Equal(
+            ["identity.password_too_short", "identity.password_needs_digit"],
+            violations.Select(v => v.Code));
+        Assert.Equal(["identity.password_needs_digit"], PasswordPolicy.Evaluate("abcdefgh", "newPassword").Select(v => v.Code));
+        Assert.Equal(["identity.password_too_long"], PasswordPolicy.Evaluate("a1" + new string('x', 127), "newPassword").Select(v => v.Code));
+        Assert.Empty(PasswordPolicy.Evaluate("world5678", "newPassword"));
+    }
+
+    [Fact]
+    public void Change_password_replaces_the_hash_and_moves_the_stamp()
+    {
+        var credential = Credential.Create(Guid.NewGuid(), "old-hash", Now);
+        var before = credential.Stamp;
+
+        credential.ChangePassword("new-hash", Now.AddMinutes(5));
+
+        Assert.Equal("new-hash", credential.PasswordHash);
+        Assert.Equal(Now.AddMinutes(5), credential.UpdatedAt);
+        Assert.NotEqual(before, credential.Stamp);
+    }
+
+    [Fact]
+    public void Stamp_survives_a_microsecond_round_trip()
+    {
+        var precise = Now.AddTicks(1234567); // 100 ns ticks; Postgres keeps microseconds
+        var stored = new DateTimeOffset(precise.Ticks / 10 * 10, TimeSpan.Zero);
+
+        Assert.Equal(
+            Credential.Create(Guid.NewGuid(), "h", precise).Stamp,
+            Credential.Create(Guid.NewGuid(), "h", stored).Stamp);
+    }
+
     [Theory]
     [InlineData(null, "identity.email_required")]
     [InlineData("  ", "identity.email_required")]

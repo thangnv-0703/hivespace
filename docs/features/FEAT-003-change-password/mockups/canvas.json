@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-22T10:00:00Z" },
+  "title": "FEAT-003 · Change password",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 860, "title": "SCR-STF-018 Change password", "expand": "fill" },
+    "PasswordErrors.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 960, "title": "SCR-STF-018 Wrong current password + policy errors", "expand": "fill" },
+    "PasswordMobile.dc.html": { "x": 0, "y": 1080, "w": 390, "h": 1000, "title": "SCR-STF-018 Mobile, success toast", "expand": "fill" },
+    "ProfilePasswordCard.dc.html": { "x": 470, "y": 1080, "w": 760, "h": 260, "title": "SCR-STF-016 new Password card" },
+    "AccountMenu.dc.html": { "x": 1310, "y": 1080, "w": 810, "h": 400, "title": "Header account menu with Change password" }
+  },
+  "order": [
+    "Main.dc.html",
+    "PasswordErrors.dc.html",
+    "PasswordMobile.dc.html",
+    "ProfilePasswordCard.dc.html",
+    "AccountMenu.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "FEAT-003: change password", "kind": "title1", "maxW": 2640 }
+  },
+  "designSystems": []
+}

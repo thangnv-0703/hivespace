@@ -7,7 +7,7 @@ namespace Identity.Application.Features.Registration;
 public sealed record SignInCommand(string? Email, string? Password, string? ReturnUrl);
 
 /// <summary>The signed-in user and where the browser goes next.</summary>
-public sealed record SignInOutcome(User User, string RedirectUrl);
+public sealed record SignInOutcome(User User, string RedirectUrl, long PasswordStamp);
 
 /// <summary>
 /// FR-AUTH-009, FR-AUTH-010: unknown email, wrong password and no password all fail the same way. An unverified email may
@@ -31,7 +31,7 @@ public sealed class SignInHandler(IUserRepository users, IPasswordHasher hasher)
             return Result<SignInOutcome>.Fail("identity.invalid_credentials");
         }
 
-        return Result<SignInOutcome>.Ok(new SignInOutcome(user, SafeRedirect(command.ReturnUrl)));
+        return Result<SignInOutcome>.Ok(new SignInOutcome(user, SafeRedirect(command.ReturnUrl), credential.Stamp));
     }
 
     /// <summary>Only a local path under <c>/connect/authorize</c> is honored; anything else goes home (AC-17).</summary>

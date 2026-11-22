@@ -12,6 +12,11 @@ export type LanguageUpdate = {
     language: Language;
 };
 
+export type PasswordChange = {
+    currentPassword: string;
+    newPassword: string;
+};
+
 export type Profile = {
     userId: Id;
     /**
@@ -333,3 +338,42 @@ export type UpdateMyLanguageResponses = {
 };
 
 export type UpdateMyLanguageResponse = UpdateMyLanguageResponses[keyof UpdateMyLanguageResponses];
+
+export type ChangeMyPasswordData = {
+    body: PasswordChange;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/me/password';
+};
+
+export type ChangeMyPasswordErrors = {
+    /**
+     * `common.validation_failed` with `identity.current_password_required`, `identity.current_password_incorrect` or the password rule codes on `newPassword`.
+     */
+    400: Error;
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+    /**
+     * `identity.password_not_set`: the account has no password (Google-created account).
+     */
+    409: Error;
+};
+
+export type ChangeMyPasswordError = ChangeMyPasswordErrors[keyof ChangeMyPasswordErrors];
+
+export type ChangeMyPasswordResponses = {
+    /**
+     * Password changed; other sessions are signed out.
+     */
+    204: void;
+};
+
+export type ChangeMyPasswordResponse = ChangeMyPasswordResponses[keyof ChangeMyPasswordResponses];

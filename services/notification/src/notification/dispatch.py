@@ -12,6 +12,7 @@ from hivespace_common.eventbus import Envelope
 from notification.features.contacts import repository as contacts
 from notification.features.contacts.events import UserProfileChanged
 from notification.features.emails import service as emails
+from notification.features.emails.events import PasswordChanged
 from notification.providers.email import EmailSender
 
 log = logging.getLogger(__name__)
@@ -31,10 +32,14 @@ def make_handler(
             if envelope.event_type == "UserProfileChanged":
                 # Validate against the contract before any write; a bad payload rolls back the inbox row too.
                 UserProfileChanged.model_validate(envelope.data)
+            if envelope.event_type == "PasswordChanged":
+                PasswordChanged.model_validate(envelope.data)
             if envelope.event_type in contacts.CONTACT_EVENTS:
                 await contacts.upsert(conn, envelope.data)
             if envelope.event_type in emails.EMAIL_EVENTS:
-                outgoing = await emails.prepare(conn, envelope.event_id, envelope.data, public_base_url)
+                outgoing = await emails.prepare(
+                    conn, envelope.event_type, envelope.event_id, envelope.data, public_base_url
+                )
         # After commit: a send failure must not roll back the record, and redelivery then hits the inbox.
         if outgoing is not None:
             await emails.deliver(engine, sender, outgoing)

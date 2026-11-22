@@ -171,7 +171,14 @@
         "gaps": [
           "avatar upload and upload error (FEAT-035)"
         ],
-        "supplements": []
+        "supplements": [
+          {
+            "state": "password card",
+            "strategy": "code-native",
+            "feature": "FEAT-003",
+            "source": "docs/features/FEAT-003-change-password/ui-design.md#password-card"
+          }
+        ]
       },
       "contract_bindings": [
         "GET /v1/me/profile",
@@ -203,6 +210,58 @@
           "docs/features/FEAT-002-profile-and-language/mockups/AccountMenu.dc.html"
         ],
         "canvas": "https://claude.ai/artifact/NCMYCzcnfWLv2DnHMxJHG3",
+        "note": "visual reference; ui-design.md is authoritative",
+        "extra": [
+          {
+            "feature": "FEAT-003",
+            "files": [
+              "docs/features/FEAT-003-change-password/mockups/ProfilePasswordCard.dc.html"
+            ],
+            "canvas": "https://claude.ai/artifact/6NYyGvX7QpEnwQ6ffhAyB4"
+          }
+        ]
+      }
+    },
+    "SCR-STF-018": {
+      "name": "Change password",
+      "surface": "STF",
+      "feature": "FEAT-003",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-003-change-password/ui-design.md#scr-stf-018--change-password"
+      },
+      "states": {
+        "covered": [
+          "default",
+          "submitting",
+          "error (client, validation, wrong current password, password_not_set, save failed, 401)",
+          "success"
+        ],
+        "gaps": [],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "PUT /v1/me/password",
+        "POST /bff/session/refresh"
+      ],
+      "conformance": {
+        "result": "pass",
+        "corrections": [],
+        "escalations": [
+          "reuses PasswordRules under FEAT-001 E-2 (pending toward ux-foundations); no new escalation"
+        ]
+      },
+      "status": "designed",
+      "designed_at": "2026-11-22",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-003-change-password/mockups/Main.dc.html",
+          "docs/features/FEAT-003-change-password/mockups/PasswordErrors.dc.html",
+          "docs/features/FEAT-003-change-password/mockups/PasswordMobile.dc.html",
+          "docs/features/FEAT-003-change-password/mockups/AccountMenu.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/6NYyGvX7QpEnwQ6ffhAyB4",
         "note": "visual reference; ui-design.md is authoritative"
       }
     }

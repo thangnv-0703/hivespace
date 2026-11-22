@@ -6,6 +6,8 @@ import { inject, type InjectionKey } from 'vue'
  */
 export interface ProfileSession {
   isSignedIn(): boolean
+  /** The signed-in user's email, for the hidden username field that password managers need. */
+  email(): string
   /** Forces a token refresh so the header name and language are current after a save (technical-design D-4). */
   refresh(): Promise<void>
   /** A call answered 401: the session is gone. */

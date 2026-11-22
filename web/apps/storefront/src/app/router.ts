@@ -1,6 +1,6 @@
 import { RegisterPage, SignInPage, VerifyEmailPage } from '@/features/auth'
 import { HomePage } from '@/features/home'
-import { ProfilePage } from '@/features/profile'
+import { ChangePasswordPage, ProfilePage } from '@/features/profile'
 import NotFoundPage from '@/shared/pages/NotFoundPage.vue'
 import { createRouter, createWebHistory } from 'vue-router'
 
@@ -23,6 +23,7 @@ export const router = createRouter({
     { path: '/register', name: 'register', component: RegisterPage, meta: { fullscreen: true } },
     { path: '/verify-email', name: 'verify-email', component: VerifyEmailPage, meta: { fullscreen: true } },
     { path: '/profile', name: 'profile', component: ProfilePage, meta: { requiresAuth: true } },
+    { path: '/profile/password', name: 'change-password', component: ChangePasswordPage, meta: { requiresAuth: true } },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundPage },
   ],
 })

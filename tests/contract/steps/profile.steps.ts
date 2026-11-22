@@ -9,12 +9,12 @@ import type { ContractWorld } from '../support/world.ts'
 const redirectUri = 'http://localhost:5080/bff/callback'
 const b64url = (data: Buffer | string) => Buffer.from(data).toString('base64url')
 
-async function signIn(world: ContractWorld, email: string, displayName: string): Promise<void> {
+async function signIn(world: ContractWorld, email: string, displayName: string, password = 'hello1234'): Promise<void> {
   world.email = email
-  await world.post('/v1/users', { email, displayName, password: 'hello1234' })
+  await world.post('/v1/users', { email, displayName, password })
   assert.equal(world.response!.status, 201)
   world.userId = world.body.userId
-  await world.post('/v1/users/sign-in', { email, password: 'hello1234' })
+  await world.post('/v1/users/sign-in', { email, password })
   assert.equal(world.response!.status, 200)
   const cookie = world.response!.headers.getSetCookie().find((c) => c.startsWith('hs.idp='))!.split(';')[0]!
 
@@ -83,6 +83,14 @@ Given('a signed-in user with email {string} and name {string}', async function (
   await signIn(this, email, name)
 })
 
+Given('a signed-in user with email {string} and password {string}', async function (this: ContractWorld, email: string, password: string) {
+  await signIn(this, email, 'An Nguyen', password)
+})
+
+Given('the account has no password', async function (this: ContractWorld) {
+  await this.service.db.query('delete from credentials where user_id = $1', [this.userId])
+})
+
 Given('a signed-in user with a complete profile', async function (this: ContractWorld) {
   await signIn(this, 'an@example.com', 'An Nguyen')
   await this.put('/v1/me/profile', complete)
@@ -127,6 +135,23 @@ When('the user saves the profile with an extra email key {string}', async functi
   await this.put('/v1/me/profile', { ...complete, email })
 })
 
+When('the user changes the password from {string} to {string}', async function (this: ContractWorld, currentPassword: string, newPassword: string) {
+  await this.put('/v1/me/password', { currentPassword, newPassword })
+})
+
+When('the user changes the password in language {string} from {string} to {string}', async function (this: ContractWorld, language: string, currentPassword: string, newPassword: string) {
+  await this.put('/v1/me/password', { currentPassword, newPassword }, language)
+})
+
+When('the user changes the password from {string} to a password of {int} characters', async function (this: ContractWorld, currentPassword: string, length: number) {
+  await this.put('/v1/me/password', { currentPassword, newPassword: 'a1' + 'x'.repeat(length - 2) })
+})
+
+When(/^a caller changes the password with (no token|a tampered token)$/, async function (this: ContractWorld, credential: string) {
+  const bearer = credential === 'no token' ? null : tampered(this)
+  await this.send('PUT', '/v1/me/password', { currentPassword: 'hello1234', newPassword: 'world5678' }, undefined, bearer)
+})
+
 When('the user saves the language {string}', async function (this: ContractWorld, language: string) {
   await this.put('/v1/me/profile/language', { language })
 })
@@ -156,6 +181,10 @@ Then('the profile has display name {string}, phone {string}, gender {string} and
 
 Then('the language in the response is {string}', function (this: ContractWorld, language: string) {
   assert.equal(this.body.language, language)
+})
+
+Then(/^exactly (\d+) PasswordChanged events? was queued$/, async function (this: ContractWorld, count: string) {
+  assert.equal(await countEvents(this, 'PasswordChanged'), Number(count))
 })
 
 Then('exactly {int} UserProfileChanged event was queued', async function (this: ContractWorld, count: number) {

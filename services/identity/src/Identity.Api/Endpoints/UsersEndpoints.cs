@@ -19,6 +19,9 @@ public static class UsersEndpoints
 {
     public const string CookieScheme = "hs.idp";
 
+    /// <summary>The credential's <c>updated_at</c> as Unix ms: a cookie issued before a password change no longer signs in silently (D-4).</summary>
+    public const string PasswordStampClaim = "pwd_at"; // pragma: allowlist secret - a claim name, not a credential
+
     public static IEndpointRouteBuilder MapUsersEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/v1/users", async (HttpContext http, RegisterUserRequest body, RegisterUserHandler handler, CancellationToken ct) =>
@@ -47,7 +50,7 @@ public static class UsersEndpoints
             {
                 var result = await handler.HandleAsync(new SignInCommand(body.Email, body.Password, body.ReturnUrl), ct);
                 var outcome = result.OrThrow();
-                await http.SignInAsync(CookieScheme, ToPrincipal(outcome.User));
+                await http.SignInAsync(CookieScheme, ToPrincipal(outcome.User, outcome.PasswordStamp));
                 return Results.Ok(new { redirectUrl = outcome.RedirectUrl });
             })
             .WithName("signIn");
@@ -56,7 +59,7 @@ public static class UsersEndpoints
     }
 
     /// <summary>The Identity session (cookie <c>hs.idp</c>); OpenIddict reads these claims when issuing tokens (T7).</summary>
-    public static ClaimsPrincipal ToPrincipal(User user)
+    public static ClaimsPrincipal ToPrincipal(User user, long? passwordStamp = null)
     {
         var claims = new List<Claim>
         {
@@ -66,6 +69,11 @@ public static class UsersEndpoints
             new("name", user.DisplayName),
             new("lang", user.Language),
         };
+        if (passwordStamp is { } stamp)
+        {
+            claims.Add(new Claim(PasswordStampClaim, stamp.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
+
         claims.AddRange(user.Roles.Select(r => new Claim("role", r.Role.ToString())));
         return new ClaimsPrincipal(new ClaimsIdentity(claims, CookieScheme, "name", "role"));
     }

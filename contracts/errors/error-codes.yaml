@@ -27,3 +27,6 @@ codes:
   identity.date_of_birth_too_old: { http: 400 }
   identity.language_unsupported: { http: 400 }
   identity.email_read_only: { http: 400 }
+  identity.current_password_required: { http: 400 }
+  identity.current_password_incorrect: { http: 400 }
+  identity.password_not_set: { http: 409 }

@@ -20,6 +20,7 @@ const initials = computed(() => {
 })
 const items = computed(() => [
   { label: t('common.account.profile'), to: '/profile' },
+  { label: t('common.account.changePassword'), to: '/profile/password' },
   { label: t('auth.actions.signOut'), onClick: () => logout.value?.submit(), divided: true },
 ])
 </script>

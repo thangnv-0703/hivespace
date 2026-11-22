@@ -1,6 +1,6 @@
 // The only file in this feature that imports the generated clients (dev-standards §8.4). It adds the CSRF header and
 // Accept-Language to every call, like the auth feature does for its own calls (technical-design D-2, D-5).
-import { getMyProfile, updateMyLanguage, updateMyProfile, type Profile, type ProfileUpdate } from '@hivespace/api-client/identity'
+import { changeMyPassword, getMyProfile, updateMyLanguage, updateMyProfile, type PasswordChange, type Profile, type ProfileUpdate } from '@hivespace/api-client/identity'
 import { client as identityClient } from '@hivespace/api-client/identity/client'
 
 identityClient.setConfig({ baseUrl: globalThis.location?.origin ?? '', headers: { 'X-HS-CSRF': '1' } })
@@ -62,3 +62,6 @@ export const loadProfile = () => run(() => getMyProfile({ headers: headers() }))
 export const saveProfile = (body: ProfileUpdate) => run(() => updateMyProfile({ body, headers: headers() }))
 
 export const saveLanguage = (value: 'vi' | 'en') => run(() => updateMyLanguage({ body: { language: value }, headers: headers() }))
+
+/** The server returns 204; the caller then refreshes the session (technical-design D-3). Never retried by the UI (D-1). */
+export const changePassword = (body: PasswordChange) => run(() => changeMyPassword({ body, headers: headers() }))

@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { Eye, EyeOff } from '@lucide/vue'
-import { Button, Input } from '@hivespace/ui'
 import { ref, useTemplateRef } from 'vue'
+
+import Button from './Button.vue'
+import Input from './Input.vue'
 
 // Password input with the show/hide toggle (ui-design "Form conventions"). Other attributes (autocomplete, onBlur) reach the input.
 defineProps<{ label: string; error?: string; hint?: string; showLabel: string; hideLabel: string }>()

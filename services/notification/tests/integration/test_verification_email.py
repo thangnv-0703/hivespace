@@ -228,3 +228,69 @@ async def test_an_invalid_profile_event_changes_nothing_and_leaves_no_inbox_row(
 
     assert await _count(engine, "contacts") == 0
     assert await _count(engine, "inbox") == 0
+
+
+# ---- FEAT-003: PasswordChanged (AC-6) ----
+
+
+def _password_event(language: str = "vi") -> Envelope:
+    return Envelope.model_validate(
+        {
+            "eventId": str(uuid.uuid4()),
+            "eventType": "PasswordChanged",
+            "eventVersion": 1,
+            "occurredAt": datetime.now(UTC).isoformat(),
+            "producer": "identity",
+            "correlationId": "corr-1",
+            "data": {
+                "userId": str(uuid.uuid4()),
+                "email": "an@example.com",
+                "displayName": "An",
+                "language": language,
+                "changedAt": "2026-11-22T17:30:00+00:00",
+            },
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("language", "subject"),
+    [("vi", "Mật khẩu HiveSpace của bạn đã được thay đổi"), ("en", "Your HiveSpace password was changed")],
+)
+async def test_a_password_change_sends_one_email_with_its_own_template(
+    engine: AsyncEngine, language: str, subject: str
+) -> None:
+    sender = FakeSender()
+
+    await make_handler(engine, sender, BASE_URL)(_password_event(language))
+
+    assert [m.subject for m in sender.sent] == [subject]
+    assert "00:30 23/11/2026" in sender.sent[0].text
+    async with engine.connect() as conn:
+        row = (await conn.execute(text("SELECT template, status FROM email_records"))).one()
+    assert (row.template, row.status) == ("password_changed", "sent")
+
+
+async def test_a_password_event_delivered_twice_sends_once(engine: AsyncEngine) -> None:
+    sender = FakeSender()
+    handle = make_handler(engine, sender, BASE_URL)
+    event = _password_event()
+
+    await handle(event)
+    await handle(event)
+
+    assert len(sender.sent) == 1
+    assert await _count(engine, "email_records") == 1
+
+
+async def test_an_invalid_password_event_writes_nothing_and_sends_nothing(engine: AsyncEngine) -> None:
+    sender = FakeSender()
+    bad = _password_event()
+    bad.data["password"] = "leaked"  # noqa: S105 - an extra key the contract forbids
+
+    with pytest.raises(ValueError, match="password"):
+        await make_handler(engine, sender, BASE_URL)(bad)
+
+    assert sender.sent == []
+    assert await _count(engine, "email_records") == 0
+    assert await _count(engine, "inbox") == 0

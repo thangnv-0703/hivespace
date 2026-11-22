@@ -43,6 +43,11 @@
     "toasts": {
       "saved": "Profile saved",
       "languageFailed": "We couldn't save your language. It applies on this device for now."
+    },
+    "password": {
+      "title": "Password",
+      "body": "Change the password you use to sign in. Other devices will be signed out.",
+      "action": "Change password"
     }
   }
 }

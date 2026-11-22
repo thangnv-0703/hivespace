@@ -8,28 +8,28 @@ public static class PasswordPolicy
     public const int MinLength = 8;
     public const int MaxLength = 128;
 
-    public static IReadOnlyList<Violation> Evaluate(string? password)
+    public static IReadOnlyList<Violation> Evaluate(string? password, string field = "password")
     {
         var value = password ?? string.Empty;
         var violations = new List<Violation>();
         if (value.Length < MinLength)
         {
-            violations.Add(new Violation("password", "identity.password_too_short"));
+            violations.Add(new Violation(field, "identity.password_too_short"));
         }
 
         if (value.Length > MaxLength)
         {
-            violations.Add(new Violation("password", "identity.password_too_long"));
+            violations.Add(new Violation(field, "identity.password_too_long"));
         }
 
         if (!value.Any(char.IsLetter))
         {
-            violations.Add(new Violation("password", "identity.password_needs_letter"));
+            violations.Add(new Violation(field, "identity.password_needs_letter"));
         }
 
         if (!value.Any(char.IsDigit))
         {
-            violations.Add(new Violation("password", "identity.password_needs_digit"));
+            violations.Add(new Violation(field, "identity.password_needs_digit"));
         }
 
         return violations;

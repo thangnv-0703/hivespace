@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
+using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
 using Identity.Infrastructure.Persistence;
@@ -27,6 +28,7 @@ public static class DependencyInjection
         var services = builder.Services;
         services.AddScoped<IUserRepository, EfUserRepository>();
         services.AddSingleton(TimeProvider.System);
+        services.AddScoped<ISessionRevoker, OpenIddictSessionRevoker>();
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
         services.AddSingleton<IVerificationTokenGenerator, Sha256TokenGenerator>();
         // Sent rows still hold the verification token, so they are deleted after 24 hours (R-6, AC-8).
@@ -36,6 +38,7 @@ public static class DependencyInjection
         services.AddScoped<VerifyEmailHandler>();
         services.AddScoped<ResendVerificationEmailHandler>();
         services.AddScoped<SignInHandler>();
+        services.AddScoped<ChangeMyPasswordHandler>();
         services.AddScoped<GetMyProfileHandler>();
         services.AddScoped<UpdateMyProfileHandler>();
         services.AddScoped<UpdateMyLanguageHandler>();

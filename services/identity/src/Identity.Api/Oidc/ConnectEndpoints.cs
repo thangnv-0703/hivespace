@@ -34,8 +34,14 @@ public static class ConnectEndpoints
 
         var session = await http.AuthenticateAsync(UsersEndpoints.CookieScheme);
         var userId = session.Succeeded ? session.Principal?.FindFirstValue(Claims.Subject) : null;
-        if (userId is null || !Guid.TryParse(userId, out var id) || await users.FindByIdAsync(id, http.RequestAborted) is not { } user)
+        if (userId is null || !Guid.TryParse(userId, out var id) || await users.FindByIdAsync(id, http.RequestAborted) is not { } user
+            || !await PasswordStampMatchesAsync(session.Principal!, users, id, http.RequestAborted))
         {
+            if (session.Succeeded)
+            {
+                await http.SignOutAsync(UsersEndpoints.CookieScheme);
+            }
+
             // No Identity session: the storefront sign-in screen takes over and comes back here (D-1).
             var back = http.Request.PathBase + http.Request.Path + http.Request.QueryString;
             return Results.Redirect("/signin?returnUrl=" + Uri.EscapeDataString(back));
@@ -45,6 +51,11 @@ public static class ConnectEndpoints
             BuildPrincipal(user, request.GetScopes()),
             authenticationScheme: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
+
+    /// <summary>A user with a credential needs an <c>hs.idp</c> cookie carrying the credential's current stamp (D-4).</summary>
+    private static async Task<bool> PasswordStampMatchesAsync(ClaimsPrincipal cookie, IUserRepository users, Guid userId, CancellationToken ct) =>
+        await users.FindCredentialAsync(userId, ct).ConfigureAwait(false) is not { } credential
+        || cookie.FindFirstValue(UsersEndpoints.PasswordStampClaim) == credential.Stamp.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     private static async Task<IResult> ExchangeAsync(HttpContext http, IUserRepository users)
     {
