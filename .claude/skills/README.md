@@ -3,6 +3,7 @@
 Skills here load in every Claude Code session on this repo, local or cloud, and run as `/<name>` commands.
 
 ## Own skills
+- `start-feature`: sync `main` from origin, delete other local branches, optionally create the next feature branch.
 - `push-feature`: commit and push a feature's changes, then offer a PR.
 - `sync-notion`: push `docs/` to Notion.
 - `html-flow-diagram`: interactive HTML flow diagrams (used by `detailed-design`).
