@@ -22,6 +22,8 @@ export interface Failure {
   code: string
   message?: string
   details: FieldProblem[]
+  /** Seconds from the `Retry-After` header of a `429`, when it carries one (FEAT-005). */
+  retryAfter?: number
 }
 
 export type Outcome<T> = { ok: true; data: T } | { ok: false; failure: Failure }
@@ -49,6 +51,11 @@ interface Result<T> {
   response?: Response
 }
 
+function retryAfterOf(response: Response | undefined): number | undefined {
+  const seconds = Number(response?.headers.get('Retry-After'))
+  return Number.isFinite(seconds) && seconds > 0 ? Math.ceil(seconds) : undefined
+}
+
 async function run<T>(call: () => Promise<Result<T>>): Promise<Outcome<T>> {
   let result: Result<T>
   try {
@@ -65,6 +72,7 @@ async function run<T>(call: () => Promise<Result<T>>): Promise<Outcome<T>> {
         code: error?.code ?? 'common.internal_error',
         message: error?.message,
         details: error?.details ?? [],
+        retryAfter: retryAfterOf(result.response),
       },
     }
   }

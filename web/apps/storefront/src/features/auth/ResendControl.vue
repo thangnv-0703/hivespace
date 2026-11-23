@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 
 import { resend } from './api'
-import { useCooldown } from './useCooldown'
+import { useCooldown } from '@hivespace/core'
 import { EMAIL_PATTERN } from './validation'
 
 // "Resend email" with the 60 s client-side cooldown (ui-design, Register notice and Verify expired/invalid).

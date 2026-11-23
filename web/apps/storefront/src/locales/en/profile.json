@@ -47,7 +47,9 @@
     "password": {
       "title": "Password",
       "body": "Change the password you use to sign in. Other devices will be signed out.",
-      "action": "Change password"
+      "action": "Change password",
+      "setBody": "Your account doesn't have a password yet. Set one to also sign in with your email.",
+      "setAction": "Set a password"
     }
   }
 }

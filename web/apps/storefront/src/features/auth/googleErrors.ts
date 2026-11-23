@@ -5,6 +5,8 @@ export const GOOGLE_ERROR_TONES = {
   'identity.external_email_unverified': 'error',
   'identity.external_login_failed': 'error',
   'identity.external_login_unavailable': 'warning',
+  // The gateway's answer to a rate-limited Google callback (FEAT-005 §3.7).
+  'common.rate_limited': 'warning',
 } as const
 
 export type GoogleErrorCode = keyof typeof GOOGLE_ERROR_TONES

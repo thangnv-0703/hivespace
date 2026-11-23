@@ -4,7 +4,7 @@ import { computed, ref } from 'vue'
 
 import { resend } from './api'
 import { useSessionStore } from './session'
-import { useCooldown } from './useCooldown'
+import { useCooldown } from '@hivespace/core'
 
 // Strip under the header for signed-in users whose email is not verified (FR-AUTH-008: browsing is not blocked).
 const KEY = 'hs-banner-dismissed'

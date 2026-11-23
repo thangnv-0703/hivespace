@@ -233,6 +233,127 @@ describe('Google sign-in on SCR-STF-012 and SCR-STF-013 (FEAT-004 AC-13)', () =>
   })
 })
 
+describe('SignInPage account hardening (FEAT-005 AC-16)', () => {
+  beforeEach(() => vi.spyOn(navigation, 'goTo').mockImplementation(() => undefined))
+
+  const submitCredentials = async (wrapper: VueWrapper) => {
+    await fill(wrapper, ['an@example.com', 'wrong-pass1'])
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+  }
+
+  it('423 shows the locked warning, clears the password, keeps the form usable and moves focus to Continue with Google', async () => {
+    mockApi({ 'POST /v1/users/sign-in': () => json(423, { code: 'identity.account_locked', message: 'Too many failed attempts. This account is locked for 15 minutes.', details: [] }) })
+    const { wrapper } = await mountAt(SignInPage, SIGNIN)
+
+    await submitCredentials(wrapper)
+
+    const alert = wrapper.get('[data-testid=form-alert]')
+    expect(alert.attributes('role')).toBe('status')
+    expect(alert.text()).toContain('Account temporarily locked')
+    expect(alert.text()).toContain('Too many failed attempts.')
+    expect((wrapper.get('input[type=password]').element as HTMLInputElement).value).toBe('')
+    expect((wrapper.get('input[type=email]').element as HTMLInputElement).value).toBe('an@example.com')
+    expect(wrapper.get('input[type=email]').attributes('disabled')).toBeUndefined()
+    expect(wrapper.get('button[type=submit]').attributes('disabled')).toBeUndefined()
+    expect(document.activeElement).toBe(wrapper.get('[data-testid=google-button]').element)
+  })
+
+  it('429 shows the rate-limit warning and counts the Sign in button down from Retry-After, keeping the values and Google enabled', async () => {
+    vi.useFakeTimers()
+    try {
+      mockApi({
+        'POST /v1/users/sign-in': () =>
+          new Response(JSON.stringify({ code: 'common.rate_limited', message: 'Too many requests. Please wait a minute and try again.', details: [] }), {
+            status: 429,
+            headers: { 'Content-Type': 'application/json', 'Retry-After': '42' },
+          }),
+      })
+      const { wrapper } = await mountAt(SignInPage, SIGNIN)
+
+      await submitCredentials(wrapper)
+
+      expect(wrapper.get('[data-testid=form-alert]').text()).toContain('Too many attempts')
+      expect(wrapper.get('[data-testid=form-alert]').text()).toContain('Too many requests. Please wait a minute and try again.')
+      expect(wrapper.get('button[type=submit]').text()).toBe('Sign in (42 s)')
+      expect(wrapper.get('button[type=submit]').attributes('disabled')).toBeDefined()
+      expect((wrapper.get('input[type=password]').element as HTMLInputElement).value).toBe('wrong-pass1')
+      expect(wrapper.get('[data-testid=google-button]').attributes('disabled')).toBeUndefined()
+      await vi.advanceTimersByTimeAsync(42_000)
+      expect(wrapper.get('button[type=submit]').text()).toBe('Sign in')
+      expect(wrapper.get('button[type=submit]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.find('[data-testid=form-alert]').exists()).toBe(true) // the alert stays until the next submit
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('429 without a Retry-After header counts down from 60', async () => {
+    vi.useFakeTimers()
+    try {
+      mockApi({ 'POST /v1/users/sign-in': () => json(429, { code: 'common.rate_limited', message: 'Too many requests.', details: [] }) })
+      const { wrapper } = await mountAt(SignInPage, SIGNIN)
+
+      await submitCredentials(wrapper)
+
+      expect(wrapper.get('button[type=submit]').text()).toBe('Sign in (60 s)')
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('shows the Google rate-limit alert for ?error=common.rate_limited in both languages', async () => {
+    mockApi({})
+    for (const [locale, title] of [['en', 'Too many attempts'], ['vi', 'Quá nhiều lần thử']] as const) {
+      const { wrapper } = await mountAt(SignInPage, `${SIGNIN}&error=common.rate_limited`, locale)
+
+      const alert = wrapper.get('[data-testid=google-alert]')
+      expect(alert.attributes('role')).toBe('status')
+      expect(alert.text()).toContain(title)
+      wrapper.unmount()
+    }
+    const { wrapper } = await mountAt(SignInPage, `${SIGNIN}&error=common.rate_limited`)
+    expect(wrapper.get('[data-testid=google-alert]').text()).toContain('Too many sign-in attempts from this network. Wait a minute, then try again.')
+  })
+
+  it('an error without a returnUrl shows the alert and Try again instead of starting the login, which then starts it', async () => {
+    mockApi({})
+    const { wrapper } = await mountAt(SignInPage, '/signin?error=common.rate_limited')
+
+    expect(navigation.goTo).not.toHaveBeenCalled()
+    expect(wrapper.get('[data-testid=google-alert]').text()).toContain('Too many attempts')
+    expect(wrapper.find('form').exists()).toBe(false)
+    expect(wrapper.find('[data-testid=google-button]').exists()).toBe(false)
+    await wrapper.get('[data-testid=signin-retry]').trigger('click')
+    expect(navigation.goTo).toHaveBeenCalledWith('/bff/login')
+    expect(wrapper.get('[data-testid=signin-retry]').text()).toBe('Try again')
+  })
+
+  it('an unknown error without a returnUrl still starts the login at once', async () => {
+    mockApi({})
+    await mountAt(SignInPage, '/signin?error=identity.something_else')
+
+    expect(navigation.goTo).toHaveBeenCalledWith('/bff/login')
+  })
+
+  it('a returnUrl with max_age shows the confirm-it-is-you notice, and any other alert replaces it', async () => {
+    mockApi({ 'POST /v1/users/sign-in': () => json(401, { code: 'identity.invalid_credentials', message: 'Wrong email or password.', details: [] }) })
+    const { wrapper } = await mountAt(SignInPage, '/signin?returnUrl=' + encodeURIComponent('/connect/authorize?x=1&max_age=60'))
+
+    expect(wrapper.get('[data-testid=reauth-notice]').text()).toContain("Confirm it's you")
+    expect(wrapper.get('[data-testid=reauth-notice]').text()).toContain('For your security, sign in again to continue.')
+    await submitCredentials(wrapper)
+    expect(wrapper.find('[data-testid=reauth-notice]').exists()).toBe(false)
+  })
+
+  it('shows no notice without max_age', async () => {
+    mockApi({})
+    const { wrapper } = await mountAt(SignInPage, SIGNIN)
+
+    expect(wrapper.find('[data-testid=reauth-notice]').exists()).toBe(false)
+  })
+})
+
 describe('RegisterPage (SCR-STF-013)', () => {
   it('validates on submit: required fields, a bad email and a confirm mismatch', async () => {
     const fetchSpy = mockApi({})
