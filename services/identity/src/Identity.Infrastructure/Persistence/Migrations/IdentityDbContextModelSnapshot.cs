@@ -87,6 +87,43 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("credentials", (string)null);
                 });
 
+            modelBuilder.Entity("Identity.Domain.ExternalLogin", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("LinkedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("linked_at");
+
+                    b.Property<string>("Provider")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("provider");
+
+                    b.Property<string>("Subject")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
+                        .HasColumnName("subject");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Provider", "Subject")
+                        .IsUnique();
+
+                    b.HasIndex("UserId", "Provider")
+                        .IsUnique();
+
+                    b.ToTable("external_logins", (string)null);
+                });
+
             modelBuilder.Entity("Identity.Domain.RoleGrant", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -435,6 +472,15 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.HasOne("Identity.Domain.User", null)
                         .WithOne()
                         .HasForeignKey("Identity.Domain.Credential", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Identity.Domain.ExternalLogin", b =>
+                {
+                    b.HasOne("Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

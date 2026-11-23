@@ -13,7 +13,7 @@ The screen change (Google button, divider, error alerts on SCR-STF-012) is owned
       - a note in `contracts/openapi/identity.yaml` `info.description` that `/connect/external/*` are browser endpoints like `/connect/*`.
       (design §3.1, §3.3, §3.4; AC-15)
       Done when: Spectral shows 0 errors, the vi/en key-parity check passes, the generated client is unchanged, and the new feature file is discovered (red) by `tests/contract`.
-- [ ] T2 — Schema and domain:
+- [x] T2 — Schema and domain:
       - `ExternalLogin` entity and `IdentityDbContext` mapping (table `external_logins`, unique `(provider, subject)`, unique `(user_id, provider)`);
       - migration `AddExternalLogins`;
       - `User.RegisterExternal`.
