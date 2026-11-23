@@ -81,13 +81,15 @@ public sealed class SetPasswordApiTests : IAsyncLifetime
     public async Task Ac19_a_set_password_run_logs_the_user_id_and_never_an_email_password_or_token()
     {
         using var user = await GoogleOnlyAsync();
-        using var response = await PutAsync(user.Browser.Identity, user.Access, "logSecret5678");
+        // Generated per run so no password literal sits in source (secret scanners).
+        var secret = "Pw1-" + Guid.NewGuid().ToString("N");
+        using var response = await PutAsync(user.Browser.Identity, user.Access, secret);
         Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
 
         var logs = _factory.Logs.Text;
         Assert.Contains($"Password set: user {user.UserId}", logs, StringComparison.Ordinal);
         Assert.DoesNotContain(user.Email, logs, StringComparison.OrdinalIgnoreCase);
-        Assert.DoesNotContain("logSecret5678", logs, StringComparison.Ordinal);
+        Assert.DoesNotContain(secret, logs, StringComparison.Ordinal);
         Assert.DoesNotContain(user.Access, logs, StringComparison.Ordinal);
         Assert.DoesNotContain("eyJ", logs, StringComparison.Ordinal);
     }
