@@ -6,7 +6,7 @@
 
 The screen change (Google button, divider, error alerts on SCR-STF-012) is owned by ui-design's output (spec in [ui-design.md](ui-design.md), visual mockups in [mockups/](mockups/), registry in `docs/design-manifest.json`); T8 only wires it. UC-025 is a critical flow named in architecture §8.6 ("one Google sign-in run against a fake IdP"), so T9 is the E2E task.
 
-- [ ] T1 — Contracts first:
+- [x] T1 — Contracts first:
       - error codes `identity.external_login_denied`, `identity.external_email_unverified`, `identity.external_login_failed`, `identity.external_login_unavailable` with vi/en messages;
       - `contracts/events/ExternalLoginLinked/v1.schema.json`;
       - `contracts/features/identity/google-sign-in.feature` (start redirect shape, unavailable redirect, `returnUrl` handling, unknown provider 404, no-password sign-in);
