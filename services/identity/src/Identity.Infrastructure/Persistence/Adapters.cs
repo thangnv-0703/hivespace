@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
 using Identity.Domain;
@@ -6,7 +7,7 @@ using Npgsql;
 
 namespace Identity.Infrastructure.Persistence;
 
-internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
+internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository, ILockoutStore, IAuditLog
 {
     private const string UniqueViolation = "23505";
 
@@ -52,11 +53,36 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
 
     public void RemoveCredential(Credential credential) => db.Credentials.Remove(credential);
 
+    public Task<SignInLockout?> FindAsync(Guid userId, CancellationToken cancellationToken) =>
+        db.SignInLockouts.FirstOrDefaultAsync(l => l.UserId == userId, cancellationToken);
+
+    public void Add(SignInLockout lockout) => db.SignInLockouts.Add(lockout);
+
+    public void Remove(SignInLockout lockout) => db.SignInLockouts.Remove(lockout);
+
+    public void Add(AuditEntry entry)
+    {
+        // Joins the row to the trace of the request (design §5.2); never an email, address or token (D-4).
+        entry.SetCorrelationId(Activity.Current?.TraceId.ToString());
+        db.AuditEntries.Add(entry);
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
         {
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            db.ChangeTracker.Clear();
+            throw new ConcurrencyConflictException(ex);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "PK_sign_in_lockouts" })
+        {
+            db.ChangeTracker.Clear();
+            throw new ConcurrencyConflictException(ex);
         }
         catch (DbUpdateException ex) when (
             ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "IX_users_normalized_email" })

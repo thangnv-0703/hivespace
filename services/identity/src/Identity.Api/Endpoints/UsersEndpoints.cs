@@ -22,6 +22,12 @@ public static class UsersEndpoints
     /// <summary>The credential's <c>updated_at</c> as Unix ms: a cookie issued before a password change no longer signs in silently (D-4).</summary>
     public const string PasswordStampClaim = "pwd_at"; // pragma: allowlist secret - a claim name, not a credential
 
+    /// <summary>Unix seconds of the interactive sign-in behind the session (OIDC <c>auth_time</c>, FEAT-005 §3.6).</summary>
+    public const string AuthTimeClaim = "auth_time";
+
+    /// <summary>How the user signed in (OIDC <c>amr</c>): <c>pwd</c> or <c>google</c>.</summary>
+    public const string AmrClaim = "amr";
+
     public static IEndpointRouteBuilder MapUsersEndpoints(this IEndpointRouteBuilder app)
     {
         app.MapPost("/v1/users", async (HttpContext http, RegisterUserRequest body, RegisterUserHandler handler, CancellationToken ct) =>
@@ -50,7 +56,7 @@ public static class UsersEndpoints
             {
                 var result = await handler.HandleAsync(new SignInCommand(body.Email, body.Password, body.ReturnUrl), ct);
                 var outcome = result.OrThrow();
-                await http.SignInAsync(CookieScheme, ToPrincipal(outcome.User, outcome.PasswordStamp));
+                await http.SignInAsync(CookieScheme, ToPrincipal(outcome.User, outcome.PasswordStamp, outcome.AuthTime.ToUnixTimeSeconds(), "pwd"));
                 return Results.Ok(new { redirectUrl = outcome.RedirectUrl });
             })
             .WithName("signIn");
@@ -59,7 +65,7 @@ public static class UsersEndpoints
     }
 
     /// <summary>The Identity session (cookie <c>hs.idp</c>); OpenIddict reads these claims when issuing tokens (T7).</summary>
-    public static ClaimsPrincipal ToPrincipal(User user, long? passwordStamp = null)
+    public static ClaimsPrincipal ToPrincipal(User user, long? passwordStamp = null, long? authTime = null, string? amr = null)
     {
         var claims = new List<Claim>
         {
@@ -72,6 +78,16 @@ public static class UsersEndpoints
         if (passwordStamp is { } stamp)
         {
             claims.Add(new Claim(PasswordStampClaim, stamp.ToString(System.Globalization.CultureInfo.InvariantCulture)));
+        }
+
+        if (authTime is { } at)
+        {
+            claims.Add(new Claim(AuthTimeClaim, at.ToString(System.Globalization.CultureInfo.InvariantCulture), ClaimValueTypes.Integer64));
+        }
+
+        if (amr is not null)
+        {
+            claims.Add(new Claim(AmrClaim, amr));
         }
 
         claims.AddRange(user.Roles.Select(r => new Claim("role", r.Role.ToString())));

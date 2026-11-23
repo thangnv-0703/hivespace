@@ -34,6 +34,28 @@ public sealed class EmailInUseException(Exception inner) : Exception("The email 
 public sealed class ExternalLoginConflictException(Exception inner) : Exception("The external login is already linked.", inner);
 
 /// <summary>
+/// Raised by <see cref="IUserRepository.SaveChangesAsync"/> when two failed attempts for one account raced: the lockout row changed
+/// or was inserted since it was read. Nothing stays staged, so the caller reads it again and reapplies (FEAT-005 D-3).
+/// </summary>
+public sealed class ConcurrencyConflictException(Exception inner) : Exception("The lockout changed concurrently.", inner);
+
+/// <summary>Lockout rows (FR-AUTH-011). Changes are staged and committed by <see cref="IUserRepository.SaveChangesAsync"/>.</summary>
+public interface ILockoutStore
+{
+    Task<SignInLockout?> FindAsync(Guid userId, CancellationToken cancellationToken);
+
+    void Add(SignInLockout lockout);
+
+    void Remove(SignInLockout lockout);
+}
+
+/// <summary>The security audit log (NFR-SEC-009); rows are committed with whatever else the unit of work holds.</summary>
+public interface IAuditLog
+{
+    void Add(AuditEntry entry);
+}
+
+/// <summary>
 /// Signs the user out of every session except one (FR-AUTH-024). It only stages changes in the same unit of work;
 /// <see cref="IUserRepository.SaveChangesAsync"/> commits them with the credential and the outbox row (D-2).
 /// </summary>
@@ -80,5 +102,6 @@ public interface IUserRepository
     /// </summary>
     /// <exception cref="EmailInUseException">The unique index on the normalized email rejected the insert.</exception>
     /// <exception cref="ExternalLoginConflictException">A unique index of <c>external_logins</c> rejected the insert.</exception>
+    /// <exception cref="ConcurrencyConflictException">The lockout row of the account changed or appeared since it was read.</exception>
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

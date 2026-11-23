@@ -32,6 +32,7 @@ public sealed class ExternalSignInHandler(
     IUserRepository users,
     ISessionRevoker sessions,
     IEventOutbox outbox,
+    IAuditLog audit,
     TimeProvider clock)
 {
     public const string ExternalLoginLinkedEvent = "ExternalLoginLinked";
@@ -44,14 +45,15 @@ public sealed class ExternalSignInHandler(
         if (string.IsNullOrWhiteSpace(identity.Provider) || identity.Provider.Length > Domain.ExternalLogin.ProviderMaxLength
             || string.IsNullOrWhiteSpace(identity.Subject) || identity.Subject.Length > Domain.ExternalLogin.SubjectMaxLength)
         {
-            return Result<ExternalSignInOutcome>.Fail(Failed);
+            return await AuditFailureAsync(Result<ExternalSignInOutcome>.Fail(Failed), cancellationToken).ConfigureAwait(false);
         }
 
         for (var attempt = 0; ; attempt++)
         {
             try
             {
-                return await DecideAsync(identity, command.Language, cancellationToken).ConfigureAwait(false);
+                var decided = await DecideAsync(identity, command.Language, cancellationToken).ConfigureAwait(false);
+                return decided.IsSuccess ? decided : await AuditFailureAsync(decided, cancellationToken).ConfigureAwait(false);
             }
             catch (Exception ex) when (attempt == 0 && ex is EmailInUseException or ExternalLoginConflictException)
             {
@@ -59,9 +61,17 @@ public sealed class ExternalSignInHandler(
             }
             catch (Exception ex) when (ex is EmailInUseException or ExternalLoginConflictException)
             {
-                return Result<ExternalSignInOutcome>.Fail(Failed);
+                return await AuditFailureAsync(Result<ExternalSignInOutcome>.Fail(Failed), cancellationToken).ConfigureAwait(false);
             }
         }
+    }
+
+    /// <summary>One <c>sign_in_failed</c> row (method google, reason = the error code) for a failure decided here (NFR-SEC-009, D-2).</summary>
+    private async Task<Result<ExternalSignInOutcome>> AuditFailureAsync(Result<ExternalSignInOutcome> failed, CancellationToken ct)
+    {
+        audit.Add(AuditEntry.SignInFailed(null, AuditMethod.Google, failed.Failure!.Code, clock.GetUtcNow()));
+        await users.SaveChangesAsync(ct).ConfigureAwait(false);
+        return failed;
     }
 
     private async Task<Result<ExternalSignInOutcome>> DecideAsync(ExternalIdentity identity, string language, CancellationToken ct)
@@ -72,7 +82,7 @@ public sealed class ExternalSignInHandler(
             var linked = await users.FindByIdAsync(known.UserId, ct).ConfigureAwait(false);
             return linked is null
                 ? Result<ExternalSignInOutcome>.Fail(Failed)
-                : Result<ExternalSignInOutcome>.Ok(new ExternalSignInOutcome(linked, await StampOfAsync(linked.Id, ct).ConfigureAwait(false)));
+                : await SignedInAsync(linked, await StampOfAsync(linked.Id, ct).ConfigureAwait(false), ct).ConfigureAwait(false);
         }
 
         if (!identity.EmailVerified || string.IsNullOrWhiteSpace(identity.Email))
@@ -101,7 +111,7 @@ public sealed class ExternalSignInHandler(
             // The same identity was linked by a concurrent first sign-in since the lookup above: sign in. Another identity of the
             // provider on this account: refuse.
             return current.Subject == identity.Subject
-                ? Result<ExternalSignInOutcome>.Ok(new ExternalSignInOutcome(user, await StampOfAsync(user.Id, ct).ConfigureAwait(false)))
+                ? await SignedInAsync(user, await StampOfAsync(user.Id, ct).ConfigureAwait(false), ct).ConfigureAwait(false)
                 : Result<ExternalSignInOutcome>.Fail(Failed);
         }
 
@@ -128,6 +138,7 @@ public sealed class ExternalSignInHandler(
 
         users.AddExternalLogin(Domain.ExternalLogin.Link(user.Id, identity.Provider, identity.Subject!, now));
         Enqueue(user, identity.Provider, accountCreated: false, passwordRemoved, now);
+        audit.Add(AuditEntry.SignInSucceeded(user.Id, AuditMethod.Google, now));
         await users.SaveChangesAsync(ct).ConfigureAwait(false);
         return Result<ExternalSignInOutcome>.Ok(new ExternalSignInOutcome(user, credential?.Stamp));
     }
@@ -141,8 +152,17 @@ public sealed class ExternalSignInHandler(
         users.Add(user);
         users.AddExternalLogin(Domain.ExternalLogin.Link(user.Id, identity.Provider, identity.Subject!, now));
         Enqueue(user, identity.Provider, accountCreated: true, passwordRemoved: false, now);
+        audit.Add(AuditEntry.SignInSucceeded(user.Id, AuditMethod.Google, now));
         await users.SaveChangesAsync(ct).ConfigureAwait(false);
         return Result<ExternalSignInOutcome>.Ok(new ExternalSignInOutcome(user, null));
+    }
+
+    /// <summary>An existing identity signs in: the only thing written is the audit row (NFR-SEC-009).</summary>
+    private async Task<Result<ExternalSignInOutcome>> SignedInAsync(User user, long? stamp, CancellationToken ct)
+    {
+        audit.Add(AuditEntry.SignInSucceeded(user.Id, AuditMethod.Google, clock.GetUtcNow()));
+        await users.SaveChangesAsync(ct).ConfigureAwait(false);
+        return Result<ExternalSignInOutcome>.Ok(new ExternalSignInOutcome(user, stamp));
     }
 
     /// <summary>The provider's name trimmed and cut to the limit, or the local part of the email when it has none.</summary>
