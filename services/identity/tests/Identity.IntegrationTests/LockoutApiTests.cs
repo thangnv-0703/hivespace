@@ -167,6 +167,27 @@ public sealed class LockoutApiTests : IAsyncLifetime
         Assert.InRange(claims.GetProperty("auth_time").GetInt64(), before - 5, before + 60);
     }
 
+    [Fact]
+    public async Task Ac19_a_lockout_run_logs_the_lock_by_user_id_and_never_an_email_password_or_token()
+    {
+        var (userId, email) = await RegisterAsync();
+        using var client = _factory.CreateClient();
+        for (var i = 0; i < 5; i++)
+        {
+            using var wrong = await SignInAsync(client, email, "wrongSecret99");
+        }
+
+        using var locked = await SignInAsync(client, email, "hello1234");
+
+        var logs = _factory.Logs.Text;
+        Assert.Contains($"Account locked: user {userId}", logs, StringComparison.Ordinal);
+        Assert.Equal(1, logs.Split("Account locked: user", StringSplitOptions.None).Length - 1);
+        Assert.DoesNotContain(email, logs, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("wrongSecret99", logs, StringComparison.Ordinal);
+        Assert.DoesNotContain("hello1234", logs, StringComparison.Ordinal);
+        Assert.DoesNotContain("eyJ", logs, StringComparison.Ordinal);
+    }
+
     private async Task<(Guid UserId, string Email)> RegisterAsync(string? email = null, bool verified = false)
     {
         email ??= $"{Guid.NewGuid():N}@example.com";

@@ -36,5 +36,7 @@ export default defineConfig({
     reuseExistingServer: true,
     timeout: 10 * 60_000,
     stdout: 'ignore',
+    // These suites sign in many users from one loopback address; the real limit is 10 per minute (FEAT-005 D-9, scaffold-notes).
+    env: { RateLimits__PermitLimit: '1000' },
   },
 })

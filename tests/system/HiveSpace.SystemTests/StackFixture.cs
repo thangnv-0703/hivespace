@@ -30,7 +30,8 @@ public sealed class StackFixture : IAsyncLifetime
     public async ValueTask InitializeAsync()
     {
         using var cts = new CancellationTokenSource(StartupTimeout);
-        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.HiveSpace_AppHost>(cts.Token);
+        // The suite signs in many users from one loopback address; the real gateway limit is 10 per minute (FEAT-005 D-9, scaffold-notes).
+        var builder = await DistributedApplicationTestingBuilder.CreateAsync<Projects.HiveSpace_AppHost>(["RateLimits:PermitLimit=1000"], cts.Token);
         builder.Services.AddLogging(logging => logging.AddProvider(new CapturingProvider(_logs)));
         App = await builder.BuildAsync(cts.Token);
         await App.StartAsync(cts.Token);

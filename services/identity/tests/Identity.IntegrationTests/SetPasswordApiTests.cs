@@ -78,6 +78,21 @@ public sealed class SetPasswordApiTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task Ac19_a_set_password_run_logs_the_user_id_and_never_an_email_password_or_token()
+    {
+        using var user = await GoogleOnlyAsync();
+        using var response = await PutAsync(user.Browser.Identity, user.Access, "logSecret5678");
+        Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+
+        var logs = _factory.Logs.Text;
+        Assert.Contains($"Password set: user {user.UserId}", logs, StringComparison.Ordinal);
+        Assert.DoesNotContain(user.Email, logs, StringComparison.OrdinalIgnoreCase);
+        Assert.DoesNotContain("logSecret5678", logs, StringComparison.Ordinal);
+        Assert.DoesNotContain(user.Access, logs, StringComparison.Ordinal);
+        Assert.DoesNotContain("eyJ", logs, StringComparison.Ordinal);
+    }
+
+    [Fact]
     public async Task Ac11_without_a_recent_google_sign_in_it_asks_to_reauthenticate_and_writes_nothing()
     {
         using var user = await GoogleOnlyAsync();
