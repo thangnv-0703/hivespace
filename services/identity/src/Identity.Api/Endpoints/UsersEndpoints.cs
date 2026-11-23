@@ -64,6 +64,12 @@ public static class UsersEndpoints
         return app;
     }
 
+    /// <summary>The <c>auth_time</c> of a cookie or token principal, or null when it has none or it is not a number.</summary>
+    public static long? AuthTimeOf(ClaimsPrincipal? principal) =>
+        long.TryParse(principal?.FindFirstValue(AuthTimeClaim), System.Globalization.NumberStyles.None, System.Globalization.CultureInfo.InvariantCulture, out var value)
+            ? value
+            : null;
+
     /// <summary>The Identity session (cookie <c>hs.idp</c>); OpenIddict reads these claims when issuing tokens (T7).</summary>
     public static ClaimsPrincipal ToPrincipal(User user, long? passwordStamp = null, long? authTime = null, string? amr = null)
     {

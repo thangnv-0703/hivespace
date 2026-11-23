@@ -76,6 +76,7 @@ public static partial class ExternalLoginEndpoints
         ExternalLoginProviders providers,
         ExternalSignInHandler handler,
         RecordSignInFailureHandler failures,
+        TimeProvider clock,
         ILoggerFactory loggers,
         CancellationToken ct)
     {
@@ -107,7 +108,7 @@ public static partial class ExternalLoginEndpoints
         }
 
         var outcome = result.Value!;
-        await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(outcome.User, outcome.PasswordStamp));
+        await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(outcome.User, outcome.PasswordStamp, clock.GetUtcNow().ToUnixTimeSeconds(), "google"));
         LogSignedIn(logger, provider, outcome.User.Id);
         return Results.Redirect(returnUrl ?? "/");
     }

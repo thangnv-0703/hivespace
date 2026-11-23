@@ -134,6 +134,39 @@ public sealed class LockoutApiTests : IAsyncLifetime
         Assert.Null(row.UserId);
     }
 
+    [Fact]
+    public async Task Ac12_a_google_sign_in_issues_tokens_with_amr_google_and_a_fresh_auth_time()
+    {
+        var before = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        _idp.State.Next = new NextSignIn(Outcomes.Ok, "sub-" + Guid.NewGuid().ToString("N"), $"{Guid.NewGuid():N}@gmail.com", "An");
+        using var browser = new GoogleBrowser(_factory, _idp);
+        var verifier = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        var challenge = Convert.ToBase64String(SHA256.HashData(Encoding.ASCII.GetBytes(verifier))).TrimEnd('=').Replace('+', '-').Replace('/', '_');
+        var authorize = "/connect/authorize?client_id=hivespace-storefront&response_type=code&state=xyz"
+            + $"&redirect_uri={Uri.EscapeDataString(IdentityApiFactory.Issuer + "/bff/callback")}&scope={Uri.EscapeDataString("openid email profile roles offline_access")}"
+            + $"&code_challenge={challenge}&code_challenge_method=S256";
+        Assert.Equal(authorize, (await browser.SignInAsync(authorize)).FinalLocation);
+
+        var code = System.Web.HttpUtility.ParseQueryString(new Uri(IdentityApiFactory.Issuer + (await browser.GetAsync(authorize)).Location!.Replace(IdentityApiFactory.Issuer, string.Empty, StringComparison.Ordinal)).Query)["code"]!;
+        using var response = await browser.Identity.PostAsync("/connect/token", new FormUrlEncodedContent(new Dictionary<string, string>
+        {
+            ["grant_type"] = "authorization_code",
+            ["code"] = code,
+            ["code_verifier"] = verifier,
+            ["redirect_uri"] = IdentityApiFactory.Issuer + "/bff/callback",
+            ["client_id"] = "hivespace-storefront",
+            ["client_secret"] = IdentityApiFactory.ClientSecret,
+        }), Ct);
+        var body = await response.Content.ReadAsStringAsync(Ct);
+        Assert.True(response.IsSuccessStatusCode, body);
+
+        var access = System.Text.Json.JsonDocument.Parse(body).RootElement.GetProperty("access_token").GetString()!;
+        var payload = access.Split('.')[1].Replace('-', '+').Replace('_', '/');
+        var claims = System.Text.Json.JsonDocument.Parse(Convert.FromBase64String(payload.PadRight(payload.Length + ((4 - (payload.Length % 4)) % 4), '='))).RootElement;
+        Assert.Equal("google", claims.GetProperty("amr").GetString());
+        Assert.InRange(claims.GetProperty("auth_time").GetInt64(), before - 5, before + 60);
+    }
+
     private async Task<(Guid UserId, string Email)> RegisterAsync(string? email = null, bool verified = false)
     {
         email ??= $"{Guid.NewGuid():N}@example.com";

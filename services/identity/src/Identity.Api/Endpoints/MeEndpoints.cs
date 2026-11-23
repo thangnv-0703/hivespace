@@ -66,7 +66,7 @@ public static class MeEndpoints
                 if (session.Succeeded && session.Principal?.FindFirstValue("sub") == userId.ToString()
                     && await users.FindByIdAsync(userId, ct) is { } current)
                 {
-                    await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(current, stamp));
+                    await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(current, stamp, UsersEndpoints.AuthTimeOf(session.Principal), session.Principal.FindFirstValue(UsersEndpoints.AmrClaim)));
                 }
 
                 return Results.NoContent();

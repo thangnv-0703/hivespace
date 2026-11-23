@@ -26,7 +26,7 @@ The screen states (SCR-STF-012 locked and rate-limited, SCR-STF-018 set mode and
 - [x] T5 — Audit retention: `AuditRetentionSweeper` (start and every 6 hours, 90 days) registered in Identity.
       (design §5.2 Infrastructure; NFR-SEC-009)
       Done when: an integration test of `RunOnceAsync` passes for AC-9.
-- [ ] T6 — Re-authentication plumbing: `auth_time` and `amr` in `UsersEndpoints.ToPrincipal`, FEAT-004 `complete` (`amr=google`) and both password reissues; `ConnectEndpoints` `max_age` check, `BuildPrincipal` claims, refresh copy; gateway `/bff/login?reauth=true` → `max_age=60`.
+- [x] T6 — Re-authentication plumbing: `auth_time` and `amr` in `UsersEndpoints.ToPrincipal`, FEAT-004 `complete` (`amr=google`) and both password reissues; `ConnectEndpoints` `max_age` check, `BuildPrincipal` claims, refresh copy; gateway `/bff/login?reauth=true` → `max_age=60`.
       (design §3.6, §5.2 Api, §5.3; D-5)
       Done when: Identity integration tests pass for AC-12 (old and fresh `auth_time` with `max_age`, claims in access and ID tokens before and after refresh), and a gateway test shows `max_age=60` only with `reauth=true`.
 - [ ] T7 — Set a password: `SetMyPasswordHandler`, `IUserRepository.AddCredential`, `CredentialExistsException` mapping, `PUT /v1/me/password/initial` with `hs.idp` reissue; `ProfileView.HasPassword`.

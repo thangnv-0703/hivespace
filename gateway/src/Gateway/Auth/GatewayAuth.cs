@@ -86,6 +86,11 @@ public static class GatewayAuth
                     o.Events.OnRedirectToIdentityProvider = ctx =>
                     {
                         ctx.ProtocolMessage.IssuerAddress = settings.PublicOrigin + "/connect/authorize";
+                        if (ctx.Properties.Items.ContainsKey(BffEndpoints.ReauthItem))
+                        {
+                            ctx.ProtocolMessage.MaxAge = BffEndpoints.ReauthMaxAgeSeconds;
+                        }
+
                         return Task.CompletedTask;
                     };
 

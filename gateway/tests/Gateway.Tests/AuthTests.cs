@@ -179,6 +179,21 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
         Assert.Contains("offline_access", location, StringComparison.Ordinal);
     }
 
+    [Theory]
+    [InlineData("/bff/login?returnUrl=/profile/password&reauth=true", true)]
+    [InlineData("/bff/login?returnUrl=/profile/password&reauth=false", false)]
+    [InlineData("/bff/login?returnUrl=/profile/password", false)]
+    public async Task Ac12_bff_login_asks_for_a_fresh_sign_in_with_max_age_60_only_when_reauth_is_true(string url, bool expectsMaxAge)
+    {
+        using var client = _host.NewClient();
+
+        using var response = await client.GetAsync(url, Ct);
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+        var location = response.Headers.Location!.OriginalString;
+        Assert.Equal(expectsMaxAge, location.Contains("max_age=60", StringComparison.Ordinal));
+    }
+
     [Fact]
     public async Task Bff_login_on_the_seller_host_uses_the_seller_client_and_its_own_callback()
     {

@@ -7,13 +7,26 @@ namespace Gateway.Auth;
 /// <summary>Endpoints served by the gateway itself (design §3.3, <c>contracts/openapi/gateway.yaml</c>). The browser never receives a token.</summary>
 public static class BffEndpoints
 {
+    /// <summary>The challenge property that makes the authorize request carry <c>max_age</c>.</summary>
+    public const string ReauthItem = "reauth";
+
+    /// <summary>60 seconds covers the round trip, so a fresh sign-in is never asked twice (FEAT-005 §3.6).</summary>
+    public const string ReauthMaxAgeSeconds = "60";
+
     public static IEndpointRouteBuilder MapBffEndpoints(this IEndpointRouteBuilder app)
     {
         // The request host picks the OIDC client (ADR-0027); returnUrl is a path on that same host.
-        app.MapGet("/bff/login", (string? returnUrl, HttpRequest request, Microsoft.Extensions.Options.IOptions<GatewayAuthOptions> options) =>
-                Results.Challenge(
-                    new AuthenticationProperties { RedirectUri = LocalPath.OrHome(returnUrl) },
-                    [options.Value.SurfaceFor(request).OidcScheme]))
+        // reauth asks Identity for a sign-in made in the last 60 seconds (OIDC max_age, FR-AUTH-027, FEAT-005 §3.6).
+        app.MapGet("/bff/login", (string? returnUrl, bool? reauth, HttpRequest request, Microsoft.Extensions.Options.IOptions<GatewayAuthOptions> options) =>
+            {
+                var properties = new AuthenticationProperties { RedirectUri = LocalPath.OrHome(returnUrl) };
+                if (reauth == true)
+                {
+                    properties.Items[ReauthItem] = "true";
+                }
+
+                return Results.Challenge(properties, [options.Value.SurfaceFor(request).OidcScheme]);
+            })
             .AllowAnonymous();
 
         app.MapGet("/bff/user", async (HttpContext http, SessionTokens sessions, AccessTokenValidator validator) =>
