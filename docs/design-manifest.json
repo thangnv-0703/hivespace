@@ -22,17 +22,24 @@
           "loading",
           "google alerts (cancelled, unverified, failed)",
           "google unavailable",
-          "google loading"
+          "google loading",
+          "locked out",
+          "rate limited (with countdown)",
+          "google rate limited",
+          "re-authentication notice",
+          "retry (error without returnUrl)"
         ],
-        "gaps": [
-          "locked out (FEAT-005)"
-        ],
+        "gaps": [],
         "supplements": []
       },
       "contract_bindings": [
         "POST /v1/users/sign-in",
         "GET /connect/external/google/start (navigation)",
-        "/signin?error= codes identity.external_login_denied | external_email_unverified | external_login_failed | external_login_unavailable"
+        "/signin?error= codes identity.external_login_denied | external_email_unverified | external_login_failed | external_login_unavailable",
+        "POST /v1/users/sign-in 423 identity.account_locked, 429 common.rate_limited (Retry-After)",
+        "/signin?error= code common.rate_limited",
+        "returnUrl with max_age (re-authentication, /connect/authorize)",
+        "GET /bff/login (retry)"
       ],
       "conformance": {
         "result": "corrected",
@@ -41,7 +48,8 @@
           "red alert box -> Alert error",
           "custom password icons -> lucide Eye/EyeOff",
           "text-brand-500 links -> text-text-link",
-          "FEAT-004: Google G brand mark is a recorded vendor-colour exception (not a fork); secondary Button, Alert tones and divider use existing tokens"
+          "FEAT-004: Google G brand mark is a recorded vendor-colour exception (not a fork); secondary Button, Alert tones and divider use existing tokens",
+          "FEAT-005: new states use existing Alert tones, Button and useCooldown; no new tokens"
         ],
         "escalations": [
           "E-1 AuthLayout shell (accepted 2026-11-19; amended into design.md §4.5)",
@@ -68,6 +76,15 @@
               "docs/features/FEAT-004-google-sign-in/mockups/SignInMobile.dc.html"
             ],
             "canvas": "https://claude.ai/artifact/A8C8z8n6T6nBC4sYouwXtB"
+          },
+          {
+            "feature": "FEAT-005",
+            "files": [
+              "docs/features/FEAT-005-account-hardening/mockups/SignInLocked.dc.html",
+              "docs/features/FEAT-005-account-hardening/mockups/SignInRetry.dc.html",
+              "docs/features/FEAT-005-account-hardening/mockups/HardeningAlerts.dc.html"
+            ],
+            "canvas": "https://claude.ai/artifact/SrevC22oLd23LX3H1ofje8"
           }
         ]
       },
@@ -75,6 +92,11 @@
         {
           "feature": "FEAT-004",
           "source": "docs/features/FEAT-004-google-sign-in/ui-design.md#scr-stf-012--sign-in",
+          "designed_at": "2026-11-23"
+        },
+        {
+          "feature": "FEAT-005",
+          "source": "docs/features/FEAT-005-account-hardening/ui-design.md#scr-stf-012--sign-in",
           "designed_at": "2026-11-23"
         }
       ]
@@ -220,6 +242,12 @@
             "strategy": "code-native",
             "feature": "FEAT-003",
             "source": "docs/features/FEAT-003-change-password/ui-design.md#password-card"
+          },
+          {
+            "state": "password card set",
+            "strategy": "code-native",
+            "feature": "FEAT-005",
+            "source": "docs/features/FEAT-005-account-hardening/ui-design.md#password-card-set"
           }
         ]
       },
@@ -227,7 +255,8 @@
         "GET /v1/me/profile",
         "PUT /v1/me/profile",
         "PUT /v1/me/profile/language",
-        "POST /bff/session/refresh"
+        "POST /bff/session/refresh",
+        "GET /v1/me/profile hasPassword"
       ],
       "conformance": {
         "result": "corrected",
@@ -261,12 +290,19 @@
               "docs/features/FEAT-003-change-password/mockups/ProfilePasswordCard.dc.html"
             ],
             "canvas": "https://claude.ai/artifact/6NYyGvX7QpEnwQ6ffhAyB4"
+          },
+          {
+            "feature": "FEAT-005",
+            "files": [
+              "docs/features/FEAT-005-account-hardening/mockups/ProfileSetPasswordCard.dc.html"
+            ],
+            "canvas": "https://claude.ai/artifact/SrevC22oLd23LX3H1ofje8"
           }
         ]
       }
     },
     "SCR-STF-018": {
-      "name": "Change password",
+      "name": "Change password (set mode for accounts without a password)",
       "surface": "STF",
       "feature": "FEAT-003",
       "strategy": "code-native",
@@ -279,20 +315,32 @@
           "default",
           "submitting",
           "error (client, validation, wrong current password, password_not_set, save failed, 401)",
-          "success"
+          "success",
+          "loading (profile)",
+          "set mode default",
+          "reauthentication required",
+          "set-mode errors (validation, password_already_set)",
+          "locked (change mode)",
+          "rate limited",
+          "set success"
         ],
         "gaps": [],
         "supplements": []
       },
       "contract_bindings": [
         "PUT /v1/me/password",
-        "POST /bff/session/refresh"
+        "POST /bff/session/refresh",
+        "GET /v1/me/profile (hasPassword)",
+        "PUT /v1/me/password/initial",
+        "PUT /v1/me/password 423, 429",
+        "GET /bff/login?reauth=true&returnUrl=/profile/password (navigation)"
       ],
       "conformance": {
         "result": "pass",
         "corrections": [],
         "escalations": [
-          "reuses PasswordRules under FEAT-001 E-2 (pending toward ux-foundations); no new escalation"
+          "reuses PasswordRules under FEAT-001 E-2 (pending toward ux-foundations); no new escalation",
+          "FEAT-005: reuses FEAT-004 Google G brand-mark exception and FEAT-001 E-2 PasswordRules; no new escalation"
         ]
       },
       "status": "designed",
@@ -305,8 +353,26 @@
           "docs/features/FEAT-003-change-password/mockups/AccountMenu.dc.html"
         ],
         "canvas": "https://claude.ai/artifact/6NYyGvX7QpEnwQ6ffhAyB4",
-        "note": "visual reference; ui-design.md is authoritative"
-      }
+        "note": "visual reference; ui-design.md is authoritative",
+        "extra": [
+          {
+            "feature": "FEAT-005",
+            "files": [
+              "docs/features/FEAT-005-account-hardening/mockups/Main.dc.html",
+              "docs/features/FEAT-005-account-hardening/mockups/SetPasswordMobile.dc.html",
+              "docs/features/FEAT-005-account-hardening/mockups/HardeningAlerts.dc.html"
+            ],
+            "canvas": "https://claude.ai/artifact/SrevC22oLd23LX3H1ofje8"
+          }
+        ]
+      },
+      "supplements_by_feature": [
+        {
+          "feature": "FEAT-005",
+          "source": "docs/features/FEAT-005-account-hardening/ui-design.md#scr-stf-018--change-password",
+          "designed_at": "2026-11-23"
+        }
+      ]
     }
   }
 }

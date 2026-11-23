@@ -1,0 +1,132 @@
+{
+ "meta": {
+  "title": "FEAT-005 · Account hardening",
+  "subtitle": "Design solution from <code>technical-design.md</code>: lockout, set a first password, gateway rate limits and the sign-in audit log. Pick a flow to follow one use-case path; click any arrow for its data contract.",
+  "description": "Every sign-in and password request first passes the gateway's rate limiter: 10 per minute per IP for the anonymous /v1/users endpoints and the Google callback, 10 per minute per user for the password endpoints. Identity then checks the account's lockout row: a locked account is answered 423 without checking the password. Each wrong password, and each wrong current password on change password, adds one failure; the fifth within 15 minutes locks the account for 15 minutes. Every sign-in success, failure and lockout is written to audit_entries in the same transaction, without email or IP, and a sweeper deletes rows older than 90 days. A user without a password sets one through PUT /v1/me/password/initial after a Google sign-in in the last 10 minutes; when the sign-in is older, the page sends the user through /bff/login?reauth=true, which asks Identity's authorize endpoint for max_age=60 and so for a fresh Google sign-in. Google sign-in is never blocked by a password lockout.",
+  "viewBox": [1280, 700],
+  "links": [
+   {"href": "technical-design.md", "label": "technical-design.md"},
+   {"href": "../FEAT-004-google-sign-in/design-flow.html", "label": "FEAT-004 flow"},
+   {"href": "../../architecture-flow.html", "label": "Architecture"}
+  ],
+  "kindLabels": {"security": "Gateway / BFF", "backend": "Event bus", "database": "Store", "external": "Person / external"},
+  "edgeLabels": {"dashed": "Event", "security": "Auth / tokens"},
+  "overview": [
+   ["Implements", "FR-AUTH-011, FR-AUTH-012, FR-AUTH-027; NFR-SEC-005, NFR-SEC-009 (sign-in part)"],
+   ["Realizes", "UC-002 2b; UC-026 1a and the lockout side of 2a"],
+   ["Screens", "SCR-STF-012, SCR-STF-018, SCR-STF-016 Password card"],
+   ["Builds", "PUT /v1/me/password/initial, 423/429 responses, Profile.hasPassword, /bff/login?reauth, max_age, gateway limiters"],
+   ["Schema", "new tables sign_in_lockouts (xmin) and audit_entries"],
+   ["Depends on", "FEAT-001, FEAT-003, FEAT-004 (build and merge first)"]
+  ],
+  "footnote": "Source: <code>docs/features/FEAT-005-account-hardening/technical-design.md</code> (§3 contracts, §5 components, §7 decisions, §8 open items). Generated with html-flow-diagram; edit <code>design-flow.model.json</code> and rebuild."
+ },
+ "frames": [],
+ "nodes": [
+  {"id": "browser", "kind": "external", "x": 20, "y": 300, "w": 150, "h": 50, "label": "Browser", "sub": "buyer", "desc": "The user. Holds the BFF cookie (gateway) and <code>hs.idp</code> (Identity), which now carries <code>auth_time</code> and <code>amr</code> (<code>pwd</code> or <code>google</code>)."},
+  {"id": "spa", "kind": "frontend", "x": 220, "y": 100, "w": 190, "h": 66, "label": "Storefront SPA", "sub": "SCR-STF-012, 018, 016", "desc": "<b>Sign in:</b> 423 shows the locked message, 429 and <code>?error=common.rate_limited</code> the rate-limit message; an error without <code>returnUrl</code> shows a Try again button. <b>Password page:</b> set mode when <code>hasPassword</code> is false; a 403 offers Continue with Google (<code>/bff/login?reauth=true&amp;returnUrl=/profile/password</code>); 423 and 429 in change mode. <b>Profile card:</b> \"Set a password\"."},
+  {"id": "gw", "kind": "security", "x": 470, "y": 100, "w": 190, "h": 340, "label": "Gateway + BFF", "sub": "rate limiter", "sub2": "auth · auth-user", "desc": "Policy <code>auth</code>: 10/min per client IP on <code>/v1/users*</code> and the Google callback. Policy <code>auth-user</code>: 10/min per <code>sub</code> on <code>/v1/me/password*</code>. Over the limit: 429 <code>common.rate_limited</code> with <code>Retry-After</code>, or a redirect to <code>/signin?error=…</code> for the callback. Client IP from <code>X-Forwarded-For</code> only when <code>Gateway:TrustForwardedFor</code>. <code>/bff/login?reauth=true</code> adds <code>max_age=60</code>."},
+  {"id": "identity", "kind": "service", "x": 740, "y": 100, "w": 200, "h": 340, "label": "Identity", "sub": "lockout · audit", "sub2": "set password · max_age", "desc": "<b>Domain:</b> <code>SignInLockout</code>, <code>LockoutPolicy</code> (5 / 15 min / 15 min), <code>AuditEntry</code>. <b>Application:</b> <code>LockoutRecorder</code> (3 tries on conflict), changed <code>SignInHandler</code> and <code>ChangeMyPasswordHandler</code>, new <code>SetMyPasswordHandler</code>, Google audit rows. <b>Api:</b> <code>PUT /v1/me/password/initial</code>, <code>auth_time</code>/<code>amr</code> in <code>hs.idp</code> and tokens, <code>max_age</code> in <code>/connect/authorize</code>. <b>Infrastructure:</b> <code>AuditRetentionSweeper</code> (90 days)."},
+  {"id": "idb", "kind": "database", "x": 1040, "y": 100, "w": 190, "h": 80, "label": "identitydb", "sub": "sign_in_lockouts", "sub2": "audit_entries · credentials", "desc": "New <code>sign_in_lockouts</code> (<code>user_id</code> pk, <code>failed_count</code>, <code>window_started_at</code>, <code>locked_until</code>, <code>xmin</code>) and <code>audit_entries</code> (<code>type</code>, <code>method</code>, <code>user_id</code> nullable, <code>reason</code>, <code>correlation_id</code>; no email or IP). Set password inserts a <code>credentials</code> row; OpenIddict rows of other sessions get revoked."},
+  {"id": "bus", "kind": "backend", "x": 1040, "y": 240, "w": 190, "h": 50, "label": "Service Bus", "sub": "topic hivespace-events", "sigil": "service", "desc": "Outbox relay, at least once. Carries the existing <code>PasswordChanged/v1</code> after a password is set."},
+  {"id": "notif", "kind": "service", "x": 1040, "y": 350, "w": 190, "h": 56, "label": "Notification", "sub": "password-changed email", "desc": "Unchanged handling of <code>PasswordChanged</code> (FR-NOTIF-014). FEAT-004's <code>external_login_linked</code> notice gains a link to <code>/profile/password</code> in its password-removed paragraph."},
+  {"id": "mail", "kind": "external", "x": 760, "y": 560, "w": 200, "h": 50, "label": "Email provider", "sub": "Mailpit locally", "desc": "SMTP. Sends the password-changed security email after a password is set."},
+  {"id": "google", "kind": "external", "x": 470, "y": 520, "w": 190, "h": 56, "label": "Google / fake IdP", "sub": "re-authentication", "desc": "FEAT-004's OpenID Connect provider. Used here for the fresh sign-in that set-password requires; a Google sign-in works even while the account is password-locked (D-2)."}
+ ],
+ "edges": [
+  {"id": "e1", "from": "browser", "to": "spa", "s": "emphasis", "label": "form",
+   "data": {"p": "Sign-in form, password page (set or change), profile card", "f": "SPA", "c": "conf", "s": "Passwords only in the request body, never stored in the browser"}},
+  {"id": "e2", "from": "browser", "to": "gw", "s": "emphasis", "label": "request", "toAt": 0.66,
+   "data": {"p": "POST /v1/users/sign-in {email, password} · PUT /v1/me/password {currentPassword, newPassword} · PUT /v1/me/password/initial {newPassword} · GET /bff/login?reauth=true&returnUrl=/profile/password · Google callback", "f": "HTTPS JSON (X-HS-CSRF) and navigations", "c": "conf", "s": "Responses: 200/204, 401 invalid_credentials, 423 account_locked, 403 reauthentication_required, 409 password_already_set, 429 rate_limited + Retry-After", "w": "Over 10/min: rejected here, Identity not called"}},
+  {"id": "e3", "from": "gw", "to": "identity", "s": "emphasis", "label": "relay",
+   "data": {"p": "The same requests; bearer token for /v1/me/*; hs.idp passes through", "f": "HTTP", "c": "conf", "s": "auth (per IP) or auth-user (per sub) limiter applied first"}},
+  {"id": "e4", "from": "identity", "to": "idb", "s": "default", "label": "count", "fromAt": 0.1, "toAt": 0.3,
+   "data": {"p": "Read lockout row; on failure failed_count+1 (lock on the 5th), on success delete it; audit_entries row(s) sign_in_succeeded / sign_in_failed / account_locked", "f": "EF Core · one SaveChanges", "c": "internal", "s": "xmin conflict → reload and reapply, 3 tries; no email or IP stored", "w": "Locked: no password check (FR-AUTH-012)"}},
+  {"id": "e5", "from": "identity", "to": "idb", "s": "default", "label": "set", "fromAt": 0.25, "toAt": 0.8,
+   "data": {"p": "Insert credential (argon2id), revoke other authorizations and tokens, outbox PasswordChanged", "f": "EF Core · one SaveChanges", "c": "restr", "s": "Only when amr=google and auth_time ≤ 10 min; PK conflict → 409 password_already_set"}},
+  {"id": "e6", "from": "identity", "to": "bus", "s": "dashed", "label": "event", "fromAt": 0.45,
+   "data": {"p": "PasswordChanged/v1 {userId, email, displayName, language, changedAt}", "f": "Event envelope · JSON schema v1 (unchanged)", "c": "pii", "s": "No password or hash", "w": "After commit, at least once"}},
+  {"id": "e7", "from": "bus", "to": "notif", "s": "dashed",
+   "data": {"p": "PasswordChanged", "f": "Service Bus subscription", "c": "pii", "s": "Inbox dedupe by eventId"}},
+  {"id": "e8", "from": "notif", "to": "mail", "s": "default", "label": "send", "fromSide": "bottom", "toSide": "right",
+   "data": {"p": "Password-changed security email (vi/en)", "f": "SMTP", "c": "pii", "s": "After commit", "w": "Retries are FEAT-032"}},
+  {"id": "e9", "from": "browser", "to": "google", "s": "security", "label": "re-auth", "fromSide": "bottom", "toSide": "left",
+   "data": {"p": "/connect/authorize?…&max_age=60 → /signin → Sign in with Google (FEAT-004 start, consent, callback, complete) → authorize again", "f": "OIDC redirects", "c": "conf", "s": "Fresh auth_time and amr=google land in hs.idp and in the new access token", "w": "Typed password is lost; the user submits again"}},
+  {"id": "e10", "from": "identity", "to": "google", "s": "security", "label": "code", "fromSide": "bottom", "toSide": "right", "fromAt": 0.2,
+   "data": {"p": "FEAT-004 code redeem and ID-token validation (unchanged)", "f": "HTTPS/JSON", "c": "restr", "s": "Google success and failure now write audit rows (method google)"}}
+ ],
+ "flows": {
+  "all": {"title": "FEAT-005 design solution", "intro": "Five paths: lockout on sign-in, lockout on change password, setting a first password with re-authentication, the gateway limits, and Google while locked."},
+  "lock": {
+   "title": "Lockout on sign-in (UC-002 2b)", "button": "Lockout", "color": "security",
+   "tags": ["UC-002 2b", "FR-AUTH-011, FR-AUTH-012, NFR-SEC-009", "AC-1..AC-4, AC-6, AC-8"],
+   "steps": [
+    {"e": ["e1", "e2", "e3"], "t": "<strong>Sign in</strong> with email and password, through the per-IP limiter."},
+    {"e": ["e4"], "t": "<strong>Locked?</strong> If <code>locked_until</code> is in the future: audit row, <strong>423 <code>identity.account_locked</code></strong>, the password is not checked."},
+    {"e": ["e4"], "t": "<strong>Wrong password:</strong> one more failure and an audit row; the 5th within 15 minutes sets <code>locked_until = now + 15 min</code> and answers 423, the others 401."},
+    {"e": ["e4"], "t": "<strong>Correct password:</strong> the lockout row is deleted, <code>sign_in_succeeded</code> is written, <code>hs.idp</code> gets <code>auth_time</code> and <code>amr=pwd</code>."}
+   ]},
+  "change": {
+   "title": "Lockout on change password (UC-026 2a)", "button": "Change pwd", "color": "frontend",
+   "tags": ["UC-026 2a", "FR-AUTH-025 note, FR-AUTH-012", "AC-5"],
+   "steps": [
+    {"e": ["e1", "e2", "e3"], "t": "<strong>PUT /v1/me/password</strong> through the per-user limiter."},
+    {"e": ["e4"], "t": "<strong>Locked:</strong> 423 before anything is evaluated. <strong>Wrong current password:</strong> counts on the same lockout (423 when it locks, otherwise the usual 400). <strong>Correct:</strong> the lockout is cleared."}
+   ]},
+  "set": {
+   "title": "Set a first password (UC-026 1a)", "button": "Set password", "color": "frontend",
+   "tags": ["UC-026 1a", "FR-AUTH-027, FR-NOTIF-014, OQ-33", "AC-10..AC-12, AC-15"],
+   "steps": [
+    {"e": ["e1", "e2", "e3"], "t": "<strong>Set mode</strong> (<code>hasPassword</code> false); the first submit gets <strong>403 <code>identity.reauthentication_required</code></strong> because the last Google sign-in is older than 10 minutes."},
+    {"e": ["e2", "e9"], "t": "<strong>Continue with Google:</strong> <code>/bff/login?reauth=true</code> sends <code>max_age=60</code>; authorize clears the old <code>hs.idp</code> and the user signs in with Google again."},
+    {"e": ["e10"], "t": "<strong>Fresh session:</strong> the new access token carries <code>amr=google</code> and a fresh <code>auth_time</code>."},
+    {"e": ["e2", "e3", "e5"], "t": "<strong>Submit again:</strong> one transaction creates the credential, revokes other sessions and queues <code>PasswordChanged</code>; 204 and <code>hs.idp</code> reissued with <code>pwd_at</code>."},
+    {"e": ["e6", "e7", "e8"], "t": "<strong>Security email</strong> \"your password was changed\"."}
+   ]},
+  "limit": {
+   "title": "Rate limits (NFR-SEC-005)", "button": "Rate limit", "color": "security",
+   "tags": ["NFR-SEC-005", "AC-13, AC-14"],
+   "steps": [
+    {"e": ["e2"], "t": "<strong>11th request in a minute</strong> from one IP (register, sign-in, resend, Google callback) or from one user (password endpoints)."},
+    {"e": ["e2"], "t": "<strong>429 <code>common.rate_limited</code></strong> with <code>Retry-After</code>, or for the callback a redirect to <code>/signin?error=common.rate_limited</code>. Identity is not called."}
+   ]},
+  "google": {
+   "title": "Google while locked", "button": "Google", "color": "external",
+   "tags": ["D-2", "NFR-SEC-009", "AC-7, AC-8"],
+   "steps": [
+    {"e": ["e9", "e10"], "t": "<strong>Google sign-in</strong> (FEAT-004) neither checks nor changes the password lockout."},
+    {"e": ["e4"], "t": "<strong>Audit row</strong> <code>sign_in_succeeded</code> or <code>sign_in_failed</code> with method <code>google</code>."}
+   ]}
+ },
+ "notes": [
+  {"id": "N1", "on": "gw", "st": "decision", "t": "Two layers of protection", "b": "Lockout per account in Identity; request limits per IP or user in the gateway. One guards an account guessed from many IPs, the other many accounts from one IP.", "r": "D-1"},
+  {"id": "N2", "on": "google", "st": "decision", "t": "Google not blocked by a lockout", "b": "Otherwise five wrong passwords from anyone lock the owner out completely. <strong>Confirmed by the user.</strong>", "r": "D-2"},
+  {"id": "N3", "on": "idb", "st": "decision", "t": "Lockout in its own table, xmin", "b": "<code>credentials.updated_at</code> is the <code>pwd_at</code> stamp and must not move; parallel failures must all count; FEAT-006 locks accounts without a credential.", "r": "D-3"},
+  {"id": "N4", "on": "idb", "st": "decision", "t": "Audit without email or IP", "b": "NFR-LEG-001 limits the personal data we collect; user id and correlation id answer who signed in and when.", "r": "D-4"},
+  {"id": "N5", "on": "identity", "st": "decision", "t": "Re-auth: Google within 10 min", "b": "<code>auth_time</code> and <code>amr</code> in tokens, OIDC <code>max_age</code> on authorize. A stolen session cannot add a password. <strong>Confirmed by the user</strong> (OQ-33 proposal).", "r": "D-5"},
+  {"id": "N6", "on": "gw", "st": "decision", "t": "Client IP only behind a trusted proxy", "b": "<code>X-Forwarded-For</code> is trusted only with <code>Gateway:TrustForwardedFor</code>; the Google callback is limited per IP because no user is known yet.", "r": "D-6"},
+  {"id": "N7", "on": "spa", "st": "decision", "t": "Distinct 423 for a locked account", "b": "Registration already reveals that an email exists, so the lock reveals nothing new; 423, not 401, so the password page does not sign the user out. <strong>Confirmed by the user.</strong>", "r": "D-7"},
+  {"id": "N8", "on": "bus", "st": "decision", "t": "Reuse PasswordChanged", "b": "A newly set password sends the existing security email; no new event contract.", "r": "D-8"},
+  {"id": "N9", "on": "gw", "st": "risk", "t": "Limiter is in memory", "b": "Correct only with one gateway replica (risk R-5). Test stacks raise the limit to 1000 (D-9).", "r": "D-9, §8"},
+  {"id": "G1", "st": "risk", "t": "FEAT-004 is not built yet", "b": "Set password, Google audit rows, the callback limit and the notice link all touch FEAT-004 code. Build and merge it first.", "r": "§8"},
+  {"id": "G2", "st": "consider", "t": "Deferred audit and limits", "b": "Role-grant audit with FEAT-009; code sign-in lockout and limits with FEAT-006; search and upload limits with their features.", "r": "§8"}
+ ],
+ "specs": {
+  "identity": {"host": "Identity service (.NET)", "trigger": "POST /v1/users/sign-in, PUT /v1/me/password, PUT /v1/me/password/initial, /connect/authorize", "ops": ["lockout check and count", "audit rows", "set password after re-auth", "max_age on authorize", "90-day audit purge"], "data": "sign_in_lockouts, audit_entries, credentials, outbox", "nfr": "FR-AUTH-011, FR-AUTH-012, FR-AUTH-027, NFR-SEC-009"},
+  "gw": {"host": "Gateway (.NET, YARP)", "trigger": "Every request on the limited routes", "ops": ["auth: 10/min per IP", "auth-user: 10/min per sub", "429 envelope or /signin redirect", "reauth → max_age=60"], "data": "In-memory counters only", "nfr": "NFR-SEC-005"}
+ },
+ "sections": [
+  {"type": "table", "title": "New error codes", "lead": "Stable codes with vi/en messages (FR-LOC-004).", "columns": ["Code", "http", "When"], "rows": [
+   ["<code>identity.account_locked</code>", "423", "Sign-in or change password on a locked account, and the attempt that locks it"],
+   ["<code>identity.reauthentication_required</code>", "403", "Set password without a Google sign-in in the last 10 minutes"],
+   ["<code>identity.password_already_set</code>", "409", "Set password on an account that has one"],
+   ["<code>common.rate_limited</code>", "429", "Over a gateway limit (with Retry-After)"]
+  ]},
+  {"type": "table", "title": "Rate limits", "lead": "Defaults from NFR-SEC-005; configurable under <code>RateLimits</code>.", "columns": ["Policy", "Key", "Routes"], "rows": [
+   ["<code>auth</code>", "client IP", "<code>/v1/users*</code>, <code>/connect/external/{provider}/callback</code>"],
+   ["<code>auth-user</code>", "<code>sub</code>, else IP", "<code>/v1/me/password</code>, <code>/v1/me/password/initial</code>"]
+  ]},
+  {"type": "notes", "title": "Decisions, risks and open items", "lead": "Decisions D-1..D-10 and open items from the design."},
+  {"type": "catalogue", "title": "Component catalogue"}
+ ]
+}

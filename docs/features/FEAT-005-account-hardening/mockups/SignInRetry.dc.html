@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign in, try again (mobile)</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="position: relative; width: 100%; min-height: 700px; box-sizing: border-box; padding: 72px 16px 40px; background: #ffffff">
+  <div style="position: absolute; top: 16px; right: 16px; display: flex; gap: 8px">
+    <button type="button" aria-label="Language: English" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054; font: 500 14px 'Outfit','Noto Sans',sans-serif">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>EN
+    </button>
+    <button type="button" aria-label="Switch to dark theme" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+    </button>
+  </div>
+  <main>
+    <a href="#" style="display: inline-block; margin-bottom: 32px; text-decoration: none; color: #101828; font: 700 22px 'Outfit',sans-serif">HiveSpace</a>
+    <h1 style="margin: 0 0 8px; font-size: 30px; line-height: 38px; font-weight: 600">Sign in</h1>
+    <p style="margin: 0 0 32px; font-size: 14px; line-height: 20px; color: #667085">Welcome back. Sign in to keep shopping on HiveSpace.</p>
+    <div role="status" style="display: flex; gap: 12px; margin-bottom: 24px; padding: 16px; border-radius: 8px; background: #fffaeb; color: #b54708">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <div>
+        <div style="font-size: 14px; line-height: 20px; font-weight: 600">Too many attempts</div>
+        <div style="margin-top: 4px; font-size: 14px; line-height: 20px">Too many sign-in attempts from this network. Wait a minute, then try again.</div>
+      </div>
+    </div>
+    <a href="#" style="display: flex; align-items: center; justify-content: center; width: 100%; height: 48px; box-sizing: border-box; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 16px 'Outfit','Noto Sans',sans-serif; text-decoration: none; box-shadow: 0 1px 2px #1018280d">Try again</a>
+    <p style="margin: 16px 0 0; font-size: 12px; line-height: 18px; color: #667085">Shown when <code>?error=</code> arrives without a <code>returnUrl</code>. No form: Try again restarts sign-in through /bff/login.</p>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":700}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
