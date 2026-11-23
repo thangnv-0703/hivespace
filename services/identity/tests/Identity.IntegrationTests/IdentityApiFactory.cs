@@ -11,7 +11,7 @@ using Xunit;
 namespace Identity.IntegrationTests;
 
 /// <summary>Boots Identity.Api against a real Postgres container; the broker is faked (the relay is removed).</summary>
-public sealed class IdentityApiFactory(string? googleAuthority = null) : WebApplicationFactory<Program>
+public sealed class IdentityApiFactory(string? googleAuthority = null, TimeProvider? clock = null) : WebApplicationFactory<Program>
 {
     public const string GoogleClientId = "hivespace-google-test";
     public const string GoogleClientSecret = "google-test-secret"; // pragma: allowlist secret - test value
@@ -60,6 +60,11 @@ public sealed class IdentityApiFactory(string? googleAuthority = null) : WebAppl
             var relay = services.Single(d => d.ImplementationType?.Name.StartsWith("OutboxRelay", StringComparison.Ordinal) == true);
             services.Remove(relay);
             services.RemoveAll<IEventBus>();
+            if (clock is not null)
+            {
+                services.RemoveAll<TimeProvider>();
+                services.AddSingleton(clock);
+            }
         });
     }
 

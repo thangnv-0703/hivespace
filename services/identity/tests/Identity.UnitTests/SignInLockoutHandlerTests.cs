@@ -88,6 +88,8 @@ public sealed class SignInLockoutHandlerTests
 
         public void AddToken(VerificationToken token) => throw new NotSupportedException();
 
+        public void AddCredential(Credential credential) => throw new NotSupportedException();
+
         public void Add(SignInLockout newLockout) => throw new NotSupportedException();
 
         public void Remove(SignInLockout old) => throw new NotSupportedException();

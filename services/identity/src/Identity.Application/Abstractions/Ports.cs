@@ -24,6 +24,12 @@ public interface IVerificationTokenGenerator
     byte[] Hash(string token);
 }
 
+/// <summary>
+/// Raised by <see cref="IUserRepository.SaveChangesAsync"/> when a credential insert hits the primary key: the account got a
+/// password between the check and the save (two parallel set-password calls, FR-AUTH-027).
+/// </summary>
+public sealed class CredentialExistsException(Exception inner) : Exception("The account already has a password.", inner);
+
 /// <summary>Raised by <see cref="IUserRepository.SaveChangesAsync"/> when two registrations race for one normalized email.</summary>
 public sealed class EmailInUseException(Exception inner) : Exception("The email is already registered.", inner);
 
@@ -96,12 +102,16 @@ public interface IUserRepository
 
     void AddToken(VerificationToken token);
 
+    /// <summary>A first password for an account that has none (FR-AUTH-027).</summary>
+    void AddCredential(Credential credential);
+
     /// <summary>
     /// Commits everything added or changed, including queued outbox rows, in one transaction.
     /// On a unique-index conflict nothing stays staged, so the caller can decide again on fresh reads.
     /// </summary>
     /// <exception cref="EmailInUseException">The unique index on the normalized email rejected the insert.</exception>
     /// <exception cref="ExternalLoginConflictException">A unique index of <c>external_logins</c> rejected the insert.</exception>
+    /// <exception cref="CredentialExistsException">The primary key of <c>credentials</c> rejected the insert.</exception>
     /// <exception cref="ConcurrencyConflictException">The lockout row of the account changed or appeared since it was read.</exception>
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

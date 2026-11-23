@@ -48,6 +48,7 @@ public static class DependencyInjection
         services.AddScoped<SignInHandler>();
         services.AddScoped<RecordSignInFailureHandler>();
         services.AddScoped<ChangeMyPasswordHandler>();
+        services.AddScoped<SetMyPasswordHandler>();
         services.AddScoped<ExternalSignInHandler>();
         services.AddScoped<GetMyProfileHandler>();
         services.AddScoped<UpdateMyProfileHandler>();

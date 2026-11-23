@@ -29,7 +29,7 @@ The screen states (SCR-STF-012 locked and rate-limited, SCR-STF-018 set mode and
 - [x] T6 — Re-authentication plumbing: `auth_time` and `amr` in `UsersEndpoints.ToPrincipal`, FEAT-004 `complete` (`amr=google`) and both password reissues; `ConnectEndpoints` `max_age` check, `BuildPrincipal` claims, refresh copy; gateway `/bff/login?reauth=true` → `max_age=60`.
       (design §3.6, §5.2 Api, §5.3; D-5)
       Done when: Identity integration tests pass for AC-12 (old and fresh `auth_time` with `max_age`, claims in access and ID tokens before and after refresh), and a gateway test shows `max_age=60` only with `reauth=true`.
-- [ ] T7 — Set a password: `SetMyPasswordHandler`, `IUserRepository.AddCredential`, `CredentialExistsException` mapping, `PUT /v1/me/password/initial` with `hs.idp` reissue; `ProfileView.HasPassword`.
+- [x] T7 — Set a password: `SetMyPasswordHandler`, `IUserRepository.AddCredential`, `CredentialExistsException` mapping, `PUT /v1/me/password/initial` with `hs.idp` reissue; `ProfileView.HasPassword`.
       (design §3.4, §3.5, §5.2; FR-AUTH-027, FR-NOTIF-014; UC-026 1a; D-5, D-8, D-10)
       Done when: integration tests pass for AC-10 (including sign-in with the new password and a silent `/connect/authorize` with the reissued cookie), AC-11 (each error, nothing written, the parallel 409) and AC-15.
 - [ ] T8 — Gateway rate limits: policies `auth` (per IP) and `auth-user` (per `sub`, else IP) from `RateLimits` options; `OnRejected` (429 envelope with `Retry-After`, or the `/signin?error=common.rate_limited` redirect for `/connect/external/*`); routes `me-password`, `me-password-rest`, `connect-external-callback`; `UseForwardedHeaders` behind `Gateway:TrustForwardedFor`; `Gateway__TrustForwardedFor=true` in the Azure deployment config.

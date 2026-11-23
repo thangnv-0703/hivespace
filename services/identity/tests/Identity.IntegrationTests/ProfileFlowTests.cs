@@ -33,7 +33,7 @@ public sealed class ProfileFlowTests(PostgresFixture postgres) : IClassFixture<P
 
         var profile = (await rig.GetProfile.HandleAsync(userId, Ct)).Value!;
 
-        Assert.Equal(new ProfileView(userId, email, "An", null, null, null, null, "vi"), profile);
+        Assert.Equal(new ProfileView(userId, email, "An", null, null, null, null, "vi", true), profile);
     }
 
     [Fact]

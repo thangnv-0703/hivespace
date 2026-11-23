@@ -41,6 +41,8 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository, 
 
     public void AddToken(VerificationToken token) => db.VerificationTokens.Add(token);
 
+    public void AddCredential(Credential credential) => db.Credentials.Add(credential);
+
     public void Add(User user) => db.Users.Add(user);
 
     public Task<ExternalLogin?> FindExternalLoginAsync(string provider, string subject, CancellationToken cancellationToken) =>
@@ -83,6 +85,12 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository, 
         {
             db.ChangeTracker.Clear();
             throw new ConcurrencyConflictException(ex);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "PK_credentials" })
+        {
+            db.ChangeTracker.Clear();
+            throw new CredentialExistsException(ex);
         }
         catch (DbUpdateException ex) when (
             ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "IX_users_normalized_email" })
