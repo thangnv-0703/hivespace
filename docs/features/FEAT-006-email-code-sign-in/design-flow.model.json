@@ -1,0 +1,135 @@
+{
+ "meta": {
+  "title": "FEAT-006 · Sign in with an email code",
+  "subtitle": "Design solution from <code>technical-design.md</code>: request a 6-digit code by email, then sign in with it. Pick a flow to follow one UC-029 path; click any arrow for its data contract.",
+  "description": "The visitor enters an email on SCR-STF-021. Identity refuses a second request for the same address within 60 seconds (429 with Retry-After), otherwise ends every open challenge of the address, stores a new challenge with only the hash of a fresh code and, when an account exists, queues SignInCodeRequested so Notification emails the code. An unknown address gets the same 201 and a real challenge, but no email. On SCR-STF-022 the visitor types the code: an ended or expired challenge is refused, a locked account is refused without comparing the code, a wrong code counts on the challenge (ended at the fifth) and on the account lockout in one save, and a correct code ends the challenge, verifies an unverified email, clears the lockout and signs the user into hs.idp (amr=otp) exactly like a password sign-in. All of it sits behind the gateway's existing 10-per-minute-per-IP auth limiter.",
+  "viewBox": [1280, 700],
+  "links": [
+   {"href": "technical-design.md", "label": "technical-design.md"},
+   {"href": "../FEAT-005-account-hardening/design-flow.html", "label": "FEAT-005 flow"},
+   {"href": "../../architecture-flow.html", "label": "Architecture"}
+  ],
+  "kindLabels": {"security": "Gateway / BFF", "backend": "Event bus", "database": "Store", "external": "Person / external"},
+  "edgeLabels": {"dashed": "Event", "security": "Auth / tokens"},
+  "overview": [
+   ["Implements", "FR-AUTH-028..036, FR-NOTIF-016; NFR-SEC-016, NFR-SEC-005, NFR-SEC-009"],
+   ["Realizes", "UC-029 (main, 1a, 2a, 2b, 3a, 4a, 4b, 4c)"],
+   ["Screens", "SCR-STF-021, SCR-STF-022, SCR-STF-012 link"],
+   ["Builds", "POST /v1/users/sign-in/code-challenges, POST /v1/users/sign-in/code, event SignInCodeRequested/v1, Retry-After on ApiException"],
+   ["Schema", "new table sign_in_code_challenges (xmin, partial unique open index); audit method code"],
+   ["Depends on", "FEAT-001, FEAT-004, FEAT-005 (merge FEAT-005 first)"]
+  ],
+  "footnote": "Source: <code>docs/features/FEAT-006-email-code-sign-in/technical-design.md</code> (§3 contracts, §5 components, §7 decisions, §8 open items). Generated with html-flow-diagram; edit <code>design-flow.model.json</code> and rebuild."
+ },
+ "frames": [],
+ "nodes": [
+  {"id": "browser", "kind": "external", "x": 20, "y": 300, "w": 150, "h": 50, "label": "Browser", "sub": "visitor", "desc": "The visitor. After a code sign-in holds <code>hs.idp</code> with <code>pwd_at</code> (when the account has a password), <code>auth_time</code> and <code>amr=otp</code>; then the BFF cookie after the authorize round trip."},
+  {"id": "spa", "kind": "frontend", "x": 220, "y": 100, "w": 190, "h": 66, "label": "Storefront SPA", "sub": "SCR-STF-021, 022, 012", "desc": "<b>SCR-STF-012:</b> \"Sign in with an email code\" link keeping <code>returnUrl</code>. <b>SCR-STF-021</b> <code>/signin/code</code>: email, 429 countdown from <code>Retry-After</code>. <b>SCR-STF-022</b> <code>/signin/code/enter</code>: six digit boxes with paste, resend countdown, wrong / expired / ended / locked states; challenge kept in <code>sessionStorage</code> (never the code). Serves the seller centre too, through the hosted <code>/signin</code>."},
+  {"id": "gw", "kind": "security", "x": 470, "y": 100, "w": 190, "h": 340, "label": "Gateway + BFF", "sub": "auth limiter", "sub2": "no change", "desc": "Route <code>users</code> (<code>/v1/users/{**rest}</code>) with policy <code>auth</code>: one 10-per-minute window per client IP shared by all <code>/v1/users*</code> calls (FEAT-005). Over it: 429 <code>common.rate_limited</code> with <code>Retry-After</code>. Relays <code>/connect/authorize</code> and runs the BFF callback after the code sign-in."},
+  {"id": "identity", "kind": "service", "x": 740, "y": 100, "w": 200, "h": 340, "label": "Identity", "sub": "code challenges", "sub2": "lockout · audit", "desc": "<b>Domain:</b> <code>SignInCodeChallenge</code>, <code>SignInCodePolicy</code> (6 digits, 5 min, 60 s, 5 wrong). <b>Application:</b> <code>RequestSignInCodeHandler</code>, <code>SignInWithCodeHandler</code> (one save per attempt, bounded retry), <code>LockoutRecorder.Stage*</code>. <b>Infrastructure:</b> <code>SignInCodeGenerator</code> (CSPRNG, SHA-256 salted with the id, <code>FixedTimeEquals</code>), <code>SignInChallengeSweeper</code> (1 day). <b>Api:</b> two endpoints under <code>/v1/users/sign-in/</code>."},
+  {"id": "idb", "kind": "database", "x": 1040, "y": 100, "w": 190, "h": 80, "label": "identitydb", "sub": "sign_in_code_challenges", "sub2": "lockouts · audit · outbox", "desc": "New <code>sign_in_code_challenges</code>: <code>id</code>, <code>email_hash</code>, <code>user_id</code> (null for an unknown address), <code>code_hash</code>, <code>failed_count</code> 0..5, <code>created_at</code>, <code>expires_at</code>, <code>ended_at</code>, <code>end_reason</code> (used / superseded / attempts), <code>xmin</code>; unique open challenge per <code>email_hash</code>. <code>audit_entries.method</code> gains <code>code</code>. No plain email, no code."},
+  {"id": "bus", "kind": "backend", "x": 1040, "y": 240, "w": 190, "h": 50, "label": "Service Bus", "sub": "topic hivespace-events", "sigil": "service", "desc": "Outbox relay, at least once. Carries <code>SignInCodeRequested/v1</code> only for addresses that have an account."},
+  {"id": "notif", "kind": "service", "x": 1040, "y": 350, "w": 190, "h": 56, "label": "Notification", "sub": "sign_in_code email", "desc": "Validates <code>SignInCodeRequested</code> (pydantic, <code>extra=forbid</code>), upserts the contact, writes one <code>email_records</code> row and renders <code>sign_in_code.{vi,en}</code> with the code and \"valid for 5 minutes\". The body is never stored or logged."},
+  {"id": "mail", "kind": "external", "x": 760, "y": 560, "w": 200, "h": 50, "label": "Email provider", "sub": "Mailpit locally", "desc": "SMTP. Delivers the code email to the visitor's inbox."}
+ ],
+ "edges": [
+  {"id": "e1", "from": "browser", "to": "spa", "s": "emphasis", "label": "form",
+   "data": {"p": "Email on SCR-STF-021; six digits on SCR-STF-022", "f": "SPA", "c": "conf", "s": "The code lives only in the input; never stored by the SPA"}},
+  {"id": "e2", "from": "browser", "to": "gw", "s": "emphasis", "label": "request", "toAt": 0.66,
+   "data": {"p": "POST /v1/users/sign-in/code-challenges {email} · POST /v1/users/sign-in/code {challengeId, code, returnUrl} · then GET /connect/authorize… and the BFF callback", "f": "HTTPS JSON (X-HS-CSRF) and navigations", "c": "conf", "s": "Responses: 201 {challengeId, expiresAt, resendAvailableAt}; 200 {redirectUrl} + hs.idp; 400; 401 sign_in_code_invalid / sign_in_code_expired / sign_in_challenge_ended; 423 account_locked; 429 sign_in_code_too_soon or rate_limited + Retry-After", "w": "Over 10/min per IP: rejected here, Identity not called"}},
+  {"id": "e3", "from": "gw", "to": "identity", "s": "emphasis", "label": "relay",
+   "data": {"p": "The same requests; hs.idp passes through", "f": "HTTP", "c": "conf", "s": "auth limiter (per IP) applied first"}},
+  {"id": "e4", "from": "identity", "to": "idb", "s": "default", "label": "issue", "fromAt": 0.1, "toAt": 0.3,
+   "data": {"p": "Newest challenge for email_hash (60 s rule); end open challenges (superseded); insert challenge with code_hash; outbox SignInCodeRequested when an account exists", "f": "EF Core · one SaveChanges", "c": "restr", "s": "Only hashes stored; open-index conflict → 429 too soon, Retry-After 60", "w": "Unknown address: same rows, no outbox row"}},
+  {"id": "e5", "from": "identity", "to": "idb", "s": "default", "label": "check", "fromAt": 0.25, "toAt": 0.8,
+   "data": {"p": "Challenge by id and lockout row; wrong: failed_count+1 on both (challenge ends at 5); correct: end challenge (used), verify email, delete lockout; audit row method code", "f": "EF Core · one SaveChanges per attempt", "c": "internal", "s": "xmin conflicts on challenge or lockout → reload and reapply (bounded); constant-time compare", "w": "Locked: code not compared (FR-AUTH-035)"}},
+  {"id": "e6", "from": "identity", "to": "bus", "s": "dashed", "label": "event", "fromAt": 0.45,
+   "data": {"p": "SignInCodeRequested/v1 {userId, email, displayName, language, code, expiresAt}", "f": "Event envelope · JSON schema v1", "c": "restr", "s": "Carries the code (R-6, as VerificationEmailRequested); never logged; 5-minute lifetime", "w": "After commit, at least once"}},
+  {"id": "e7", "from": "bus", "to": "notif", "s": "dashed",
+   "data": {"p": "SignInCodeRequested", "f": "Service Bus subscription", "c": "restr", "s": "Inbox dedupe by eventId"}},
+  {"id": "e8", "from": "notif", "to": "mail", "s": "default", "label": "send", "fromSide": "bottom", "toSide": "right",
+   "data": {"p": "Sign-in code email (vi/en): the code and how long it stays valid", "f": "SMTP", "c": "restr", "s": "After commit; failure recorded as the exception type only", "w": "Retries are FEAT-032"}},
+  {"id": "e9", "from": "mail", "to": "browser", "s": "dashed", "label": "inbox", "fromSide": "left", "toSide": "bottom",
+   "data": {"p": "The visitor reads the 6-digit code in their inbox", "f": "Email", "c": "restr", "s": "Valid 5 minutes, single use"}}
+ ],
+ "flows": {
+  "all": {"title": "FEAT-006 design solution", "intro": "Request a code, sign in with it, and the exception paths: too soon or resend, wrong or expired code, locked account, unknown address."},
+  "request": {
+   "title": "Request a code (UC-029 1–2)", "button": "Request", "color": "frontend",
+   "tags": ["UC-029 main 1–2", "FR-AUTH-028, FR-AUTH-034, FR-NOTIF-016, NFR-SEC-016", "AC-1, AC-4, AC-13, AC-14"],
+   "steps": [
+    {"e": ["e1", "e2", "e3"], "t": "<strong>Enter email</strong> on SCR-STF-021; <code>POST /v1/users/sign-in/code-challenges</code> through the per-IP limiter."},
+    {"e": ["e4"], "t": "<strong>Issue:</strong> earlier open challenges end (<code>superseded</code>); a new challenge stores only <code>SHA-256(id ‖ code)</code>; <strong>201</strong> <code>{challengeId, expiresAt, resendAvailableAt}</code>."},
+    {"e": ["e6", "e7"], "t": "<strong>Event</strong> <code>SignInCodeRequested</code> reaches Notification through the outbox."},
+    {"e": ["e8", "e9"], "t": "<strong>Email</strong> with the code arrives; SCR-STF-022 shows the entry and the resend countdown."}
+   ]},
+  "signin": {
+   "title": "Sign in with the code (UC-029 3–5)", "button": "Sign in", "color": "security",
+   "tags": ["UC-029 main 3–5", "FR-AUTH-030, FR-AUTH-036, NFR-SEC-016", "AC-5, AC-9, AC-10"],
+   "steps": [
+    {"e": ["e1", "e2", "e3"], "t": "<strong>Type or paste the code</strong>; <code>POST /v1/users/sign-in/code {challengeId, code, returnUrl}</code>."},
+    {"e": ["e5"], "t": "<strong>Correct:</strong> in one save the challenge ends <code>used</code>, an unverified email is verified, the lockout row is deleted, <code>sign_in_succeeded</code> (method <code>code</code>) is written."},
+    {"e": ["e2", "e3"], "t": "<strong>200 {redirectUrl}</strong> with <code>hs.idp</code> (<code>pwd_at</code> when there is a password, <code>amr=otp</code>); the browser goes through <code>/connect/authorize</code> and the BFF callback back to where it came from."}
+   ]},
+  "soon": {
+   "title": "Too soon and resend (UC-029 1a, 3a)", "button": "Resend", "color": "frontend",
+   "tags": ["UC-029 1a, 3a", "FR-AUTH-033, FR-AUTH-034", "AC-3, AC-4"],
+   "steps": [
+    {"e": ["e2", "e3", "e4"], "t": "<strong>Within 60 s</strong> of the last request for the address: <strong>429 <code>identity.sign_in_code_too_soon</code></strong> with <code>Retry-After</code>; nothing written. Also for unknown addresses."},
+    {"e": ["e2", "e3", "e4"], "t": "<strong>After 60 s:</strong> a new code; the previous challenge is ended and its code stops working."}
+   ]},
+  "wrong": {
+   "title": "Wrong or expired code (UC-029 4a, 4b)", "button": "Wrong code", "color": "external",
+   "tags": ["UC-029 4a, 4b", "FR-AUTH-031, FR-AUTH-032", "AC-6, AC-7, AC-11"],
+   "steps": [
+    {"e": ["e2", "e3", "e5"], "t": "<strong>Wrong code:</strong> +1 on the challenge and on the account lockout in one save; <strong>401 <code>identity.sign_in_code_invalid</code></strong>."},
+    {"e": ["e5"], "t": "<strong>Fifth wrong code:</strong> the challenge ends (<code>attempts</code>); <strong>401 <code>identity.sign_in_challenge_ended</code></strong>, request a new code."},
+    {"e": ["e5"], "t": "<strong>Expired:</strong> <strong>401 <code>identity.sign_in_code_expired</code></strong>, not counted. The bodies never reveal whether the email exists."}
+   ]},
+  "locked": {
+   "title": "Locked account (UC-029 4c)", "button": "Locked", "color": "security",
+   "tags": ["UC-029 4c", "FR-AUTH-035, FR-AUTH-011", "AC-8"],
+   "steps": [
+    {"e": ["e2", "e3", "e5"], "t": "<strong>Locked</strong> (by passwords and codes together): <strong>423 <code>identity.account_locked</code></strong> without comparing the code; audit <code>sign_in_failed</code>. Password and Google sign-in are offered."}
+   ]},
+  "unknown": {
+   "title": "Unknown address (UC-029 2a)", "button": "Unknown", "color": "external",
+   "tags": ["UC-029 2a", "FR-AUTH-029", "AC-2"],
+   "steps": [
+    {"e": ["e2", "e3", "e4"], "t": "<strong>Same 201</strong> and a real challenge with a code that is never sent; no outbox row, no email."},
+    {"e": ["e5"], "t": "<strong>Any code</strong> gets the same 401 answers as for a real account, ending at the fifth."}
+   ]}
+ },
+ "notes": [
+  {"id": "N1", "on": "identity", "st": "decision", "t": "A real challenge for every address", "b": "Unknown addresses get a stored, expiring, countable challenge with an unsent code, so every response is identical by construction.", "r": "D-1"},
+  {"id": "N2", "on": "gw", "st": "decision", "t": "Endpoints under /v1/users/sign-in/", "b": "Covered by the existing <code>auth</code> route and limiter; submit answers like <code>signIn</code>. The challenge id stays out of URLs.", "r": "D-2"},
+  {"id": "N3", "on": "idb", "st": "decision", "t": "Email only as a hash, purged after a day", "b": "The 60 s rule needs per-address memory even for unknown addresses; NFR-LEG-001 keeps the clear address out. HMAC rejected for one-day rows.", "r": "D-3"},
+  {"id": "N4", "on": "notif", "st": "decision", "t": "Locked accounts still get a code", "b": "Refusing the request would make it a lock oracle (FR-AUTH-029); the submit is refused (FR-AUTH-035).", "r": "D-4"},
+  {"id": "N5", "on": "identity", "st": "decision", "t": "Challenge and lockout in one save", "b": "<code>LockoutRecorder</code> gains staging methods so a wrong code counts on both, also under parallel submits.", "r": "D-5"},
+  {"id": "N6", "on": "spa", "st": "risk", "t": "Email outage not detected", "b": "With the outbox (ADR-0002) Identity cannot know at request time; the code page always offers resend and password/Google. UC-029 2b rewording proposed.", "r": "D-6, §8"},
+  {"id": "N7", "on": "idb", "st": "decision", "t": "SHA-256 salted with the id", "b": "Lifetime, five tries, lockout and the IP limit guard the code; argon2 would add latency without changing that.", "r": "D-7"},
+  {"id": "N8", "on": "browser", "st": "decision", "t": "amr=otp and the real pwd_at", "b": "FEAT-004's exact <code>pwd_at</code> rule would reject the cookie otherwise; set-password re-auth still means Google.", "r": "D-8"},
+  {"id": "G1", "st": "risk", "t": "FEAT-005 not on main yet", "b": "Lockout, audit, limiter and Retry-After exist only on <code>feat/005-account-hardening</code>. Merge first.", "r": "§8"},
+  {"id": "G2", "st": "consider", "t": "Architecture vocabulary", "b": "Add \"sign-in code challenge\" to Identity in §5.2 and <code>SignInCodeRequested</code> to §5.4 events (software-architecture).", "r": "§8"}
+ ],
+ "specs": {
+  "identity": {"host": "Identity service (.NET)", "trigger": "POST /v1/users/sign-in/code-challenges, POST /v1/users/sign-in/code", "ops": ["60 s per-address rule", "issue hashed code, end earlier ones", "constant-time check, 5 wrong per challenge", "shared lockout, audit method code", "verify email on success", "purge 1 day after expiry"], "data": "sign_in_code_challenges, sign_in_lockouts, audit_entries, users, outbox", "nfr": "FR-AUTH-028..036, NFR-SEC-016, NFR-SEC-009"},
+  "notif": {"host": "Notification (Python)", "trigger": "SignInCodeRequested/v1", "ops": ["validate payload", "upsert contact", "render sign_in_code vi/en", "send after commit"], "data": "email_records, contacts, inbox", "nfr": "FR-NOTIF-016, FR-LOC-005"}
+ },
+ "sections": [
+  {"type": "table", "title": "New error codes", "lead": "Stable codes with vi/en messages (FR-LOC-004).", "columns": ["Code", "http", "When"], "rows": [
+   ["<code>identity.sign_in_code_invalid</code>", "401", "Wrong code for an open challenge"],
+   ["<code>identity.sign_in_code_expired</code>", "401", "Open challenge past its 5 minutes"],
+   ["<code>identity.sign_in_challenge_ended</code>", "401", "Used, superseded, five wrong codes, or unknown"],
+   ["<code>identity.sign_in_code_too_soon</code>", "429", "Requested again within 60 s (Retry-After)"]
+  ]},
+  {"type": "table", "title": "Code rules", "lead": "OQ-35 proposals, constants in <code>SignInCodePolicy</code>.", "columns": ["Rule", "Value", "Requirement"], "rows": [
+   ["Digits", "6, CSPRNG", "FR-AUTH-028, NFR-SEC-016"],
+   ["Lifetime", "5 minutes", "FR-AUTH-028"],
+   ["Resend wait", "60 seconds per address", "FR-AUTH-033"],
+   ["Wrong codes per challenge", "5, then ended", "FR-AUTH-032"]
+  ]},
+  {"type": "notes", "title": "Decisions, risks and open items", "lead": "Decisions D-1..D-9 and open items from the design."},
+  {"type": "catalogue", "title": "Component catalogue"}
+ ]
+}

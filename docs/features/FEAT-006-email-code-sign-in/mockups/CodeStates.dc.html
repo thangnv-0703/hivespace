@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Email code sign-in states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="width: 560px; height: 1180px; box-sizing: border-box; padding: 32px 56px; background: #ffffff; display: flex; flex-direction: column; gap: 28px">
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 12px; line-height: 18px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #667085">SCR-STF-021 · too soon</h2>
+    <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 8px; background: #fffaeb; color: #b54708">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <div>
+        <div style="font-size: 14px; line-height: 20px; font-weight: 600">Please wait a moment</div>
+        <div style="margin-top: 4px; font-size: 14px; line-height: 20px">You just asked for a code. Wait a moment before asking again.</div>
+        <a href="#" style="display: inline-block; margin-top: 8px; font-size: 14px; line-height: 20px; font-weight: 600; color: #b54708; text-decoration: underline">Enter the code you already have</a>
+      </div>
+    </div>
+    <button type="button" disabled style="width: 100%; height: 48px; border: 0; border-radius: 8px; background: #c2d6ff; color: #ffffff; font: 500 16px 'Outfit','Noto Sans',sans-serif; cursor: not-allowed">Send code (42 s)</button>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 12px; line-height: 18px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #667085">SCR-STF-022 · expired</h2>
+    <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 8px; background: #fffaeb; color: #b54708">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <div>
+        <div style="font-size: 14px; line-height: 20px; font-weight: 600">Code expired</div>
+        <div style="margin-top: 4px; font-size: 14px; line-height: 20px">This code has expired. Request a new code.</div>
+      </div>
+    </div>
+    <div style="display: flex; gap: 12px" aria-hidden="true">
+      <span style="width: 52px; height: 60px; border: 1px solid #d0d5dd; border-radius: 8px; background: #f2f4f7"></span>
+      <span style="width: 52px; height: 60px; border: 1px solid #d0d5dd; border-radius: 8px; background: #f2f4f7"></span>
+      <span style="width: 52px; height: 60px; border: 1px solid #d0d5dd; border-radius: 8px; background: #f2f4f7"></span>
+      <span style="width: 52px; height: 60px; border: 1px solid #d0d5dd; border-radius: 8px; background: #f2f4f7"></span>
+      <span style="width: 52px; height: 60px; border: 1px solid #d0d5dd; border-radius: 8px; background: #f2f4f7"></span>
+      <span style="width: 52px; height: 60px; border: 1px solid #d0d5dd; border-radius: 8px; background: #f2f4f7"></span>
+    </div>
+    <button type="button" style="width: 100%; height: 48px; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 16px 'Outfit','Noto Sans',sans-serif; box-shadow: 0 1px 2px #1018280d">Send a new code</button>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 12px; line-height: 18px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #667085">SCR-STF-022 · ended (five wrong codes, used or replaced)</h2>
+    <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 8px; background: #fffaeb; color: #b54708">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <div>
+        <div style="font-size: 14px; line-height: 20px; font-weight: 600">Request a new code</div>
+        <div style="margin-top: 4px; font-size: 14px; line-height: 20px">This code can no longer be used. Request a new code.</div>
+      </div>
+    </div>
+    <button type="button" disabled style="width: 100%; height: 48px; border: 0; border-radius: 8px; background: #c2d6ff; color: #ffffff; font: 500 16px 'Outfit','Noto Sans',sans-serif; cursor: not-allowed">Send a new code (0:12)</button>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 12px; line-height: 18px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #667085">SCR-STF-022 · locked</h2>
+    <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 8px; background: #fffaeb; color: #b54708">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+      <div>
+        <div style="font-size: 14px; line-height: 20px; font-weight: 600">Account temporarily locked</div>
+        <div style="margin-top: 4px; font-size: 14px; line-height: 20px">Too many failed attempts. This account is locked for 15 minutes. Try again later, or sign in with Google.</div>
+        <a href="#" style="display: inline-block; margin-top: 8px; font-size: 14px; line-height: 20px; font-weight: 600; color: #b54708; text-decoration: underline">Sign in another way</a>
+      </div>
+    </div>
+    <button type="button" disabled style="width: 100%; height: 48px; border: 0; border-radius: 8px; background: #c2d6ff; color: #ffffff; font: 500 16px 'Outfit','Noto Sans',sans-serif; cursor: not-allowed">Sign in</button>
+  </section>
+
+  <section style="display: flex; flex-direction: column; gap: 12px">
+    <h2 style="margin: 0; font-size: 12px; line-height: 18px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: #667085">SCR-STF-022 · new code sent</h2>
+    <p style="margin: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 14px; line-height: 20px; color: #344054">Didn't get it?
+      <button type="button" disabled style="padding: 0; border: 0; background: transparent; font: 500 14px 'Outfit','Noto Sans',sans-serif; color: #98a2b3; cursor: not-allowed">Resend code in 1:00</button>
+    </p>
+    <p role="status" style="margin: 0; display: flex; gap: 8px; align-items: flex-start; font-size: 14px; line-height: 20px; color: #027a48">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#039855" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      New code sent. The earlier code no longer works.
+    </p>
+  </section>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":1180}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
