@@ -16,3 +16,20 @@ export async function emailFor(address: string): Promise<{ text: string; subject
   }
   throw new Error(`No email for ${address} reached Mailpit within 60 s`)
 }
+
+/** Waits up to 60 s for an email to `address` with exactly `subject` (an account can receive several). */
+export async function emailWithSubject(address: string, subject: string): Promise<{ text: string; subject: string }> {
+  const deadline = Date.now() + 60_000
+  while (Date.now() < deadline) {
+    const search = await fetch(`${mailpit}/api/v1/search?query=${encodeURIComponent(`to:${address}`)}`)
+    const body = (await search.json()) as { messages: { ID: string; Subject: string }[] }
+    const match = body.messages.find((m) => m.Subject === subject)
+    if (match) {
+      const message = await fetch(`${mailpit}/api/v1/message/${match.ID}`)
+      const detail = (await message.json()) as { Text: string; Subject: string }
+      return { text: detail.Text, subject: detail.Subject }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 500))
+  }
+  throw new Error(`No email "${subject}" for ${address} reached Mailpit within 60 s`)
+}

@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: HiveSpace Identity API
   version: 1.0.0
-  description: Registration, email verification and password sign-in (FEAT-001). OpenIddict endpoints (`/connect/*`) follow the OIDC standard and are not listed here.
+  description: Registration, email verification and password sign-in (FEAT-001). OpenIddict endpoints (`/connect/*`) follow the OIDC standard and are not listed here. The Google sign-in endpoints (`/connect/external/{provider}/start`, `/callback`, `/complete`, FEAT-004) are browser redirect endpoints like `/connect/*`; they are not listed here either and are specified by `contracts/features/identity/google-sign-in.feature`.
 servers:
   - url: /
 tags:

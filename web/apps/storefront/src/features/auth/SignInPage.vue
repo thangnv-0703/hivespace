@@ -2,22 +2,38 @@
 import { Alert, Button, Input, PasswordField, Spinner } from '@hivespace/ui'
 import { computed, onMounted, reactive, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { signInWithPassword } from './api'
 import AuthPage from './AuthPage.vue'
+import GoogleButton from './GoogleButton.vue'
+import { GOOGLE_ERROR_TONES, googleErrorOf } from './googleErrors'
 import { goTo } from './navigation'
 import { EMAIL_PATTERN, fieldOf, returnUrlOf } from './validation'
 
 // SCR-STF-012. Reached from Identity's authorize redirect with ?returnUrl=/connect/authorize... (passed through unchanged).
 const { t } = useI18n()
 const route = useRoute()
+const router = useRouter()
 
 const email = ref('')
 const password = ref('')
 const errors = reactive({ email: '', password: '' })
 const formError = ref<{ message: string; code?: string } | null>(null)
 const busy = ref(false)
+const googleBusy = ref(false)
+// A failed Google attempt comes back as ?error=<code> (FEAT-004). Read once: the URL drops it so a reload or Back does not
+// show it again. Only one alert shows at a time; a new password submit clears it.
+const googleError = ref(googleErrorOf(route.query.error))
+const googleAlert = computed(() =>
+  googleError.value
+    ? {
+        variant: GOOGLE_ERROR_TONES[googleError.value],
+        title: t(`auth.errors.${googleError.value}.title`),
+        message: t(`auth.errors.${googleError.value}.message`),
+      }
+    : null,
+)
 const emailRef = ref<{ focus: () => void } | null>(null)
 const passwordRef = ref<{ focus: () => void } | null>(null)
 
@@ -27,6 +43,11 @@ const returnUrl = computed(() => returnUrlOf(route.query.returnUrl))
 const starting = !returnUrl.value
 onMounted(() => {
   if (starting) goTo('/bff/login')
+  else if (route.query.error !== undefined) {
+    const query = { ...route.query }
+    delete query.error
+    void router.replace({ query })
+  }
 })
 const registerTarget = computed(() => ({ path: '/register', query: returnUrl.value ? { returnUrl: returnUrl.value } : {} }))
 
@@ -43,6 +64,7 @@ function checkPassword(): boolean {
 
 async function submit() {
   formError.value = null
+  googleError.value = null
   const emailOk = checkEmail()
   const passwordOk = checkPassword()
   if (!emailOk) return emailRef.value?.focus()
@@ -77,7 +99,18 @@ async function submit() {
 <template>
   <AuthPage :title="$t('auth.signIn.title')" :subtitle="$t('auth.signIn.subtitle')">
     <div v-if="starting" role="status" data-testid="signin-starting"><Spinner /></div>
-    <form v-else class="space-y-4" novalidate :aria-busy="busy" @submit.prevent="submit">
+    <template v-else>
+      <Alert
+        v-if="googleAlert"
+        class="mb-6"
+        :variant="googleAlert.variant"
+        :title="googleAlert.title"
+        :message="googleAlert.message"
+        data-testid="google-alert"
+      />
+      <GoogleButton :return-url="returnUrl" :disabled="busy" @start="googleBusy = true" />
+    </template>
+    <form v-if="!starting" class="space-y-4" novalidate :aria-busy="busy" @submit.prevent="submit">
       <Alert v-if="formError" variant="error" :title="$t('auth.signIn.failedTitle')" :message="formError.message" />
       <p v-if="formError?.code" class="text-xs text-text-muted">{{ formError.code }}</p>
       <Input
@@ -87,7 +120,7 @@ async function submit() {
         autocomplete="email"
         inputmode="email"
         required
-        :disabled="busy"
+        :disabled="busy || googleBusy"
         :label="$t('auth.fields.email')"
         :error="errors.email"
         @blur="checkEmail"
@@ -98,14 +131,14 @@ async function submit() {
         autocomplete="current-password"
         :placeholder="$t('auth.signIn.passwordPlaceholder')"
         required
-        :disabled="busy"
+        :disabled="busy || googleBusy"
         :label="$t('auth.fields.password')"
         :error="errors.password"
         :show-label="$t('auth.actions.showPassword')"
         :hide-label="$t('auth.actions.hidePassword')"
         @blur="checkPassword"
       />
-      <Button type="submit" size="lg" class="w-full" :loading="busy">{{ $t('auth.signIn.submit') }}</Button>
+      <Button type="submit" size="lg" class="w-full" :loading="busy" :disabled="googleBusy">{{ $t('auth.signIn.submit') }}</Button>
     </form>
     <p class="mt-6 text-sm text-text-muted">
       {{ $t('auth.signIn.noAccount') }}

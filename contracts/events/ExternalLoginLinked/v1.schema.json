@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivespace.dev/events/ExternalLoginLinked/v1.schema.json",
+  "title": "ExternalLoginLinked v1 (producer: identity, consumer: notification). A Google identity was linked to an account, new (accountCreated) or existing. Never a token, subject or password.",
+  "type": "object",
+  "required": ["userId", "email", "displayName", "language", "provider", "accountCreated", "passwordRemoved", "linkedAt"],
+  "properties": {
+    "userId": { "type": "string", "format": "uuid" },
+    "email": { "type": "string", "maxLength": 254 },
+    "displayName": { "type": "string", "maxLength": 80 },
+    "language": { "type": "string", "enum": ["vi", "en"] },
+    "provider": { "type": "string", "enum": ["google"] },
+    "accountCreated": { "type": "boolean" },
+    "passwordRemoved": { "type": "boolean" },
+    "linkedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

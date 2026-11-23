@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
+using Identity.Application.Features.ExternalLogin;
 using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
@@ -39,6 +40,7 @@ public static class DependencyInjection
         services.AddScoped<ResendVerificationEmailHandler>();
         services.AddScoped<SignInHandler>();
         services.AddScoped<ChangeMyPasswordHandler>();
+        services.AddScoped<ExternalSignInHandler>();
         services.AddScoped<GetMyProfileHandler>();
         services.AddScoped<UpdateMyProfileHandler>();
         services.AddScoped<UpdateMyLanguageHandler>();

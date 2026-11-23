@@ -4,14 +4,19 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
 using Xunit;
 
 namespace Identity.IntegrationTests;
 
 /// <summary>Boots Identity.Api against a real Postgres container; the broker is faked (the relay is removed).</summary>
-public sealed class IdentityApiFactory : WebApplicationFactory<Program>
+public sealed class IdentityApiFactory(string? googleAuthority = null) : WebApplicationFactory<Program>
 {
+    public const string GoogleClientId = "hivespace-google-test";
+    public const string GoogleClientSecret = "google-test-secret"; // pragma: allowlist secret - test value
+    public const string GoogleCallback = Issuer + "/connect/external/google/callback";
+
     public const string Issuer = "http://localhost:5080";
     public const string SellerOrigin = "http://seller.localhost:5080";
     public const string ClientSecret = "test-client-secret";
@@ -21,6 +26,9 @@ public sealed class IdentityApiFactory : WebApplicationFactory<Program>
     public ECDsa SigningKey { get; } = ECDsa.Create(ECCurve.NamedCurves.nistP256);
 
     private readonly PostgreSqlContainer _postgres = new PostgreSqlBuilder("pgvector/pgvector:pg17").Build();
+
+    /// <summary>Every log line the app wrote, after the app's own level filters (the log-capture test, AC-16).</summary>
+    public CapturedLogs Logs { get; } = new();
 
     public async Task StartAsync() => await _postgres.StartAsync();
 
@@ -39,6 +47,14 @@ public sealed class IdentityApiFactory : WebApplicationFactory<Program>
         builder.UseSetting("Identity:EncryptionKeyPem", RSA.Create(2048).ExportPkcs8PrivateKeyPem());
         builder.UseSetting("Identity:Clients:Storefront:ClientSecret", ClientSecret);
         builder.UseSetting("Identity:Clients:Seller:ClientSecret", SellerClientSecret);
+        if (googleAuthority is not null)
+        {
+            builder.UseSetting("Identity:Google:ClientId", GoogleClientId);
+            builder.UseSetting("Identity:Google:ClientSecret", GoogleClientSecret);
+            builder.UseSetting("Identity:Google:Authority", googleAuthority);
+        }
+
+        builder.ConfigureLogging(logging => logging.AddProvider(Logs));
         builder.ConfigureServices(services =>
         {
             var relay = services.Single(d => d.ImplementationType?.Name.StartsWith("OutboxRelay", StringComparison.Ordinal) == true);
@@ -51,6 +67,31 @@ public sealed class IdentityApiFactory : WebApplicationFactory<Program>
     {
         await base.DisposeAsync();
         await _postgres.DisposeAsync();
+    }
+}
+
+/// <summary>Collects formatted log lines (with exception text) in memory.</summary>
+public sealed class CapturedLogs : ILoggerProvider
+{
+    private readonly System.Collections.Concurrent.ConcurrentQueue<string> _lines = new();
+
+    public string Text => string.Join('\n', _lines);
+
+    public ILogger CreateLogger(string categoryName) => new Logger(categoryName, _lines);
+
+    public void Dispose()
+    {
+    }
+
+    private sealed class Logger(string category, System.Collections.Concurrent.ConcurrentQueue<string> lines) : ILogger
+    {
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter) =>
+            lines.Enqueue($"{logLevel} {category}: {formatter(state, exception)} {exception}");
     }
 }
 

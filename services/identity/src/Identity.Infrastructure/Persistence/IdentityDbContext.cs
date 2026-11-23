@@ -13,6 +13,8 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
 
     public DbSet<VerificationToken> VerificationTokens => Set<VerificationToken>();
 
+    public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(e =>
@@ -73,6 +75,21 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
             e.Property(t => t.InvalidatedAt).HasColumnName("invalidated_at");
             e.Property(t => t.CreatedAt).HasColumnName("created_at");
             e.HasOne<User>().WithMany().HasForeignKey(t => t.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<ExternalLogin>(e =>
+        {
+            e.ToTable("external_logins");
+            e.HasKey(l => l.Id);
+            e.Property(l => l.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(l => l.UserId).HasColumnName("user_id");
+            e.Property(l => l.Provider).HasColumnName("provider").HasMaxLength(ExternalLogin.ProviderMaxLength);
+            e.Property(l => l.Subject).HasColumnName("subject").HasMaxLength(ExternalLogin.SubjectMaxLength);
+            e.Property(l => l.LinkedAt).HasColumnName("linked_at");
+            // One account per Google identity, and one Google identity per account (AC-11).
+            e.HasIndex(l => new { l.Provider, l.Subject }).IsUnique();
+            e.HasIndex(l => new { l.UserId, l.Provider }).IsUnique();
+            e.HasOne<User>().WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.AddOutboxAndInbox();

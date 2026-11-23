@@ -144,6 +144,95 @@ describe('SignInPage (SCR-STF-012)', () => {
   })
 })
 
+describe('Google sign-in on SCR-STF-012 and SCR-STF-013 (FEAT-004 AC-13)', () => {
+  beforeEach(() => vi.spyOn(navigation, 'goTo').mockImplementation(() => undefined))
+
+  it.each([
+    ['sign in', SignInPage, SIGNIN],
+    ['register', RegisterPage, '/register?returnUrl=%2Fconnect%2Fauthorize%3Fx%3D1'],
+  ])('navigates to the Google start with the page returnUrl on %s, and disables the form', async (_name, page, path) => {
+    const fetchSpy = mockApi({})
+    const { wrapper } = await mountAt(page, path)
+
+    await wrapper.get('[data-testid=google-button]').trigger('click')
+    await flushPromises()
+
+    expect(navigation.goTo).toHaveBeenCalledWith('/connect/external/google/start?returnUrl=%2Fconnect%2Fauthorize%3Fx%3D1')
+    expect(fetchSpy).not.toHaveBeenCalled()
+    expect(wrapper.get('[data-testid=google-button]').attributes('aria-busy')).toBe('true')
+    for (const input of wrapper.findAll('input')) expect(input.attributes('disabled')).toBeDefined()
+    expect(wrapper.get('button[type=submit]').attributes('disabled')).toBeDefined()
+  })
+
+  it('renders the button and the divider above the form, in both languages', async () => {
+    mockApi({})
+    const en = (await mountAt(SignInPage, SIGNIN)).wrapper
+    const vi_ = (await mountAt(RegisterPage, '/register', 'vi')).wrapper
+
+    expect(en.get('[data-testid=google-button]').text()).toBe('Continue with Google')
+    expect(en.get('[role=separator]').text()).toBe('or')
+    expect(en.html().indexOf('google-button')).toBeLessThan(en.html().indexOf('<form'))
+    expect(vi_.get('[data-testid=google-button]').text()).toBe('Tiếp tục với Google')
+    expect(vi_.get('[role=separator]').text()).toBe('hoặc')
+  })
+
+  it.each([
+    ['identity.external_login_denied', 'status', 'Google sign-in cancelled', 'Đã hủy đăng nhập bằng Google'],
+    ['identity.external_email_unverified', 'alert', 'Google email not verified', 'Email Google chưa được xác minh'],
+    ['identity.external_login_failed', 'alert', 'Google sign-in failed', 'Đăng nhập bằng Google không thành công'],
+    ['identity.external_login_unavailable', 'status', 'Google sign-in unavailable', 'Đăng nhập bằng Google đang không khả dụng'],
+  ])('shows the alert for %s in en and vi, with the form still usable', async (code, role, en, vi_) => {
+    mockApi({})
+    for (const [locale, title] of [['en', en], ['vi', vi_]] as const) {
+      const { wrapper } = await mountAt(SignInPage, `${SIGNIN}&error=${code}`, locale)
+
+      const alert = wrapper.get('[data-testid=google-alert]')
+      expect(alert.attributes('role')).toBe(role)
+      expect(alert.text()).toContain(title)
+      expect(wrapper.get('input[type=email]').attributes('disabled')).toBeUndefined()
+      expect(wrapper.get('[data-testid=google-button]').attributes('disabled')).toBeUndefined()
+      wrapper.unmount()
+    }
+  })
+
+  it('points to email and password when Google is unavailable (FR-AUTH-023)', async () => {
+    mockApi({})
+    const { wrapper } = await mountAt(SignInPage, `${SIGNIN}&error=identity.external_login_unavailable`)
+
+    expect(wrapper.get('[data-testid=google-alert]').text()).toContain('Sign in with your email and password, or try again later.')
+  })
+
+  it.each(['identity.something_else', 'toString', ''])('ignores an unknown error value %j', async (value) => {
+    mockApi({})
+    const { wrapper } = await mountAt(SignInPage, `${SIGNIN}&error=${value}`)
+
+    expect(wrapper.find('[data-testid=google-alert]').exists()).toBe(false)
+    expect(wrapper.find('[role=alert]').exists()).toBe(false)
+  })
+
+  it('drops error from the URL but keeps returnUrl, so a reload does not show the alert again', async () => {
+    mockApi({})
+    const { wrapper, router } = await mountAt(SignInPage, `${SIGNIN}&error=identity.external_login_failed`)
+    await flushPromises()
+
+    expect(router.currentRoute.value.query).toEqual({ returnUrl: '/connect/authorize?x=1' })
+    expect(wrapper.find('[data-testid=google-alert]').exists()).toBe(true)
+  })
+
+  it('a new password submit replaces the Google alert with its own result', async () => {
+    mockApi({ 'POST /v1/users/sign-in': () => json(401, { code: 'identity.invalid_credentials', message: 'Wrong email or password.', details: [] }) })
+    const { wrapper } = await mountAt(SignInPage, `${SIGNIN}&error=identity.external_login_failed`)
+
+    await fill(wrapper, ['an@example.com', 'wrong-pass1'])
+    await wrapper.get('form').trigger('submit')
+    await flushPromises()
+
+    expect(wrapper.find('[data-testid=google-alert]').exists()).toBe(false)
+    expect(wrapper.findAll('[role=alert]')).toHaveLength(1)
+    expect(wrapper.get('[role=alert]').text()).toContain('Wrong email or password.')
+  })
+})
+
 describe('RegisterPage (SCR-STF-013)', () => {
   it('validates on submit: required fields, a bad email and a confirm mismatch', async () => {
     const fetchSpy = mockApi({})

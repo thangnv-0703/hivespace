@@ -23,7 +23,10 @@ contacts = Table(
 )
 
 # Events that carry the contact's details. UserProfileChanged brings the saved name and language (FR-LOC-005).
-CONTACT_EVENTS = frozenset({"UserRegistered", "VerificationEmailRequested", "UserProfileChanged"})
+# ExternalLoginLinked is the only event of an account created with Google (FEAT-004 D-3).
+CONTACT_EVENTS = frozenset(
+    {"UserRegistered", "VerificationEmailRequested", "UserProfileChanged", "ExternalLoginLinked"}
+)
 
 
 async def upsert(conn: AsyncConnection, data: dict[str, Any]) -> None:

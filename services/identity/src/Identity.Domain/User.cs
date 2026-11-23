@@ -58,6 +58,14 @@ public sealed class User
         return user;
     }
 
+    /// <summary>An account created by an external sign-in: the provider proved the email, so it starts verified (FR-AUTH-020).</summary>
+    public static User RegisterExternal(Email email, DisplayName displayName, string language, DateTimeOffset now)
+    {
+        var user = Register(email, displayName, language, now);
+        user.EmailVerifiedAt = now;
+        return user;
+    }
+
     public void VerifyEmail(DateTimeOffset now)
     {
         EmailVerifiedAt ??= now;

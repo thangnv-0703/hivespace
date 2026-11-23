@@ -39,6 +39,8 @@
 ├─ infra/                        Bicep modules, main.bicep, parameters (azd output, reviewed); budget alert
 ├─ templates/                    Copier templates (section 9)
 ├─ tools/                        seed/, datagen/, eval/, k6/, scripts/ (id-resolver, i18n-parity)
+│  └─ fake-idp/                  src/FakeIdp + tests/: a local OpenID Connect server standing in for Google
+│                                (Identity integration tests, contract tests, AppHost, E2E; never deployed; FEAT-004 D-7)
 ├─ tests/
 │  ├─ e2e/                       Playwright hero flow (features/ Gherkin journeys, specs/ technical checks)
 │  └─ system/                    cross-service risk tests (saga failure injection, triple callback,

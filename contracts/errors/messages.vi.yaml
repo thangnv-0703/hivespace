@@ -28,3 +28,8 @@ identity.email_read_only: "Email đăng nhập không thể thay đổi tại đ
 identity.current_password_required: "Nhập mật khẩu hiện tại."
 identity.current_password_incorrect: "Mật khẩu hiện tại không đúng."
 identity.password_not_set: "Tài khoản này chưa có mật khẩu."
+
+identity.external_login_denied: "Bạn đã hủy đăng nhập bằng Google. Hãy thử lại hoặc đăng nhập bằng email và mật khẩu."
+identity.external_email_unverified: "Google không xác nhận được địa chỉ email này nên chúng tôi không thể đăng nhập bằng email đó. Hãy dùng tài khoản Google khác hoặc đăng nhập bằng email và mật khẩu."
+identity.external_login_failed: "Chúng tôi không thể hoàn tất đăng nhập bằng Google. Hãy thử lại hoặc đăng nhập bằng email và mật khẩu."
+identity.external_login_unavailable: "Google hiện không khả dụng. Hãy đăng nhập bằng email và mật khẩu, hoặc thử lại sau."
