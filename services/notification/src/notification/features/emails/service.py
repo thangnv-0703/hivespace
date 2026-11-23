@@ -17,7 +17,7 @@ from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, Text,
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
-from notification.features.emails.events import PasswordChanged
+from notification.features.emails.events import ExternalLoginLinked, PasswordChanged
 from notification.providers.email import EmailMessage, EmailSender
 
 log = logging.getLogger(__name__)
@@ -43,6 +43,7 @@ email_records = Table(
 LANGUAGES = ("vi", "en")
 VERIFICATION = "verification"
 PASSWORD_CHANGED = "password_changed"  # noqa: S105 - a template name, not a credential
+EXTERNAL_LOGIN_LINKED = "external_login_linked"
 VIETNAM = ZoneInfo("Asia/Ho_Chi_Minh")  # NFR-L10N-002: times are shown in Vietnam time
 
 
@@ -53,6 +54,8 @@ class EmailKind:
     template: str
     subjects: dict[str, str]
     context: Callable[[dict[str, Any], str], dict[str, Any]]
+    # Whether this event asks for the email at all; a skipped event writes no record and sends nothing.
+    applies: Callable[[dict[str, Any]], bool] = lambda _data: True
 
 
 def _verification_context(data: dict[str, Any], public_base_url: str) -> dict[str, Any]:
@@ -66,6 +69,16 @@ def _password_changed_context(data: dict[str, Any], _public_base_url: str) -> di
     return {
         "display_name": event.display_name,
         "changed_at": event.changed_at.astimezone(VIETNAM).strftime("%H:%M %d/%m/%Y"),
+    }
+
+
+def _external_login_linked_context(data: dict[str, Any], _public_base_url: str) -> dict[str, Any]:
+    # Validated before any write (dispatch); no link and no token in this email (FEAT-004 design 5.3).
+    event = ExternalLoginLinked.model_validate(data)
+    return {
+        "display_name": event.display_name,
+        "linked_at": event.linked_at.astimezone(VIETNAM).strftime("%H:%M %d/%m/%Y"),
+        "password_removed": event.password_removed,
     }
 
 
@@ -85,6 +98,14 @@ KINDS: dict[str, EmailKind] = {
         PASSWORD_CHANGED,
         {"vi": "Mật khẩu HiveSpace của bạn đã được thay đổi", "en": "Your HiveSpace password was changed"},
         _password_changed_context,
+    ),
+    # Only a link to an existing account is announced; a Google-created account gets no email
+    # (FEAT-004 D-3, FR-NOTIF-015).
+    "ExternalLoginLinked": EmailKind(
+        EXTERNAL_LOGIN_LINKED,
+        {"vi": "Tài khoản Google đã được liên kết với HiveSpace", "en": "Google account linked to HiveSpace"},
+        _external_login_linked_context,
+        applies=lambda data: data.get("accountCreated") is False,
     ),
 }
 EMAIL_EVENTS = frozenset(KINDS)
@@ -119,8 +140,13 @@ def render(language: str, display_name: str, link: str) -> tuple[str, str, str]:
 async def prepare(
     conn: AsyncConnection, event_type: str, event_id: str, data: dict[str, Any], public_base_url: str
 ) -> Outgoing | None:
-    """Insert the pending record in the caller's transaction. None if this (event, template) has one."""
+    """Insert the pending record in the caller's transaction.
+
+    None if this (event, template) already has one, or if the event asks for no email.
+    """
     kind = KINDS[event_type]
+    if not kind.applies(data):
+        return None
     record_id = uuid.uuid4()
     stmt = (
         insert(email_records)

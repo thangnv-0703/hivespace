@@ -23,6 +23,34 @@ internal static class DotnetServicesExtensions
             .WithEnvironment("Identity__Clients__Seller__BaseUrl", SellerOrigin)
             .WithEnvironment("Identity__Clients__Seller__ClientSecret", secrets.SellerClientSecret);
 
+    /// <summary>The fake IdP's fixed local port; E2E steps reach its <c>/__fake/next</c> control endpoint there (FEAT-004 T9).</summary>
+    public const int FakeIdpPort = 5090;
+
+    /// <summary>
+    /// Google sign-in (FEAT-004 §5.6, D-7): a real test client when <c>.local/dev-secrets/google.json</c> exists, otherwise the fake
+    /// IdP from <c>tools/fake-idp</c> on <see cref="FakeIdpPort"/>. Identity does not wait for it: Google being down must never
+    /// block password sign-in (FR-AUTH-023).
+    /// </summary>
+    private static void WithGoogle(this IResourceBuilder<ProjectResource> identity, IDistributedApplicationBuilder builder, GoogleClient google)
+    {
+        var authority = google.Authority;
+        if (!google.Real)
+        {
+            authority = $"http://localhost:{FakeIdpPort}";
+            builder.AddProject<Projects.FakeIdp>("fake-idp", launchProfileName: null)
+                .WithHttpEndpoint(port: FakeIdpPort)
+                .WithHttpHealthCheck("/health")
+                .WithEnvironment("FakeIdp__ClientId", google.ClientId)
+                .WithEnvironment("FakeIdp__ClientSecret", google.ClientSecret)
+                .WithEnvironment("FakeIdp__RedirectUris__0", PublicOrigin + "/connect/external/google/callback");
+        }
+
+        identity
+            .WithEnvironment("Identity__Google__ClientId", google.ClientId)
+            .WithEnvironment("Identity__Google__ClientSecret", google.ClientSecret)
+            .WithEnvironment("Identity__Google__Authority", authority);
+    }
+
     /// <summary>.NET services (ADR-0001, ADR-0020). Each gets its own database; none reads another's (ADR-0018).</summary>
     public static DotnetResources AddDotnetServices(this IDistributedApplicationBuilder builder, InfrastructureResources infra, GoResources go)
     {
@@ -46,6 +74,7 @@ internal static class DotnetServicesExtensions
             .WithReference(infra.Messaging)
             .WaitFor(identityDb)
             .WaitFor(infra.Messaging);
+        identity.WithGoogle(builder, DevSecrets.LoadGoogleClient(builder.AppHostDirectory));
 
         // Stubs generated from templates/dotnet-service; each grows its database and references in its slice.
         // They have no launchSettings.json, so they need an explicit endpoint: without one Aspire assigns none

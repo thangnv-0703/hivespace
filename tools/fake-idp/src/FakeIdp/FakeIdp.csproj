@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <!-- A local stand-in for Google's OpenID Connect provider (FEAT-004 D-7). Never deployed. -->
+  <PropertyGroup>
+    <RootNamespace>FakeIdp</RootNamespace>
+  </PropertyGroup>
+</Project>

@@ -8,6 +8,7 @@ import { useRoute } from 'vue-router'
 
 import { register } from './api'
 import AuthPage from './AuthPage.vue'
+import GoogleButton from './GoogleButton.vue'
 import { focusTitle } from './navigation'
 import ResendControl from './ResendControl.vue'
 import { DISPLAY_NAME_MAX, EMAIL_PATTERN, fieldOf, returnUrlOf } from './validation'
@@ -26,6 +27,7 @@ const emailTaken = ref(false)
 const showRuleErrors = ref(false)
 const formError = ref<{ message: string; code?: string } | null>(null)
 const busy = ref(false)
+const googleBusy = ref(false)
 // Template refs by field, so errors can move focus to the first invalid one.
 const displayNameRef = ref<Focusable | null>(null)
 const emailRef = ref<Focusable | null>(null)
@@ -137,6 +139,7 @@ async function goBack() {
     :title="$t('auth.register.title')"
     :subtitle="$t('auth.register.subtitle')"
   >
+    <GoogleButton :return-url="returnUrl" :disabled="busy" @start="googleBusy = true" />
     <form class="space-y-4" novalidate :aria-busy="busy" @submit.prevent="submit">
       <Alert v-if="formError" variant="error" :title="formError.message" />
       <p v-if="formError?.code" class="text-xs text-text-muted">{{ formError.code }}</p>
@@ -156,7 +159,7 @@ async function goBack() {
         v-model="values.displayName"
         autocomplete="name"
         required
-        :disabled="busy"
+        :disabled="busy || googleBusy"
         :label="$t('auth.fields.displayName')"
         :error="errors.displayName"
         @blur="check('displayName')"
@@ -169,7 +172,7 @@ async function goBack() {
           autocomplete="email"
           inputmode="email"
           required
-          :disabled="busy"
+          :disabled="busy || googleBusy"
           :label="$t('auth.fields.email')"
           :error="errors.email"
           @blur="check('email')"
@@ -186,7 +189,7 @@ async function goBack() {
           v-model="values.password"
           autocomplete="new-password"
           required
-          :disabled="busy"
+          :disabled="busy || googleBusy"
           :label="$t('auth.fields.password')"
           :error="errors.password"
           :show-label="$t('auth.actions.showPassword')"
@@ -203,14 +206,14 @@ async function goBack() {
         v-model="values.confirm"
         autocomplete="new-password"
         required
-        :disabled="busy"
+        :disabled="busy || googleBusy"
         :label="$t('auth.fields.confirmPassword')"
         :error="errors.confirm"
         :show-label="$t('auth.actions.showPassword')"
         :hide-label="$t('auth.actions.hidePassword')"
         @blur="check('confirm')"
       />
-      <Button type="submit" size="lg" class="w-full" :loading="busy">{{ $t('auth.register.submit') }}</Button>
+      <Button type="submit" size="lg" class="w-full" :loading="busy" :disabled="googleBusy">{{ $t('auth.register.submit') }}</Button>
     </form>
     <p class="mt-6 text-sm text-text-muted">
       {{ $t('auth.register.haveAccount') }}

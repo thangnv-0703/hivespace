@@ -1,0 +1,132 @@
+{
+ "meta": {
+  "title": "FEAT-004 · Google sign-in with auto-link",
+  "subtitle": "Design solution from <code>technical-design.md</code>: the components this slice changes, the contract on every arrow, and the decisions behind them. Pick a flow to follow one use-case path; click any arrow for its data contract.",
+  "description": "A visitor on the storefront sign-in page chooses Google. The browser navigates to Identity through the gateway, which redirects it to Google with code flow, PKCE, state and nonce. After consent Google redirects back to Identity's callback, where the OpenID Connect handler redeems the code and validates the ID token, then parks the Google principal in a short-lived hs.ext cookie. The complete endpoint decides: a known Google identity signs in, a verified email matching an account links to it (and for an unverified account removes its password and sessions), and no match creates a verified Buyer without a password. Identity starts the hs.idp session and writes ExternalLoginLinked to the outbox in the same transaction. Notification stores the contact and emails the owner only when an existing account was linked. If Google is down or invalid the visitor is sent back to the sign-in page with a stable error code and password sign-in keeps working.",
+  "viewBox": [1280, 740],
+  "links": [
+   {"href": "technical-design.md", "label": "technical-design.md"},
+   {"href": "../FEAT-003-change-password/design-flow.html", "label": "FEAT-003 flow"},
+   {"href": "../../architecture-flow.html", "label": "Architecture"}
+  ],
+  "kindLabels": {"security": "Gateway / BFF", "backend": "Event bus", "database": "Store", "external": "Person / external"},
+  "edgeLabels": {"dashed": "Event", "security": "Auth / tokens"},
+  "overview": [
+   ["Implements", "FR-AUTH-020..023, FR-AUTH-026, FR-NOTIF-015, EIR-SW-006, NFR-SEC-014"],
+   ["Realizes", "UC-025 (main, 3a, 1a, 2a); UC-002 no-password case"],
+   ["Screens", "SCR-STF-012"],
+   ["Builds", "GET /connect/external/google/{start,callback,complete}, event ExternalLoginLinked, tools/fake-idp"],
+   ["Schema", "new table external_logins (unique provider+subject, unique user+provider)"],
+   ["Depends on", "FEAT-001, FEAT-003 (merge first)"]
+  ],
+  "footnote": "Source: <code>docs/features/FEAT-004-google-sign-in/technical-design.md</code> (§3 contracts, §5 components, §7 decisions, §8 open items). Generated with html-flow-diagram; edit <code>design-flow.model.json</code> and rebuild."
+ },
+ "frames": [],
+ "nodes": [
+  {"id": "browser", "kind": "external", "x": 20, "y": 300, "w": 150, "h": 50, "label": "Browser", "sub": "visitor, signed out", "desc": "The visitor. Follows redirects between the storefront, Identity and Google. Holds <code>hs.idp</code> after sign-in and, briefly, <code>hs.ext</code> and the correlation and nonce cookies (SameSite Lax)."},
+  {"id": "spa", "kind": "frontend", "x": 220, "y": 100, "w": 180, "h": 56, "label": "Storefront SPA", "sub": "/signin (SCR-STF-012)", "desc": "<code>SignInPage.vue</code>: the Google button and divider, navigating to <code>/connect/external/google/start?returnUrl=…</code> (a full-page navigation, no fetch). Reads <code>?error=</code> and shows the vi/en message for the four known codes; unknown values are ignored. The password form always stays usable."},
+  {"id": "gw", "kind": "security", "x": 470, "y": 100, "w": 190, "h": 340, "label": "Gateway + BFF", "sub": "route connect · anonymous", "sub2": "no change", "desc": "Existing anonymous route <code>/connect/{**rest}</code> → identity. Strips only <code>hs.bff*</code> cookies, so Identity's correlation, nonce, <code>hs.ext</code> and <code>hs.idp</code> cookies pass in both directions. No CSRF header on GET."},
+  {"id": "identity", "kind": "service", "x": 740, "y": 100, "w": 200, "h": 340, "label": "Identity", "sub": "external login", "sub2": "OIDC client + decision", "desc": "<b>Api:</b> provider registry, <code>hs.ext</code> cookie, OpenID Connect scheme <code>google</code> (code, PKCE S256, state, nonce, scope <code>openid email profile</code>), <code>start</code> and <code>complete</code> endpoints, <code>ExternalFailure.Classify</code>. <b>Application:</b> <code>ExternalSignInHandler</code>. <b>Change:</b> <code>/connect/authorize</code> now matches <code>pwd_at</code> exactly, also when the account has no credential."},
+  {"id": "idb", "kind": "database", "x": 1040, "y": 100, "w": 190, "h": 70, "label": "identitydb", "sub": "external_logins · users", "sub2": "credentials · outbox", "desc": "New table <code>external_logins</code> (<code>user_id</code>, <code>provider</code>, <code>subject</code>, <code>linked_at</code>). A Google-created user has no <code>credentials</code> row; linking an unverified account deletes its row (D-5). OpenIddict tables get <code>revoked</code> for that account."},
+  {"id": "bus", "kind": "backend", "x": 1040, "y": 230, "w": 190, "h": 50, "label": "Service Bus", "sub": "topic hivespace-events", "sigil": "service", "desc": "Outbox relay, at least once. Carries <code>ExternalLoginLinked/v1</code> to Notification."},
+  {"id": "notif", "kind": "service", "x": 1040, "y": 330, "w": 190, "h": 56, "label": "Notification", "sub": "contacts · emails", "desc": "<code>ExternalLoginLinked</code> upserts the contact for every event, and sends template <code>external_login_linked</code> only when <code>accountCreated</code> is false (vi/en, Asia/Ho_Chi_Minh time, extra paragraph when <code>passwordRemoved</code>). Payload validated by a pydantic model mirroring the schema."},
+  {"id": "ndb", "kind": "database", "x": 1040, "y": 440, "w": 190, "h": 56, "label": "notificationdb", "sub": "inbox · email_records · contacts", "desc": "No schema change. <code>email_records</code> unique on <code>(event_id, template)</code> keeps the notice idempotent."},
+  {"id": "mail", "kind": "external", "x": 760, "y": 600, "w": 200, "h": 50, "label": "Email provider", "sub": "Mailpit locally", "desc": "SMTP (Mailpit locally). Sent after commit; failure is recorded as <code>failed</code> (retries are FEAT-032)."},
+  {"id": "google", "kind": "external", "x": 470, "y": 500, "w": 190, "h": 56, "label": "Google / fake IdP", "sub": "OIDC provider", "desc": "Google in the demo; <code>tools/fake-idp</code> in tests, the AppHost and E2E (a real OIDC server with discovery, JWKS, PKCE checks and a <code>/__fake/next</code> control endpoint). Selected by <code>Identity:Google:Authority</code>. Calls have a 5 s timeout."}
+ ],
+ "edges": [
+  {"id": "e1", "from": "browser", "to": "spa", "s": "emphasis", "label": "button",
+   "data": {"p": "Click Sign in with Google (returnUrl from the page)", "f": "SPA navigation", "c": "internal", "s": "returnUrl is a local /connect/authorize path"}},
+  {"id": "e2", "from": "browser", "to": "gw", "s": "emphasis", "label": "GET", "toAt": 0.66,
+   "data": {"p": "GET /connect/external/google/start?returnUrl · /callback?code&state · /complete → 302 redirects, Set-Cookie hs.ext then hs.idp, or /signin?error=<code>", "f": "HTTP navigation", "c": "conf", "s": "Anonymous route, state + nonce + PKCE bind the browser; hs.ext is single use", "w": "Three navigations per sign-in"}},
+  {"id": "e3", "from": "gw", "to": "identity", "s": "emphasis", "label": "relay",
+   "data": {"p": "The same GET requests and their redirects, cookies passed through", "f": "HTTP", "c": "conf", "s": "Only hs.bff* cookies stripped"}},
+  {"id": "e4", "from": "browser", "to": "google", "s": "security", "label": "consent", "fromSide": "bottom", "toSide": "left",
+   "data": {"p": "Authorize request from Identity's 302 (response_type=code, code_challenge S256, state, nonce, scope=openid email profile, redirect_uri={Issuer}/connect/external/google/callback); Google's consent and 302 back with code and state", "f": "OIDC authorization code flow", "c": "conf", "s": "Exact scope and redirect_uri (NFR-SEC-014)", "w": "Consent denied returns error=access_denied"}},
+  {"id": "e5", "from": "identity", "to": "google", "s": "security", "label": "code", "fromSide": "bottom", "toSide": "right", "fromAt": 0.2,
+   "data": {"p": "Discovery, token request (code + code_verifier + client secret), JWKS → ID token {sub, email, email_verified, name}", "f": "HTTPS/JSON, 5 s timeout", "c": "restr", "s": "Validate signature, iss, aud, exp, nonce; nothing stored (SaveTokens=false); no tokens in logs", "w": "Failure or timeout → external_login_unavailable"}},
+  {"id": "e6", "from": "identity", "to": "idb", "s": "default", "label": "1 tx", "fromAt": 0.12,
+   "data": {"p": "Find by (provider, subject) or by email; create user or link; for an unverified account verify email, delete credential, revoke authorizations, invalidate tokens; outbox ExternalLoginLinked", "f": "EF Core · one SaveChanges", "c": "pii", "s": "Unique (provider, subject) and (user_id, provider); one retry on a lost race"}},
+  {"id": "e7", "from": "identity", "to": "bus", "s": "dashed", "label": "event", "fromAt": 0.45,
+   "data": {"p": "ExternalLoginLinked/v1 {userId, email, displayName, language, provider, accountCreated, passwordRemoved, linkedAt}", "f": "Event envelope · JSON schema v1", "c": "pii", "s": "No token, subject or password (D-3)", "w": "After commit, relayed at least once"}},
+  {"id": "e8", "from": "bus", "to": "notif", "s": "dashed",
+   "data": {"p": "ExternalLoginLinked", "f": "Service Bus subscription", "c": "pii", "s": "Inbox dedupe by eventId"}},
+  {"id": "e9", "from": "notif", "to": "ndb", "s": "default", "label": "record",
+   "data": {"p": "Inbox row, contacts upsert, and email_records (template external_login_linked) only when accountCreated is false", "f": "SQL · one transaction", "c": "pii", "s": "Unique (event_id, template)"}},
+  {"id": "e10", "from": "notif", "to": "mail", "s": "default", "label": "send", "fromSide": "left", "toSide": "right",
+   "data": {"p": "Account-linked notice (vi/en), time in Asia/Ho_Chi_Minh, extra paragraph when the password was removed", "f": "SMTP", "c": "pii", "s": "After commit; no link, no token", "w": "Failure recorded as failed"}}
+ ],
+ "flows": {
+  "all": {"title": "FEAT-004 design solution", "intro": "Five paths: a new Google account, linking to an existing account, a denied or unverified response, Google unavailable, and the guards."},
+  "new": {
+   "title": "New account (UC-025 main)", "button": "New account", "color": "frontend",
+   "tags": ["UC-025 1–4", "FR-AUTH-020, NFR-SEC-014", "AC-1, AC-7, AC-14"],
+   "steps": [
+    {"e": ["e1"], "t": "<strong>Choose Google</strong> on the sign-in page."},
+    {"e": ["e2", "e3"], "t": "<strong>start</strong>: Identity checks the provider and <code>returnUrl</code> and answers 302 to Google."},
+    {"e": ["e4"], "t": "<strong>Consent</strong> at Google (code flow, PKCE S256, state, nonce, <code>openid email profile</code>)."},
+    {"e": ["e2", "e3", "e5"], "t": "<strong>callback</strong>: Identity redeems the code and validates the ID token; the Google principal waits in <code>hs.ext</code>."},
+    {"e": ["e2", "e3", "e6"], "t": "<strong>complete</strong>: no account matches, so one transaction creates a verified Buyer with no password, the link and the outbox row; <code>hs.idp</code> starts."},
+    {"e": ["e7", "e8", "e9"], "t": "<strong>Event</strong> stores the contact; no email is sent for a created account."}
+   ]},
+  "link": {
+   "title": "Link to an existing account (UC-025 3a)", "button": "Link", "color": "security",
+   "tags": ["UC-025 3a", "FR-AUTH-021, FR-NOTIF-015", "AC-2, AC-3, AC-12"],
+   "steps": [
+    {"e": ["e2", "e3", "e5"], "t": "<strong>Same start</strong>; the verified Google email matches an account."},
+    {"e": ["e6"], "t": "<strong>One transaction</strong> adds the link; the account keeps its password. When its email was <em>unverified</em>, the email is verified, the credential deleted, every session revoked and pending tokens invalidated (D-5)."},
+    {"e": ["e7", "e8", "e9", "e10"], "t": "<strong>Notice email</strong> to the owner in their language; a duplicate delivery sends once."}
+   ]},
+  "denied": {
+   "title": "Denied or unverified (UC-025 2a)", "button": "Rejected", "color": "security",
+   "tags": ["UC-025 2a", "FR-AUTH-022", "AC-5, AC-6"],
+   "steps": [
+    {"e": ["e4", "e2", "e3"], "t": "<strong>Consent denied</strong>, or the response carries <code>email_verified: false</code>, no email, a bad state, nonce or signature."},
+    {"e": ["e2"], "t": "<strong>302 to <code>/signin?error=…</code></strong> with <code>external_login_denied</code>, <code>external_email_unverified</code> or <code>external_login_failed</code>, <code>returnUrl</code> kept. No cookie, no account, no link."}
+   ]},
+  "down": {
+   "title": "Google unavailable (UC-025 1a)", "button": "Google down", "color": "external",
+   "tags": ["UC-025 1a", "FR-AUTH-023, NFR-REL-008", "AC-8"],
+   "steps": [
+    {"e": ["e2", "e3"], "t": "<strong>start</strong> awaits Google's metadata for at most 5 s."},
+    {"e": ["e5"], "t": "<strong>Metadata, token or JWKS call</strong> fails or times out."},
+    {"e": ["e2"], "t": "<strong>302 to <code>/signin?error=identity.external_login_unavailable</code></strong>; the page says Google is unavailable and the password form keeps working. Metadata is retried after 30 s."}
+   ]},
+  "guard": {
+   "title": "Guards", "button": "Guards", "color": "security",
+   "tags": ["FR-AUTH-026, NFR-SEC-014", "AC-4, AC-9, AC-10"],
+   "steps": [
+    {"e": ["e6"], "t": "<strong>Returning Google user</strong> is found by <code>(provider, subject)</code> first: no write, no event, even after a Google email change."},
+    {"e": ["e2"], "t": "<strong>returnUrl</strong> is honored only as a local <code>/connect/authorize…</code> path; an unknown provider is 404; a replayed <code>complete</code> fails."},
+    {"e": ["e3"], "t": "<strong>No password on the account</strong>: <code>POST /v1/users/sign-in</code> gives the same 401 as an unknown email; <code>PUT /v1/me/password</code> gives 409 <code>identity.password_not_set</code> (FEAT-003)."}
+   ]}
+ },
+ "notes": [
+  {"id": "N1", "on": "identity", "st": "decision", "t": "OpenID Connect handler behind a registry", "b": "The ASP.NET Core handler gives PKCE, state, nonce and ID-token validation; a second provider is one registration and a claim map. Rejected: the Google-only package and a hand-written client.", "r": "D-1, D-2"},
+  {"id": "N2", "on": "identity", "st": "decision", "t": "Redirect URI from Identity:Issuer", "b": "Identity sits behind the gateway, so the request host is internal. The fixed URI is set on both the authorize and the code-redeem request.", "r": "D-8"},
+  {"id": "N3", "on": "identity", "st": "decision", "t": "Unverified account: drop password and sessions", "b": "Closes pre-account-hijacking (an attacker registers the victim's email first). Goes beyond the SRS text \"link and sign in\": <strong>confirmed by the user</strong> (hybrid: delete and notify now, set a new password later in FEAT-005).", "r": "D-5, §8"},
+  {"id": "N4", "on": "bus", "st": "decision", "t": "One event for created and linked", "b": "<code>ExternalLoginLinked</code> with <code>accountCreated</code>; <code>UserRegistered</code> would force a verification token and email. Notification mails only when an account was linked.", "r": "D-3"},
+  {"id": "N5", "on": "idb", "st": "decision", "t": "Match by subject first, then email", "b": "<code>sub</code> is the only stable Google id; a changed Google email must not re-link or detach.", "r": "D-4"},
+  {"id": "N6", "on": "spa", "st": "decision", "t": "Errors are redirects with stable codes", "b": "No JSON body in a redirect chain; the SPA localizes <code>?error=</code> from its own vi/en keys.", "r": "D-6"},
+  {"id": "N7", "on": "google", "st": "decision", "t": "Fake IdP is a real OIDC server", "b": "<code>tools/fake-idp</code> serves integration tests, the AppHost and E2E, so discovery, PKCE and signature checks are really exercised.", "r": "D-7"},
+  {"id": "N8", "on": "identity", "st": "risk", "t": "No attempt limit or audit yet", "b": "Rate limits, lockout and the sign-in audit log arrive with FEAT-005 (NFR-SEC-009).", "r": "§8"},
+  {"id": "G1", "st": "risk", "t": "FEAT-003 is not on main", "b": "FEAT-004 relies on its <code>pwd_at</code> stamp, <code>ISessionRevoker</code> and <code>password_not_set</code>. Merge it first.", "r": "§8"},
+  {"id": "G2", "st": "consider", "t": "Picture prefill deferred", "b": "FR-AUTH-020's note mentions the Google picture; there is no avatar until FEAT-035, so only the name is prefilled.", "r": "§8"},
+  {"id": "G3", "st": "consider", "t": "Real Google client (OQ-32)", "b": "Needed only for a manual real-Google run; CI runs entirely on the fake IdP. Put the real client in <code>.local/dev-secrets/google.json</code> before the demo release.", "r": "§8, plan P-4"}
+ ],
+ "specs": {
+  "identity": {"host": "Identity service (.NET)", "trigger": "Browser GET /connect/external/{provider}/*", "ops": ["start: 5 s metadata check, challenge", "callback: handled by the OIDC handler", "complete: ExternalSignInHandler, hs.idp, redirect"], "data": "external_logins, users, credentials, outbox", "nfr": "NFR-SEC-014, NFR-REL-008, NFR-SEC-008"},
+  "notif": {"host": "Notification (Python)", "trigger": "ExternalLoginLinked", "ops": ["contacts upsert", "notice email when accountCreated is false"], "data": "inbox, contacts, email_records", "nfr": "NFR-REL-005, FR-LOC-005"},
+  "google": {"host": "Google, or tools/fake-idp locally", "trigger": "Authorize, token, JWKS, discovery", "ops": ["code flow with PKCE S256", "ID token with sub, email, email_verified, name"], "data": "No Google token stored", "nfr": "5 s timeout, retry metadata after 30 s"}
+ },
+ "sections": [
+  {"type": "table", "title": "Failure codes", "lead": "Carried in <code>/signin?error=</code>; the SPA shows the localized message.", "columns": ["Code", "http", "When"], "rows": [
+   ["<code>identity.external_login_denied</code>", "401", "Consent denied (access_denied)"],
+   ["<code>identity.external_email_unverified</code>", "401", "email_verified not true, or no email"],
+   ["<code>identity.external_login_failed</code>", "401", "Bad state, nonce, signature, issuer, audience, expiry; other Google error; missing sub; different Google identity already linked; replayed complete"],
+   ["<code>identity.external_login_unavailable</code>", "503", "Metadata, token or JWKS call fails or times out"]
+  ]},
+  {"type": "notes", "title": "Decisions, risks and open items", "lead": "Decisions D-1..D-9 and open items from the design."},
+  {"type": "catalogue", "title": "Component catalogue"}
+ ]
+}

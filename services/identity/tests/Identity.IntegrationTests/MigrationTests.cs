@@ -9,7 +9,7 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
 {
     private static readonly string[] ExpectedTables =
     [
-        "users", "credentials", "role_grants", "verification_tokens", "outbox", "inbox",
+        "users", "credentials", "role_grants", "verification_tokens", "external_logins", "outbox", "inbox",
         "OpenIddictApplications", "OpenIddictAuthorizations", "OpenIddictScopes", "OpenIddictTokens",
     ];
 
@@ -79,6 +79,55 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
         Assert.Contains("phone", after);
         Assert.Contains("gender", after);
         Assert.Contains("date_of_birth", after);
+    }
+
+    [Fact]
+    public async Task AddExternalLogins_applies_down_and_up_after_AddUserProfile()
+    {
+        await using var db = postgres.CreateContext();
+        var migrator = db.GetService<IMigrator>();
+
+        await migrator.MigrateAsync("20261120171033_AddUserProfile", TestContext.Current.CancellationToken);
+        var before = await ListTables(db);
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var after = await ListTables(db);
+
+        Assert.DoesNotContain("external_logins", before);
+        Assert.Contains("users", before);
+        Assert.Contains("external_logins", after);
+    }
+
+    [Fact]
+    public async Task External_logins_are_unique_per_subject_and_per_user_and_provider()
+    {
+        await using var db = postgres.CreateContext();
+        var ct = TestContext.Current.CancellationToken;
+        var first = Guid.CreateVersion7();
+        var second = Guid.CreateVersion7();
+        foreach (var id in new[] { first, second })
+        {
+            await db.Database.ExecuteSqlAsync(
+                $"""
+                insert into users (id, email, normalized_email, display_name, language, created_at, updated_at)
+                values ({id}, {id + "@x.com"}, {id + "@x.com"}, {"E"}, {"vi"}, now(), now())
+                """,
+                ct);
+        }
+
+        var subject = Guid.NewGuid().ToString("N");
+        await db.Database.ExecuteSqlAsync(
+            $"insert into external_logins (id, user_id, provider, subject, linked_at) values ({Guid.CreateVersion7()}, {first}, {"google"}, {subject}, now())",
+            ct);
+
+        // The same Google identity on another account.
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into external_logins (id, user_id, provider, subject, linked_at) values ({Guid.CreateVersion7()}, {second}, {"google"}, {subject}, now())",
+            ct));
+
+        // A second Google identity on the same account.
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into external_logins (id, user_id, provider, subject, linked_at) values ({Guid.CreateVersion7()}, {first}, {"google"}, {"other"}, now())",
+            ct));
     }
 
     [Fact]

@@ -13,6 +13,8 @@ export interface RunningService {
   db: pg.Pool
   /** PEM of the ES256 key Identity signs tokens with (only for identity), so a step can re-sign a token with another audience. */
   signingKeyPem?: string
+  /** The fake IdP standing in for Google (only for identity, FEAT-004 D-7). */
+  fakeIdpUrl?: string
   stop(): Promise<void>
 }
 
@@ -22,6 +24,8 @@ interface ServiceSpec {
   project: string
   connectionName: string
   extraEnv(): Record<string, string>
+  /** A helper process started before the service; its URL is passed to extraEnv. */
+  fakeIdp?: boolean
 }
 
 // A syntactically valid emulator string pointing nowhere: the outbox relay logs a warning and retries,
@@ -33,6 +37,7 @@ const specs: Record<string, ServiceSpec> = {
     dir: 'identity',
     project: 'Identity.Api',
     connectionName: 'identitydb',
+    fakeIdp: true,
     extraEnv: () => ({
       Identity__Issuer: 'http://localhost:5080',
       // Two OIDC clients, one per app host (ADR-0027).
@@ -43,6 +48,9 @@ const specs: Record<string, ServiceSpec> = {
       Identity__EncryptionKeyPem: generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
       Identity__Clients__Storefront__ClientSecret: 'test-client-secret',
       Identity__Clients__Seller__ClientSecret: 'test-seller-secret',
+      // Google sign-in against the fake IdP; Identity__Google__Authority is added once it is listening.
+      Identity__Google__ClientId: fakeGoogle.clientId,
+      Identity__Google__ClientSecret: fakeGoogle.clientSecret,
     }),
   },
   catalog: {
@@ -52,6 +60,13 @@ const specs: Record<string, ServiceSpec> = {
     // Inventory is not running; Catalog treats a failed probe as "availability unknown".
     extraEnv: () => ({ Inventory__GrpcAddress: 'http://127.0.0.1:1' }),
   },
+}
+
+/** The Google client the fake IdP accepts, and the public callback Identity registers with it (FEAT-004 §3.2). */
+export const fakeGoogle = {
+  clientId: 'hivespace-google-test',
+  clientSecret: 'google-test-secret', // pragma: allowlist secret - test value
+  redirectUri: 'http://localhost:5080/connect/external/google/callback',
 }
 
 const running = new Map<string, Promise<RunningService>>()
@@ -96,6 +111,8 @@ async function start(name: string): Promise<RunningService> {
   execFileSync('dotnet', ['build', path.join(projectDir, `${spec.project}.csproj`), '-o', outDir, '-v', 'q', '--nologo'], { stdio: 'inherit' })
 
   const extraEnv = spec.extraEnv()
+  const idp = spec.fakeIdp ? await startFakeIdp() : undefined
+  if (idp) extraEnv.Identity__Google__Authority = idp.url
   const postgres = await new PostgreSqlContainer('pgvector/pgvector:pg17').start()
   const db = new pg.Pool({ connectionString: postgres.getConnectionUri() })
   const port = await freePort()
@@ -124,6 +141,7 @@ async function start(name: string): Promise<RunningService> {
   const stop = async () => {
     child.kill()
     await Promise.race([exited, new Promise((r) => setTimeout(r, 5000))])
+    await idp?.stop()
     await db.end()
     await postgres.stop()
   }
@@ -134,7 +152,41 @@ async function start(name: string): Promise<RunningService> {
     await stop()
     throw new Error(`${name} did not become ready: ${String(error)}\n${output.join('')}`)
   }
-  return { baseUrl, db, stop, signingKeyPem: extraEnv.Identity__SigningKeyPem }
+  return { baseUrl, db, stop, signingKeyPem: extraEnv.Identity__SigningKeyPem, fakeIdpUrl: idp?.url }
+}
+
+/** Builds and starts tools/fake-idp on a free loopback port, accepting only the test Google client. */
+async function startFakeIdp(): Promise<{ url: string; stop(): Promise<void> }> {
+  const projectDir = path.join(repoRoot, 'tools', 'fake-idp', 'src', 'FakeIdp')
+  const outDir = path.join(import.meta.dirname, '..', '.build', 'fake-idp')
+  execFileSync('dotnet', ['build', path.join(projectDir, 'FakeIdp.csproj'), '-o', outDir, '-v', 'q', '--nologo'], { stdio: 'inherit' })
+  const url = `http://127.0.0.1:${await freePort()}`
+  const child = spawn('dotnet', [path.join(outDir, 'FakeIdp.dll')], {
+    cwd: projectDir,
+    env: {
+      ...process.env,
+      ASPNETCORE_URLS: url,
+      FakeIdp__ClientId: fakeGoogle.clientId,
+      FakeIdp__ClientSecret: fakeGoogle.clientSecret,
+      FakeIdp__RedirectUris__0: fakeGoogle.redirectUri,
+    },
+  })
+  const exited = new Promise<number | null>((resolve) => child.once('exit', resolve))
+  const stop = async () => {
+    child.kill()
+    await Promise.race([exited, new Promise((r) => setTimeout(r, 5000))])
+  }
+  const deadline = Date.now() + 60_000
+  while (Date.now() < deadline) {
+    try {
+      if ((await fetch(`${url}/health`)).ok) return { url, stop }
+    } catch {
+      // not listening yet
+    }
+    await new Promise((r) => setTimeout(r, 300))
+  }
+  await stop()
+  throw new Error('fake-idp did not start')
 }
 
 async function waitReady(baseUrl: string, exited: Promise<number | null>): Promise<void> {

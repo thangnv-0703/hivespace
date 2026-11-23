@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-23T10:00:00Z" },
+  "title": "FEAT-004 · Google sign-in",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 800, "title": "SCR-STF-012 Sign in with Google button", "expand": "fill" },
+    "GoogleUnavailable.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 800, "title": "SCR-STF-012 Google unavailable", "expand": "fill" },
+    "GoogleAlerts.dc.html": { "x": 0, "y": 920, "w": 560, "h": 640, "title": "SCR-STF-012 Cancelled, unverified, failed alerts" },
+    "SignInMobile.dc.html": { "x": 640, "y": 920, "w": 390, "h": 860, "title": "SCR-STF-012 Mobile, cancelled notice", "expand": "fill" },
+    "RegisterGoogle.dc.html": { "x": 1110, "y": 920, "w": 1280, "h": 960, "title": "SCR-STF-013 Register with Google button", "expand": "fill" }
+  },
+  "order": [
+    "Main.dc.html",
+    "GoogleUnavailable.dc.html",
+    "GoogleAlerts.dc.html",
+    "SignInMobile.dc.html",
+    "RegisterGoogle.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "FEAT-004: Google sign-in", "kind": "title1", "maxW": 2640 }
+  },
+  "designSystems": []
+}

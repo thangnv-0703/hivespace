@@ -1,4 +1,5 @@
 using HiveSpace.BuildingBlocks.Messaging;
+using Identity.Application.Features.ExternalLogin;
 using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
@@ -34,7 +35,10 @@ public sealed class Rig : IAsyncDisposable
         UpdateProfile = new UpdateMyProfileHandler(users, outbox, clock);
         UpdateLanguage = new UpdateMyLanguageHandler(users, outbox, clock);
         ChangePassword = new ChangeMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, clock);
+        ExternalSignIn = new ExternalSignInHandler(users, new OpenIddictSessionRevoker(_db), outbox, clock);
     }
+
+    public ExternalSignInHandler ExternalSignIn { get; }
 
     public ChangeMyPasswordHandler ChangePassword { get; }
 

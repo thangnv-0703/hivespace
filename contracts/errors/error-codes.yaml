@@ -30,3 +30,8 @@ codes:
   identity.current_password_required: { http: 400 }
   identity.current_password_incorrect: { http: 400 }
   identity.password_not_set: { http: 409 }
+  # Google sign-in (FEAT-004): these travel only in the /signin?error= redirect, http is the nearest status.
+  identity.external_login_denied: { http: 401 }
+  identity.external_email_unverified: { http: 401 }
+  identity.external_login_failed: { http: 401 }
+  identity.external_login_unavailable: { http: 503 }

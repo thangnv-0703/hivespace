@@ -28,3 +28,8 @@ identity.email_read_only: "Your sign-in email can't be changed here."
 identity.current_password_required: "Enter your current password."
 identity.current_password_incorrect: "Your current password is incorrect."
 identity.password_not_set: "This account has no password yet."
+
+identity.external_login_denied: "You cancelled the Google sign-in. Try again, or sign in with your email and password."
+identity.external_email_unverified: "Google could not confirm this email address, so we cannot sign you in with it. Use another Google account, or sign in with your email and password."
+identity.external_login_failed: "We could not complete the Google sign-in. Please try again, or sign in with your email and password."
+identity.external_login_unavailable: "Google is not available right now. Sign in with your email and password, or try again later."

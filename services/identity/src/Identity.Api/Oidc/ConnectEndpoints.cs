@@ -52,10 +52,14 @@ public static class ConnectEndpoints
             authenticationScheme: OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
     }
 
-    /// <summary>A user with a credential needs an <c>hs.idp</c> cookie carrying the credential's current stamp (D-4).</summary>
+    /// <summary>
+    /// The cookie's <c>pwd_at</c> must equal the credential's current stamp exactly (FEAT-003 D-4, FEAT-004 D-5): no stamp for an
+    /// account without a password, the current stamp for one with a password. A cookie issued before the password was removed or
+    /// changed no longer signs in.
+    /// </summary>
     private static async Task<bool> PasswordStampMatchesAsync(ClaimsPrincipal cookie, IUserRepository users, Guid userId, CancellationToken ct) =>
-        await users.FindCredentialAsync(userId, ct).ConfigureAwait(false) is not { } credential
-        || cookie.FindFirstValue(UsersEndpoints.PasswordStampClaim) == credential.Stamp.ToString(System.Globalization.CultureInfo.InvariantCulture);
+        cookie.FindFirstValue(UsersEndpoints.PasswordStampClaim)
+        == (await users.FindCredentialAsync(userId, ct).ConfigureAwait(false))?.Stamp.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
     private static async Task<IResult> ExchangeAsync(HttpContext http, IUserRepository users)
     {
