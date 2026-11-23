@@ -96,7 +96,7 @@ def test_the_notice_is_in_the_user_language_with_vietnam_time_and_the_password_p
         assert "00:30 23/11/2026" in html
         assert (removed in text) is password_removed
         assert (removed in html) is password_removed
-        # The only link is the set-a-password one, in the paragraph about the removed password (FEAT-005 AC-18).
+        # The only link is the set-a-password one, in the removed-password paragraph (FEAT-005 AC-18).
         assert ("http://localhost:5080/profile/password" in text) is password_removed
         assert ('href="http://localhost:5080/profile/password"' in html) is password_removed
         assert text.count("http") == (1 if password_removed else 0)
