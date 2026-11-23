@@ -21,7 +21,10 @@ internal static class InfrastructureExtensions
     public static InfrastructureResources AddInfrastructure(this IDistributedApplicationBuilder builder)
     {
         // pgvector on Postgres 17, matching the Neon major version planned for the demo (ADR-0003, ADR-0005).
-        var postgres = builder.AddPostgres("postgres")
+        // Fixed host port and password so a SQL client (e.g. the VS Code PostgreSQL extension) can use a stable connection string.
+        // The password comes from user-secrets: dotnet user-secrets set "Parameters:postgres-password" "<value>" --project apphost/HiveSpace.AppHost
+        var postgresPassword = builder.AddParameter("postgres-password", secret: true);
+        var postgres = builder.AddPostgres("postgres", password: postgresPassword, port: 5433)
             .WithImage("pgvector/pgvector")
             .WithImageTag("pg17")
             .WithDataVolume("hivespace-postgres")
