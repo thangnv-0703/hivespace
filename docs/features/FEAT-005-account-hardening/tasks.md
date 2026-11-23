@@ -23,7 +23,7 @@ The screen states (SCR-STF-012 locked and rate-limited, SCR-STF-018 set mode and
 - [x] T4 — Lockout in change password: locked check first, wrong current password through `LockoutRecorder` (423 when it locks), a correct current password clears the lockout.
       (design §3.3; FR-AUTH-025 note, FR-AUTH-012; UC-026 2a)
       Done when: integration tests pass for AC-5, and FEAT-003's change-password tests stay green.
-- [ ] T5 — Audit retention: `AuditRetentionSweeper` (start and every 6 hours, 90 days) registered in Identity.
+- [x] T5 — Audit retention: `AuditRetentionSweeper` (start and every 6 hours, 90 days) registered in Identity.
       (design §5.2 Infrastructure; NFR-SEC-009)
       Done when: an integration test of `RunOnceAsync` passes for AC-9.
 - [ ] T6 — Re-authentication plumbing: `auth_time` and `amr` in `UsersEndpoints.ToPrincipal`, FEAT-004 `complete` (`amr=google`) and both password reissues; `ConnectEndpoints` `max_age` check, `BuildPrincipal` claims, refresh copy; gateway `/bff/login?reauth=true` → `max_age=60`.

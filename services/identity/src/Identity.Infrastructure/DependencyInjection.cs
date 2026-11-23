@@ -39,6 +39,8 @@ public static class DependencyInjection
         // Sent rows still hold the verification token, so they are deleted after 24 hours (R-6, AC-8).
         services.AddOutboxCleanup<IdentityDbContext>(TimeSpan.FromHours(24));
 
+        services.AddHostedService<AuditRetentionSweeper>();
+
         services.AddScoped<RegisterUserHandler>();
         services.AddScoped<VerifyEmailHandler>();
         services.AddScoped<ResendVerificationEmailHandler>();
