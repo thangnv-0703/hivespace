@@ -15,5 +15,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Identity.Api\Identity.Api.csproj" />
     <ProjectReference Include="..\..\src\Identity.Infrastructure\Identity.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\..\..\tools\fake-idp\src\FakeIdp\FakeIdp.csproj" />
   </ItemGroup>
 </Project>

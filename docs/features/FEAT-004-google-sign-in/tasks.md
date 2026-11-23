@@ -32,7 +32,7 @@ The screen change (Google button, divider, error alerts on SCR-STF-012) is owned
 - [x] T4 — Fake IdP (`tools/fake-idp`, added to `HiveSpace.slnx`): discovery, JWKS, `/authorize`, `/token`, and the `/__fake/next` control endpoint with the outcomes in design §5.6; PKCE, client secret and `redirect_uri` checks.
       (design §5.6; D-7; dev-standards §10)
       Done when: its own tests drive one full code flow for `ok`, and show that each failure outcome produces the response the integration tests expect (a bad signature really fails signature validation, and so on). It builds with no warnings.
-- [ ] T5 — Identity API: `hs.ext` cookie, the `google` OpenID Connect scheme and registry (`ExternalLoginProviders`), `AddExternalLogins` configuration, `start` and `complete` endpoints, `ExternalFailure.Classify`, `OnRedirectToIdentityProvider` / `OnMessageReceived` / `OnRemoteFailure`, the exact `pwd_at` match in `ConnectEndpoints.PasswordStampMatchesAsync`, no secret in logs.
+- [x] T5 — Identity API: `hs.ext` cookie, the `google` OpenID Connect scheme and registry (`ExternalLoginProviders`), `AddExternalLogins` configuration, `start` and `complete` endpoints, `ExternalFailure.Classify`, `OnRedirectToIdentityProvider` / `OnMessageReceived` / `OnRemoteFailure`, the exact `pwd_at` match in `ConnectEndpoints.PasswordStampMatchesAsync`, no secret in logs.
       (design §3.1, §3.2, §5.2; D-1, D-2, D-5, D-6, D-8; NFR-SEC-014, EIR-SW-006; AC-3 cookie part, AC-5..AC-10, AC-16)
       Done when: integration tests with `IdentityApiFactory` and the fake IdP pass for:
       - the full happy path for a new and a linking account, ending in a successful `/connect/authorize` (AC-1, AC-2);

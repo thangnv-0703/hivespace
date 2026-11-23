@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Errors;
 using Identity.Api.Endpoints;
+using Identity.Api.External;
 using Identity.Api.Oidc;
 using OpenIddict.Validation.AspNetCore;
 using Identity.Infrastructure;
@@ -25,7 +26,9 @@ builder.Services.AddAuthentication(UsersEndpoints.CookieScheme)
         // An API: never redirect to a login page.
         o.Events.OnRedirectToLogin = ctx => { ctx.Response.StatusCode = StatusCodes.Status401Unauthorized; return Task.CompletedTask; };
         o.Events.OnRedirectToAccessDenied = ctx => { ctx.Response.StatusCode = StatusCodes.Status403Forbidden; return Task.CompletedTask; };
-    });
+    })
+    // Google sign-in (FEAT-004): the hs.ext cookie and the google OpenID Connect scheme when Identity:Google:ClientId is set.
+    .AddExternalLogins(builder.Configuration, builder.Environment);
 // The protected API accepts only the bearer access token, validated locally because Identity is the issuer (D-5).
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(MeEndpoints.Policy, policy => policy
@@ -51,6 +54,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", defaultValue: true))
 app.MapUsersEndpoints();
 app.MapMeEndpoints();
 app.MapConnectEndpoints();
+app.MapExternalLoginEndpoints();
 
 await app.RunAsync();
 
