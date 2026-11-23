@@ -58,7 +58,7 @@ public sealed class SetPasswordApiTests : IAsyncLifetime
             Assert.True(await db.Credentials.AnyAsync(c => c.UserId == user.UserId, Ct));
             var events = await PasswordChangedEventsAsync(db, user.UserId);
             var data = Assert.Single(events);
-            var schema = JsonSchema.FromText(await File.ReadAllTextAsync(SchemaPath(), Ct));
+            var schema = JsonSchema.FromText(await File.ReadAllTextAsync(SchemaPath(), Ct), new BuildOptions { SchemaRegistry = new SchemaRegistry() });
             Assert.True(schema.Evaluate(data).IsValid, "PasswordChanged data does not match its schema");
             Assert.DoesNotContain(NewPassword, data.GetRawText(), StringComparison.Ordinal);
         }
