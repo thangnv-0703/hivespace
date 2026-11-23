@@ -40,6 +40,18 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
 
     public void AddToken(VerificationToken token) => db.VerificationTokens.Add(token);
 
+    public void Add(User user) => db.Users.Add(user);
+
+    public Task<ExternalLogin?> FindExternalLoginAsync(string provider, string subject, CancellationToken cancellationToken) =>
+        db.ExternalLogins.FirstOrDefaultAsync(l => l.Provider == provider && l.Subject == subject, cancellationToken);
+
+    public Task<ExternalLogin?> FindExternalLoginByUserAsync(Guid userId, string provider, CancellationToken cancellationToken) =>
+        db.ExternalLogins.FirstOrDefaultAsync(l => l.UserId == userId && l.Provider == provider, cancellationToken);
+
+    public void AddExternalLogin(ExternalLogin link) => db.ExternalLogins.Add(link);
+
+    public void RemoveCredential(Credential credential) => db.Credentials.Remove(credential);
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
         try
@@ -49,7 +61,15 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
         catch (DbUpdateException ex) when (
             ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "IX_users_normalized_email" })
         {
+            db.ChangeTracker.Clear();
             throw new EmailInUseException(ex);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: string name }
+            && name.StartsWith("IX_external_logins_", StringComparison.Ordinal))
+        {
+            db.ChangeTracker.Clear();
+            throw new ExternalLoginConflictException(ex);
         }
     }
 }

@@ -19,7 +19,7 @@ The screen change (Google button, divider, error alerts on SCR-STF-012) is owned
       - `User.RegisterExternal`.
       (design §4, §5.2; FR-AUTH-020)
       Done when: the migration applies clean up and down on a database at `20261120171033_AddUserProfile` (`MigrationTests`). Unit tests show `RegisterExternal` gives a verified Buyer and that `Register` is unchanged.
-- [ ] T3 — Identity application: `ExternalSignInHandler` and the new repository members (`FindExternalLoginAsync`, `FindExternalLoginByUserAsync`, `Add(User)`, `AddExternalLogin`, `RemoveCredential`), `ExternalLoginConflictException` mapping in `EfUserRepository`, one retry on conflict.
+- [x] T3 — Identity application: `ExternalSignInHandler` and the new repository members (`FindExternalLoginAsync`, `FindExternalLoginByUserAsync`, `Add(User)`, `AddExternalLogin`, `RemoveCredential`), `ExternalLoginConflictException` mapping in `EfUserRepository`, one retry on conflict.
       (design §5.2; D-3, D-4, D-5; FR-AUTH-020..022; AC-1..AC-6 handler part, AC-9 sign-in part, AC-11)
       Done when: Testcontainers integration tests pass for each of these:
       - a new verified identity creates a verified Buyer with no credential and no token, one link and one `ExternalLoginLinked` (`accountCreated: true`) that validates against the schema and holds no secret (AC-1);
