@@ -35,7 +35,7 @@ The screen states (SCR-STF-012 locked and rate-limited, SCR-STF-018 set mode and
 - [x] T8 — Gateway rate limits: policies `auth` (per IP) and `auth-user` (per `sub`, else IP) from `RateLimits` options; `OnRejected` (429 envelope with `Retry-After`, or the `/signin?error=common.rate_limited` redirect for `/connect/external/*`); routes `me-password`, `me-password-rest`, `connect-external-callback`; `UseForwardedHeaders` behind `Gateway:TrustForwardedFor`; `Gateway__TrustForwardedFor=true` in the Azure deployment config.
       (design §3.7, §5.3; NFR-SEC-005; D-6, D-9)
       Done when: gateway tests pass for AC-13 (per IP, per user, other partitions unaffected, the callback redirect) and AC-14 (forwarded header trusted only when enabled); `RoutingTests` show the new routes reach Identity with the right authorization policy.
-- [ ] T9 — Notification: the `passwordRemoved` paragraph of `external_login_linked.{vi,en}.{txt,html}` links to `{storefront}/profile/password`.
+- [x] T9 — Notification: the `passwordRemoved` paragraph of `external_login_linked.{vi,en}.{txt,html}` links to `{storefront}/profile/password`.
       (design §5.4; FR-NOTIF-015; FEAT-004 D-5)
       Done when: `uv run pytest && uv run mypy && uv run lint-imports` pass, with a template test for AC-18 in vi and en.
 - [ ] T10 — UI integration (spec in [ui-design.md](ui-design.md), visual mockups in [mockups/](mockups/), registry in `docs/design-manifest.json`): `SignInPage.vue` (423, 429, `?error=common.rate_limited`, error without `returnUrl` → "Try again"); `ChangePasswordPage.vue` set mode and change-mode additions (`setMyPassword` in `api.ts`, the "Continue with Google" re-authentication action, 409 switch, 423, 429); `ProfilePage.vue` card label from `hasPassword`; vi/en keys.

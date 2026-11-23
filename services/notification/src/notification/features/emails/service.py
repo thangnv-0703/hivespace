@@ -72,10 +72,12 @@ def _password_changed_context(data: dict[str, Any], _public_base_url: str) -> di
     }
 
 
-def _external_login_linked_context(data: dict[str, Any], _public_base_url: str) -> dict[str, Any]:
-    # Validated before any write (dispatch); no link and no token in this email (FEAT-004 design 5.3).
+def _external_login_linked_context(data: dict[str, Any], public_base_url: str) -> dict[str, Any]:
+    # Validated before any write (dispatch); no token in this email (FEAT-004 design 5.3). The only link is the plain one
+    # to the set-a-password page, shown when the password was removed (FEAT-005 §5.4, FR-NOTIF-015).
     event = ExternalLoginLinked.model_validate(data)
     return {
+        "set_password_link": f"{public_base_url.rstrip('/')}/profile/password",
         "display_name": event.display_name,
         "linked_at": event.linked_at.astimezone(VIETNAM).strftime("%H:%M %d/%m/%Y"),
         "password_removed": event.password_removed,
