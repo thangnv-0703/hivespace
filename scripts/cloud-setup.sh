@@ -54,9 +54,25 @@ else
   say "WARNING: go is not installed; Go checks cannot run (need $(grep -m1 '^go ' services/inventory/go.mod))"
 fi
 
-# Docker decides which checks can run (AGENTS.md, Cloud sessions).
+# Chromium for tests/e2e: the cloud image ships its own Chromium, which may not match the Playwright version pinned in
+# tests/e2e. playwright.config.ts launches this one when PW_CHROMIUM_PATH is set.
+if [ -x /opt/pw-browsers/chromium ]; then
+  persist "export PW_CHROMIUM_PATH=/opt/pw-browsers/chromium"
+  say "playwright: tests/e2e uses /opt/pw-browsers/chromium (PW_CHROMIUM_PATH)"
+fi
+
+# Docker decides which checks can run (AGENTS.md, Cloud sessions). The cloud image has the Docker engine installed but
+# does not start it, so start the daemon here when it is not running yet.
+if ! docker info >/dev/null 2>&1 && command -v dockerd >/dev/null 2>&1; then
+  say "docker: starting the daemon"
+  setsid nohup dockerd >/tmp/dockerd.log 2>&1 < /dev/null &
+  for _ in $(seq 1 30); do
+    docker info >/dev/null 2>&1 && break
+    sleep 1
+  done
+fi
 if docker info >/dev/null 2>&1; then
-  say "docker: available"
+  say "docker: available - Testcontainers, tests/contract, tests/system, AppHost and tests/e2e can run"
 else
-  say "docker: NOT available - Testcontainers, tests/contract, tests/system, AppHost and tests/e2e cannot run here"
+  say "docker: NOT available (see /tmp/dockerd.log) - Testcontainers, tests/contract, tests/system, AppHost and tests/e2e cannot run here"
 fi
