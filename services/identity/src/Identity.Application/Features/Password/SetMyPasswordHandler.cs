@@ -25,7 +25,7 @@ public sealed class SetMyPasswordHandler(
     TimeProvider clock)
 {
     public const string ReauthenticationRequired = "identity.reauthentication_required";
-    public const string PasswordAlreadySet = "identity.password_already_set";
+    public const string PasswordAlreadySet = "identity.password_already_set"; // pragma: allowlist secret - an error code, not a credential
 
     public static readonly TimeSpan ReauthWindow = TimeSpan.FromMinutes(10);
 
