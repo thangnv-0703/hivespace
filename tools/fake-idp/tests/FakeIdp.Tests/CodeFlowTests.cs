@@ -72,6 +72,20 @@ public sealed class CodeFlowTests : IAsyncLifetime
         Assert.Equal(("sub-42", "binh@gmail.com", "Binh"), (jwt.Subject, jwt.GetClaim("email").Value, jwt.GetClaim("name").Value));
     }
 
+    [Fact]
+    public async Task A_fake_next_cookie_overrides_the_shared_next_for_that_browser()
+    {
+        await NextAsync("ok", sub: "shared-sub");
+        var cookie = JsonSerializer.Serialize(new { outcome = "ok", sub = "browser-sub", email = "chi@gmail.com", name = "Chi" });
+
+        var own = await RunAsync(cookie: Uri.EscapeDataString(cookie));
+        var shared = await RunAsync();
+
+        Assert.Equal("browser-sub", new JsonWebToken(own.IdToken).Subject);
+        Assert.Equal("chi@gmail.com", new JsonWebToken(own.IdToken).GetClaim("email").Value);
+        Assert.Equal("shared-sub", new JsonWebToken(shared.IdToken).Subject);
+    }
+
     [Theory]
     [InlineData(Outcomes.BadSignature, typeof(SecurityTokenInvalidSignatureException))]
     [InlineData(Outcomes.WrongAudience, typeof(SecurityTokenInvalidAudienceException))]
@@ -215,18 +229,24 @@ public sealed class CodeFlowTests : IAsyncLifetime
 
     private sealed record Tokens(HttpStatusCode Status, string? IdToken, string? Error);
 
-    private async Task<Tokens> RunAsync()
+    private async Task<Tokens> RunAsync(string? cookie = null)
     {
-        var flow = await AuthorizeAsync();
+        var flow = await AuthorizeAsync(cookie);
         return await RedeemAsync(flow.Query["code"]!, flow.Verifier);
     }
 
-    private async Task<Flow> AuthorizeAsync()
+    private async Task<Flow> AuthorizeAsync(string? cookie = null)
     {
         var verifier = B64(RandomNumberGenerator.GetBytes(32));
         var challenge = B64(SHA256.HashData(Encoding.ASCII.GetBytes(verifier)));
         var nonce = Guid.NewGuid().ToString("N");
-        using var response = await _http.GetAsync(new Uri("/authorize?" + AuthorizeQuery(ClientId, RedirectUri, challenge, nonce), UriKind.Relative), Ct);
+        using var request = new HttpRequestMessage(HttpMethod.Get, new Uri("/authorize?" + AuthorizeQuery(ClientId, RedirectUri, challenge, nonce), UriKind.Relative));
+        if (cookie is not null)
+        {
+            request.Headers.Add("Cookie", $"{FakeIdpApp.NextCookie}={cookie}");
+        }
+
+        using var response = await _http.SendAsync(request, Ct);
         Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
         var location = response.Headers.Location!;
         Assert.StartsWith(RedirectUri + "?", location.ToString(), StringComparison.Ordinal);

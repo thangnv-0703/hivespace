@@ -63,7 +63,7 @@ The screen change (Google button, divider, error alerts on SCR-STF-012) is owned
       - vi/en keys.
       (design §5.5; FR-AUTH-022, FR-AUTH-023; AC-13)
       Done when: both pages render and conform to their ui-design specs (default, each Google alert and the unavailable state on Sign in; the Google button on Register). Component tests cover the navigation target on both pages, the code-to-message mapping and an unknown code. `pnpm turbo run lint typecheck test build` passes, including Sheriff and vi/en parity.
-- [ ] T9 — E2E: extend the suite for UC-025 against the fake IdP: `tests/e2e/features/google-sign-in.feature` with a new visitor signing in and ending signed in (name in the header), and a visitor with a password account of the same email being linked. Steps set the outcome through `/__fake/next`.
+- [x] T9 — E2E: extend the suite for UC-025 against the fake IdP: `tests/e2e/features/google-sign-in.feature` with a new visitor signing in and ending signed in (name in the header), and a visitor with a password account of the same email being linked. Steps set the outcome through `/__fake/next`.
       (design §6 AC-14; architecture §8.6)
       Done when: both scenarios pass with `pnpm test` in `tests/e2e` against the local AppHost stack, in the desktop and mobile-360 projects.
 - [ ] T10 — Verify: AC-1..AC-16 each map to a passing test or a recorded demonstration (AC-8 and AC-14 also checked once by hand: stop the fake IdP, see the unavailable message and a working password sign-in). `dotnet build/test`, `dotnet format`, the Notification and web checks, boundary rules, Spectral, buf and `tests/contract` are green. `docs/rtm.md` Test ref cells are left to acceptance verification.

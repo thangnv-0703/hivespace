@@ -17,6 +17,9 @@ public sealed record NextRequest(string? Outcome, string? Sub, string? Email, st
 /// </summary>
 public static class FakeIdpApp
 {
+    /// <summary>The cookie a browser test sets on the fake's origin to choose its own next sign-in.</summary>
+    public const string NextCookie = "fake_next";
+
     private static readonly JsonSerializerOptions Json = new(JsonSerializerDefaults.Web);
 
     public static WebApplication Build(string[] args, Action<WebApplicationBuilder>? configure = null)
@@ -114,7 +117,7 @@ public static class FakeIdpApp
         }
 
         var oauthState = get("state");
-        var next = state.Next;
+        var next = NextFromCookie(http) ?? state.Next;
         string? error = null;
         if (get("response_type") != "code" || get("code_challenge_method") != "S256" || string.IsNullOrEmpty(get("code_challenge")))
         {
@@ -224,6 +227,24 @@ public static class FakeIdpApp
         var key = outcome == Outcomes.BadSignature ? state.OtherKey : state.SigningKey;
         var signature = key.SignData(input, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         return header + "." + payload + "." + B64(signature);
+    }
+
+    /// <summary>
+    /// A per-browser override of <see cref="FakeIdpState.Next"/>: a <c>fake_next</c> cookie on the fake's own origin holding the
+    /// same JSON as <c>POST /__fake/next</c>. Browser tests running in parallel set it per browser context, so they never see
+    /// each other's identity.
+    /// </summary>
+    private static NextSignIn? NextFromCookie(HttpContext http)
+    {
+        if (!http.Request.Cookies.TryGetValue(NextCookie, out var raw) || string.IsNullOrEmpty(raw))
+        {
+            return null;
+        }
+
+        var body = JsonSerializer.Deserialize<NextRequest>(raw, Json);
+        var d = NextSignIn.Default;
+        var outcome = body?.Outcome ?? Outcomes.Ok;
+        return Outcomes.All.Contains(outcome) ? new NextSignIn(outcome, body?.Sub ?? d.Sub, body?.Email ?? d.Email, body?.Name ?? d.Name) : null;
     }
 
     private static (string? ClientId, string? Secret) ClientCredentials(HttpContext http, Dictionary<string, string> fields)
