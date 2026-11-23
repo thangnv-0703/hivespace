@@ -17,4 +17,6 @@ regexes = [
   '''SharedAccessKey=test;''',
   # A marker the Notification test searches for in logs and tables (R-6); not a credential.
   '''tok-SECRET-9f8e7d''',
+  # Throwaway password the FEAT-005 log-leak test used before it was generated at runtime (history only).
+  '''logSecret5678''',
 ]
