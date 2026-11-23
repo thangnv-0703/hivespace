@@ -80,6 +80,13 @@ internal static class WebExtensions
             gateway.WithReference(service);
         }
 
+        // Deployed to Container Apps, the ingress appends the client address to X-Forwarded-For; the rate limits need it (FEAT-005 D-6).
+        // Locally nothing trusts the header.
+        if (builder.ExecutionContext.IsPublishMode)
+        {
+            gateway.WithEnvironment("Gateway__TrustForwardedFor", "true");
+        }
+
         return gateway;
     }
 }

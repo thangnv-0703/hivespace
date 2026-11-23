@@ -210,7 +210,14 @@ public sealed class GatewayTestHost : IAsyncLifetime
                     query["refresh"]!,
                     null,
                     DateTimeOffset.UtcNow.AddSeconds(int.Parse(query["expires"]!, System.Globalization.CultureInfo.InvariantCulture)))));
-                var principal = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity("test"));
+                // Like the real OIDC cookie principal, the session carries the user's sub (the per-user rate-limit key).
+                var identity = new System.Security.Claims.ClaimsIdentity("test");
+                if (query.TryGetValue("sub", out var sub))
+                {
+                    identity.AddClaim(new System.Security.Claims.Claim("sub", sub.ToString()));
+                }
+
+                var principal = new System.Security.Claims.ClaimsPrincipal(identity);
                 await context.SignInAsync(SessionTokens.CookieScheme, principal, props);
             }));
             next(app);
