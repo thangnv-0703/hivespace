@@ -2,6 +2,6 @@ Xin chào {{ display_name }},
 
 Tài khoản Google của bạn đã được liên kết với tài khoản HiveSpace lúc {{ linked_at }} (giờ Việt Nam). Từ nay bạn có thể đăng nhập bằng Google.
 {% if password_removed %}
-Địa chỉ email này chưa được xác minh nên để bảo vệ bạn, mật khẩu trước đây đã bị xóa. Bạn vẫn đăng nhập bằng Google được và có thể đặt mật khẩu mới sau trong trang hồ sơ.
+Địa chỉ email này chưa được xác minh nên để bảo vệ bạn, mật khẩu trước đây đã bị xóa. Bạn vẫn đăng nhập bằng Google được và có thể đặt mật khẩu mới bất cứ lúc nào tại {{ set_password_link }}
 {% endif %}
 Nếu không phải bạn thực hiện, hãy liên hệ bộ phận hỗ trợ HiveSpace ngay.

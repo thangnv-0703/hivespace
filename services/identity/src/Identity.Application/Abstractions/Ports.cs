@@ -24,6 +24,12 @@ public interface IVerificationTokenGenerator
     byte[] Hash(string token);
 }
 
+/// <summary>
+/// Raised by <see cref="IUserRepository.SaveChangesAsync"/> when a credential insert hits the primary key: the account got a
+/// password between the check and the save (two parallel set-password calls, FR-AUTH-027).
+/// </summary>
+public sealed class CredentialExistsException(Exception inner) : Exception("The account already has a password.", inner);
+
 /// <summary>Raised by <see cref="IUserRepository.SaveChangesAsync"/> when two registrations race for one normalized email.</summary>
 public sealed class EmailInUseException(Exception inner) : Exception("The email is already registered.", inner);
 
@@ -32,6 +38,28 @@ public sealed class EmailInUseException(Exception inner) : Exception("The email 
 /// two first sign-ins for one identity raced, or an account already holds an identity of the provider (AC-11).
 /// </summary>
 public sealed class ExternalLoginConflictException(Exception inner) : Exception("The external login is already linked.", inner);
+
+/// <summary>
+/// Raised by <see cref="IUserRepository.SaveChangesAsync"/> when two failed attempts for one account raced: the lockout row changed
+/// or was inserted since it was read. Nothing stays staged, so the caller reads it again and reapplies (FEAT-005 D-3).
+/// </summary>
+public sealed class ConcurrencyConflictException(Exception inner) : Exception("The lockout changed concurrently.", inner);
+
+/// <summary>Lockout rows (FR-AUTH-011). Changes are staged and committed by <see cref="IUserRepository.SaveChangesAsync"/>.</summary>
+public interface ILockoutStore
+{
+    Task<SignInLockout?> FindAsync(Guid userId, CancellationToken cancellationToken);
+
+    void Add(SignInLockout lockout);
+
+    void Remove(SignInLockout lockout);
+}
+
+/// <summary>The security audit log (NFR-SEC-009); rows are committed with whatever else the unit of work holds.</summary>
+public interface IAuditLog
+{
+    void Add(AuditEntry entry);
+}
 
 /// <summary>
 /// Signs the user out of every session except one (FR-AUTH-024). It only stages changes in the same unit of work;
@@ -74,11 +102,16 @@ public interface IUserRepository
 
     void AddToken(VerificationToken token);
 
+    /// <summary>A first password for an account that has none (FR-AUTH-027).</summary>
+    void AddCredential(Credential credential);
+
     /// <summary>
     /// Commits everything added or changed, including queued outbox rows, in one transaction.
     /// On a unique-index conflict nothing stays staged, so the caller can decide again on fresh reads.
     /// </summary>
     /// <exception cref="EmailInUseException">The unique index on the normalized email rejected the insert.</exception>
     /// <exception cref="ExternalLoginConflictException">A unique index of <c>external_logins</c> rejected the insert.</exception>
+    /// <exception cref="CredentialExistsException">The primary key of <c>credentials</c> rejected the insert.</exception>
+    /// <exception cref="ConcurrencyConflictException">The lockout row of the account changed or appeared since it was read.</exception>
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

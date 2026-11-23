@@ -7,6 +7,7 @@ codes:
   common.not_found: { http: 404 }
   common.internal: { http: 500 }
   common.dependency_unavailable: { http: 503 }
+  common.rate_limited: { http: 429 }
   identity.email_required: { http: 400 }
   identity.email_invalid: { http: 400 }
   identity.email_in_use: { http: 409 }
@@ -30,6 +31,10 @@ codes:
   identity.current_password_required: { http: 400 }
   identity.current_password_incorrect: { http: 400 }
   identity.password_not_set: { http: 409 }
+  # Account hardening (FEAT-005).
+  identity.account_locked: { http: 423 }
+  identity.reauthentication_required: { http: 403 }
+  identity.password_already_set: { http: 409 }
   # Google sign-in (FEAT-004): these travel only in the /signin?error= redirect, http is the nearest status.
   identity.external_login_denied: { http: 401 }
   identity.external_email_unverified: { http: 401 }

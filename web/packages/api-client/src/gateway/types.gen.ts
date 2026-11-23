@@ -84,6 +84,10 @@ export type BffLoginData = {
          * Local path on the calling host only (storefront or seller host, ADR-0027); anything else becomes `/`.
          */
         returnUrl?: string;
+        /**
+         * When true the authorize request carries `max_age=60`, so Identity asks for a fresh sign-in (FR-AUTH-027).
+         */
+        reauth?: boolean;
     };
     url: '/bff/login';
 };

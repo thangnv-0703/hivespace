@@ -10,6 +10,7 @@ async function register(world: ContractWorld, email: string, password: string): 
   world.email = email
   await world.post('/v1/users', { email, displayName: 'An', password })
   assert.equal(world.response!.status, 201)
+  world.userId = world.body.userId
   world.token = await tokenFromOutbox(world, world.body.userId)
 }
 

@@ -1,6 +1,7 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
 using Identity.Application.Features.ExternalLogin;
+using Identity.Application.Features.Lockout;
 using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
@@ -27,7 +28,10 @@ public static class DependencyInjection
         builder.AddEventBus<IdentityDbContext>(MessagingConnection, new MessagingOptions(EventsTopic, "identity"));
 
         var services = builder.Services;
-        services.AddScoped<IUserRepository, EfUserRepository>();
+        services.AddScoped<EfUserRepository>();
+        services.AddScoped<IUserRepository>(sp => sp.GetRequiredService<EfUserRepository>());
+        services.AddScoped<ILockoutStore>(sp => sp.GetRequiredService<EfUserRepository>());
+        services.AddScoped<IAuditLog>(sp => sp.GetRequiredService<EfUserRepository>());
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<ISessionRevoker, OpenIddictSessionRevoker>();
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
@@ -35,11 +39,16 @@ public static class DependencyInjection
         // Sent rows still hold the verification token, so they are deleted after 24 hours (R-6, AC-8).
         services.AddOutboxCleanup<IdentityDbContext>(TimeSpan.FromHours(24));
 
+        services.AddHostedService<AuditRetentionSweeper>();
+
         services.AddScoped<RegisterUserHandler>();
         services.AddScoped<VerifyEmailHandler>();
         services.AddScoped<ResendVerificationEmailHandler>();
+        services.AddScoped<LockoutRecorder>();
         services.AddScoped<SignInHandler>();
+        services.AddScoped<RecordSignInFailureHandler>();
         services.AddScoped<ChangeMyPasswordHandler>();
+        services.AddScoped<SetMyPasswordHandler>();
         services.AddScoped<ExternalSignInHandler>();
         services.AddScoped<GetMyProfileHandler>();
         services.AddScoped<UpdateMyProfileHandler>();

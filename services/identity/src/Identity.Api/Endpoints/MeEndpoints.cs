@@ -12,11 +12,13 @@ namespace Identity.Api.Endpoints;
 
 public sealed record ChangePasswordRequest(string? CurrentPassword, string? NewPassword);
 
+public sealed record SetPasswordRequest(string? NewPassword);
+
 /// <summary>
 /// The signed-in user's own profile (<c>contracts/openapi/identity.yaml</c>, technical-design §3.1). The user is always the
 /// <c>sub</c> of the validated bearer token: no id in the path, and <c>X-User-Id</c> or a body field never picks the user (D-5).
 /// </summary>
-public static class MeEndpoints
+public static partial class MeEndpoints
 {
     /// <summary>Authorization policy that accepts only the bearer token, never the <c>hs.idp</c> cookie.</summary>
     public const string Policy = "me";
@@ -66,12 +68,45 @@ public static class MeEndpoints
                 if (session.Succeeded && session.Principal?.FindFirstValue("sub") == userId.ToString()
                     && await users.FindByIdAsync(userId, ct) is { } current)
                 {
-                    await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(current, stamp));
+                    await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(current, stamp, UsersEndpoints.AuthTimeOf(session.Principal), session.Principal.FindFirstValue(UsersEndpoints.AmrClaim)));
                 }
 
                 return Results.NoContent();
             })
             .WithName("changeMyPassword");
+
+        // A first password after a recent Google sign-in (FR-AUTH-027, UC-026 1a).
+        me.MapPut("/password/initial", async (
+                HttpContext http,
+                ClaimsPrincipal user,
+                SetPasswordRequest body,
+                SetMyPasswordHandler handler,
+                IUserRepository users,
+                ILoggerFactory loggers,
+                CancellationToken ct) =>
+            {
+                var userId = user.GetUserId();
+                var command = new SetMyPasswordCommand(
+                    userId,
+                    user.FindFirstValue("oi_au_id"),
+                    UsersEndpoints.AuthTimeOf(user),
+                    user.FindAll(UsersEndpoints.AmrClaim).Select(c => c.Value).ToList(),
+                    body.NewPassword);
+                var stamp = (await handler.HandleAsync(command, ct)).OrThrow();
+                LogPasswordSet(loggers.CreateLogger(typeof(MeEndpoints)), userId);
+
+                // The account now has a password, so the cookie needs its stamp, or the next authorize would ask to sign in again
+                // (FEAT-004 exact pwd_at rule). Same auth_time and amr: setting a password is not a new sign-in.
+                var session = await http.AuthenticateAsync(UsersEndpoints.CookieScheme);
+                if (session.Succeeded && session.Principal?.FindFirstValue("sub") == userId.ToString()
+                    && await users.FindByIdAsync(userId, ct) is { } current)
+                {
+                    await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(current, stamp, UsersEndpoints.AuthTimeOf(session.Principal), session.Principal.FindFirstValue(UsersEndpoints.AmrClaim)));
+                }
+
+                return Results.NoContent();
+            })
+            .WithName("setMyPassword");
 
         return app;
     }
@@ -112,4 +147,8 @@ public static class MeEndpoints
 
         return new UpdateMyProfileCommand(userId, Read("displayName"), Read("phone"), Read("gender"), Read("dateOfBirth"), invalid);
     }
+
+    // The user id only: never the password, a token or the email.
+    [LoggerMessage(Level = LogLevel.Information, Message = "Password set: user {UserId}")]
+    private static partial void LogPasswordSet(ILogger logger, Guid userId);
 }

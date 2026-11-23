@@ -11,9 +11,10 @@ public sealed record ProfileView(
     string? Gender,
     string? DateOfBirth,
     string? AvatarUrl,
-    string Language)
+    string Language,
+    bool HasPassword)
 {
-    public static ProfileView From(User user) => new(
+    public static ProfileView From(User user, bool hasPassword) => new(
         user.Id,
         user.EmailAddress,
         user.DisplayName,
@@ -21,7 +22,8 @@ public sealed record ProfileView(
         user.Gender,
         user.DateOfBirth?.ToString("yyyy-MM-dd", System.Globalization.CultureInfo.InvariantCulture),
         null,
-        user.Language);
+        user.Language,
+        hasPassword);
 }
 
 /// <summary>Payload of <c>UserProfileChanged/v1</c>. Phone, gender and date of birth are deliberately absent (D-6, NFR-LEG-001).</summary>

@@ -1,12 +1,14 @@
+using System.Diagnostics;
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
 using Identity.Domain;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using Npgsql;
 
 namespace Identity.Infrastructure.Persistence;
 
-internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
+internal sealed partial class EfUserRepository(IdentityDbContext db, ILogger<EfUserRepository>? logger = null) : IUserRepository, ILockoutStore, IAuditLog
 {
     private const string UniqueViolation = "23505";
 
@@ -40,6 +42,8 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
 
     public void AddToken(VerificationToken token) => db.VerificationTokens.Add(token);
 
+    public void AddCredential(Credential credential) => db.Credentials.Add(credential);
+
     public void Add(User user) => db.Users.Add(user);
 
     public Task<ExternalLogin?> FindExternalLoginAsync(string provider, string subject, CancellationToken cancellationToken) =>
@@ -52,11 +56,54 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
 
     public void RemoveCredential(Credential credential) => db.Credentials.Remove(credential);
 
+    public Task<SignInLockout?> FindAsync(Guid userId, CancellationToken cancellationToken) =>
+        db.SignInLockouts.FirstOrDefaultAsync(l => l.UserId == userId, cancellationToken);
+
+    public void Add(SignInLockout lockout) => db.SignInLockouts.Add(lockout);
+
+    public void Remove(SignInLockout lockout) => db.SignInLockouts.Remove(lockout);
+
+    public void Add(AuditEntry entry)
+    {
+        // Joins the row to the trace of the request (design §5.2); never an email, address or token (D-4).
+        entry.SetCorrelationId(Activity.Current?.TraceId.ToString());
+        db.AuditEntries.Add(entry);
+    }
+
     public async Task SaveChangesAsync(CancellationToken cancellationToken)
     {
+        var locked = db.ChangeTracker.Entries<AuditEntry>()
+            .Where(e => e.State == EntityState.Added && e.Entity.Type == AuditEntry.AccountLockedType)
+            .Select(e => e.Entity.UserId)
+            .ToList();
         try
         {
             await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+            // After the commit, so a retried save logs once. The user id only, never the email (NFR-SEC-008 spirit, design §5.2).
+            if (logger is not null)
+            {
+                foreach (var userId in locked)
+                {
+                    LogAccountLocked(logger, userId);
+                }
+            }
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            db.ChangeTracker.Clear();
+            throw new ConcurrencyConflictException(ex);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "PK_sign_in_lockouts" })
+        {
+            db.ChangeTracker.Clear();
+            throw new ConcurrencyConflictException(ex);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "PK_credentials" })
+        {
+            db.ChangeTracker.Clear();
+            throw new CredentialExistsException(ex);
         }
         catch (DbUpdateException ex) when (
             ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "IX_users_normalized_email" })
@@ -72,4 +119,7 @@ internal sealed class EfUserRepository(IdentityDbContext db) : IUserRepository
             throw new ExternalLoginConflictException(ex);
         }
     }
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Account locked: user {UserId}")]
+    private static partial void LogAccountLocked(ILogger logger, Guid? userId);
 }

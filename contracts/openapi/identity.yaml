@@ -145,6 +145,20 @@ paths:
             application/json:
               schema:
                 $ref: './shared/components.yaml#/components/schemas/Error'
+        '423':
+          description: "`identity.account_locked`: five wrong attempts within 15 minutes lock the account for 15 minutes (FR-AUTH-011, FR-AUTH-012). Also the attempt that causes the lock."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '429':
+          description: "`common.rate_limited` from the gateway (NFR-SEC-005), with `Retry-After`."
+          headers:
+            Retry-After: { description: Seconds until the limit window resets, schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
   /v1/me/profile:
     get:
       operationId: getMyProfile
@@ -273,6 +287,74 @@ paths:
             application/json:
               schema:
                 $ref: './shared/components.yaml#/components/schemas/Error'
+        '423':
+          description: "`identity.account_locked`: five wrong attempts within 15 minutes lock the account for 15 minutes (FR-AUTH-011, FR-AUTH-012). Also the attempt that causes the lock."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '429':
+          description: "`common.rate_limited` from the gateway (NFR-SEC-005), with `Retry-After`."
+          headers:
+            Retry-After: { description: Seconds until the limit window resets, schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/me/password/initial:
+    put:
+      operationId: setMyPassword
+      summary: Set a first password on an account that has none, after a recent Google sign-in (FR-AUTH-027).
+      description: >
+        Needs an access token whose `amr` contains `google` and whose `auth_time` is at most 10 minutes old. Signs out every
+        other session and keeps this one; queues `PasswordChanged/v1`. The response carries `Set-Cookie: hs.idp` when the
+        request had a valid `hs.idp` for the same user.
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordSet'
+      responses:
+        '204':
+          description: Password set; other sessions are signed out.
+        '400':
+          description: "`common.validation_failed` with the password rule codes on `newPassword`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '403':
+          description: "`identity.reauthentication_required`: no Google sign-in in the last 10 minutes."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '409':
+          description: "`identity.password_already_set`: the account already has a password."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '429':
+          description: "`common.rate_limited` from the gateway (NFR-SEC-005), with `Retry-After`."
+          headers:
+            Retry-After: { description: Seconds until the limit window resets, schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
 components:
   securitySchemes:
     bearer:
@@ -300,9 +382,15 @@ components:
       properties:
         currentPassword: { type: string, format: password }
         newPassword: { type: string, format: password }
+    PasswordSet:
+      type: object
+      required: [newPassword]
+      additionalProperties: false
+      properties:
+        newPassword: { type: string, format: password }
     Profile:
       type: object
-      required: [userId, email, displayName, phone, gender, dateOfBirth, avatarUrl, language]
+      required: [userId, email, displayName, phone, gender, dateOfBirth, avatarUrl, language, hasPassword]
       properties:
         userId:
           $ref: './shared/components.yaml#/components/schemas/Id'
@@ -326,6 +414,10 @@ components:
           description: Always null until FEAT-035; the UI shows initials.
         language:
           $ref: '#/components/schemas/Language'
+        hasPassword:
+          type: boolean
+          readOnly: true
+          description: True when the account has a password; false for a Google-only account (FR-AUTH-027).
     ProfileUpdate:
       type: object
       description: The full editable representation (PUT, never PATCH). All four keys are required; the last three may be null.

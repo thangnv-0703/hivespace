@@ -1,6 +1,8 @@
 using System.Net;
 using System.Security.Claims;
 using Identity.Api.Oidc;
+using Identity.Application.Features.ExternalLogin;
+using Identity.Domain;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -120,15 +122,16 @@ public static partial class ExternalLoginSetup
                 ctx.Principal = new ClaimsPrincipal(new ClaimsIdentity(claims, provider.Scheme, "name", null));
                 return Task.CompletedTask;
             };
-            o.Events.OnRemoteFailure = ctx =>
+            o.Events.OnRemoteFailure = async ctx =>
             {
                 var code = ExternalFailure.Classify(ExternalFailure.ProviderErrorOf(ctx.Failure), ctx.Failure);
                 var returnUrl = ExternalLoginEndpoints.SafeReturnUrl(ctx.Properties?.GetString(ReturnUrlKey));
                 var logger = ctx.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>().CreateLogger(typeof(ExternalLoginSetup));
                 LogRemoteFailure(logger, provider.Name, code, ctx.Failure?.GetType().Name ?? "none");
+                await ctx.HttpContext.RequestServices.GetRequiredService<RecordSignInFailureHandler>()
+                    .HandleAsync(AuditMethod.Google, code, ctx.HttpContext.RequestAborted);
                 ctx.Response.Redirect(ExternalFailure.SignInUrl(code, returnUrl));
                 ctx.HandleResponse();
-                return Task.CompletedTask;
             };
         });
         return authentication;

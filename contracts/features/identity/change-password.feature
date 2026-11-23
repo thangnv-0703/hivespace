@@ -94,3 +94,29 @@ Feature: Change my password
     When the user changes the password in language "vi" from "wrong9999" to "world5678"
     Then the response status is 400
     And the error message is "Dữ liệu chưa hợp lệ. Vui lòng kiểm tra các trường được đánh dấu."
+
+  @operation:changeMyPassword @FR-AUTH-025 @FR-AUTH-011
+  Scenario: Wrong current passwords count toward the lockout
+    Given a signed-in user with email "an@example.com" and password "hello1234"
+    When the visitor signs in wrongly 3 times as "an@example.com"
+    And the user changes the password from "wrong9999" to "world5678"
+    Then the response status is 400
+    When the user changes the password from "wrong9999" to "world5678"
+    Then the response status is 423
+    And the error code is "identity.account_locked"
+
+  @operation:changeMyPassword @FR-AUTH-012
+  Scenario: A locked account cannot change its password
+    Given a signed-in user with email "an@example.com" and password "hello1234"
+    And the account is locked
+    When the user changes the password from "hello1234" to "world5678"
+    Then the response status is 423
+    And the error code is "identity.account_locked"
+    And exactly 0 PasswordChanged event was queued
+
+  @operation:changeMyPassword @FR-LOC-004
+  Scenario: Errors come back in English when asked
+    Given a signed-in user with email "an@example.com" and password "hello1234"
+    When the user changes the password in language "en" from "wrong9999" to "world5678"
+    Then the response status is 400
+    And the error message is "Some fields are not valid. Check the highlighted fields."

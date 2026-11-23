@@ -80,7 +80,7 @@ public sealed class UpdateMyProfileHandler(IUserRepository users, IEventOutbox o
         }
 
         await users.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-        return Result<ProfileView>.Ok(ProfileView.From(user));
+        return Result<ProfileView>.Ok(ProfileView.From(user, await users.FindCredentialAsync(user.Id, cancellationToken).ConfigureAwait(false) is not null));
     }
 
     private static void AddIfAny(List<Violation> violations, Violation? violation)

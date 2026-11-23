@@ -1,17 +1,18 @@
 <script setup lang="ts">
 import { ChevronLeft } from '@lucide/vue'
-import { passwordChecks, passwordRules } from '@hivespace/core'
-import { Alert, Button, Card, PasswordField, PasswordRules } from '@hivespace/ui'
-import { computed, nextTick, reactive, ref, useId, useTemplateRef } from 'vue'
+import { passwordChecks, passwordRules, useCooldown } from '@hivespace/core'
+import { Alert, Button, Card, GoogleIcon, PasswordField, PasswordRules, Spinner } from '@hivespace/ui'
+import { computed, nextTick, onMounted, reactive, ref, useId, useTemplateRef, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
 
-import { changePassword, type Failure } from './api'
+import { changePassword, loadProfile, setPassword, type Failure } from './api'
 import { goTo } from './navigation'
 import { useProfileSession } from './sessionPort'
 import { notify } from './toasts'
 
 // SCR-STF-018 (ui-design.md). One form, three password fields; the confirm check stays in the browser and is never sent (D-B).
+// FEAT-005: the page reads the profile once and picks its mode: change (the account has a password) or set (it has none, FR-AUTH-027).
 const { t } = useI18n()
 const session = useProfileSession()
 const headingId = useId()
@@ -25,6 +26,14 @@ const serverRuleMessages = ref<string[]>([])
 const showRuleErrors = ref(false)
 const submitting = ref(false)
 const notSet = ref('')
+const loadState = ref<'loading' | 'ready' | 'failed'>('loading')
+const hasPassword = ref(true)
+const reauthMessage = ref('')
+const lockedMessage = ref('')
+const rateLimitedMessage = ref('')
+const switchedNotice = ref('')
+const cooldown = useCooldown(60)
+const googleRef = ref<{ $el?: HTMLElement } | null>(null)
 const failed = ref(false)
 const heading = useTemplateRef<HTMLElement>('heading')
 const currentRef = ref<Focusable | null>(null)
@@ -32,14 +41,15 @@ const nextRef = ref<Focusable | null>(null)
 const confirmRef = ref<Focusable | null>(null)
 const refs = { current: currentRef, next: nextRef, confirm: confirmRef }
 
-const order: Field[] = ['current', 'next', 'confirm']
+const setMode = computed(() => !hasPassword.value)
+const order = computed<Field[]>(() => (setMode.value ? ['next', 'confirm'] : ['current', 'next', 'confirm']))
 const labels = computed<Record<Field, string>>(() => ({
   current: t('account.password.fields.current'),
   next: t('account.password.fields.new'),
   confirm: t('account.password.fields.confirm'),
 }))
 const rules = computed(() => passwordRules(values.next, (key) => t(`auth.rules.${key}`)))
-const problems = computed(() => order.filter((field) => errors[field]).map((field) => ({ field, label: labels.value[field], message: errors[field] })))
+const problems = computed(() => order.value.filter((field) => errors[field]).map((field) => ({ field, label: labels.value[field], message: errors[field] })))
 
 function check(field: Field): boolean {
   let message = ''
@@ -69,7 +79,7 @@ function focusField(field: Field) {
 }
 
 function reset() {
-  for (const field of order) {
+  for (const field of ['current', 'next', 'confirm'] as Field[]) {
     values[field] = ''
     errors[field] = ''
   }
@@ -77,10 +87,66 @@ function reset() {
   showRuleErrors.value = false
 }
 
-function applyFailure(failure: Failure) {
+async function load() {
+  loadState.value = 'loading'
+  const result = await loadProfile()
+  if (!result.ok) {
+    if (result.failure.status === 401) {
+      session.markSignedOut()
+      return goTo('/bff/login?returnUrl=%2Fprofile%2Fpassword')
+    }
+    loadState.value = 'failed'
+    return
+  }
+  hasPassword.value = result.data.hasPassword
+  loadState.value = 'ready'
+}
+
+onMounted(load)
+
+// The submit button shows the Retry-After countdown, announced at most every 10 s (ui-design "error", both modes).
+const announcement = ref('')
+const submitLabel = computed(() => {
+  const base = setMode.value ? t('account.password.set.submit') : t('account.password.actions.submit')
+  return cooldown.remaining.value > 0 ? t('account.password.actions.submitCooldown', { label: base, seconds: cooldown.remaining.value }) : base
+})
+watch(cooldown.remaining, (seconds) => {
+  if (seconds > 0 && (seconds % 10 === 0 || seconds === 1)) announcement.value = t('account.password.actions.submitCooldown', { label: submitLabel.value, seconds })
+})
+
+/** The re-authentication action: through Google and back here (technical-design §3.6, D-5). */
+function reauthenticate() {
+  goTo('/bff/login?reauth=true&returnUrl=%2Fprofile%2Fpassword')
+}
+
+async function applyFailure(failure: Failure) {
   if (failure.status === 401) {
     session.markSignedOut()
     return goTo('/bff/login?returnUrl=%2Fprofile%2Fpassword')
+  }
+  if (failure.status === 429) {
+    rateLimitedMessage.value = failure.message ?? t('account.password.errors.rateLimited')
+    cooldown.start(failure.retryAfter ?? 60)
+    return
+  }
+  if (failure.status === 423) {
+    // Locked (FR-AUTH-012): the current password is cleared, the other fields keep their values (ui-design "error").
+    lockedMessage.value = failure.message ?? ''
+    values.current = ''
+    return
+  }
+  if (failure.status === 403 && failure.code === 'identity.reauthentication_required') {
+    reauthMessage.value = failure.message ?? t('account.password.errors.reauth')
+    await nextTick()
+    googleRef.value?.$el?.focus()
+    return
+  }
+  if (failure.status === 409 && failure.code === 'identity.password_already_set') {
+    // The profile was stale: the account has a password now, so this is the change form (ui-design "error", set mode).
+    switchedNotice.value = failure.message ?? t('account.password.errors.alreadySet')
+    reset()
+    await load()
+    return
   }
   if (failure.status === 409 && failure.code === 'identity.password_not_set') {
     notSet.value = failure.message ?? t('account.password.notices.notSet')
@@ -103,16 +169,23 @@ function applyFailure(failure: Failure) {
 }
 
 async function submit() {
-  if (submitting.value) return
+  if (submitting.value || cooldown.remaining.value > 0) return
   notSet.value = ''
   failed.value = false
+  reauthMessage.value = ''
+  lockedMessage.value = ''
+  rateLimitedMessage.value = ''
+  switchedNotice.value = ''
   serverRuleMessages.value = []
-  for (const field of order) check(field)
-  const invalid = order.find((field) => errors[field])
+  for (const field of order.value) check(field)
+  const invalid = order.value.find((field) => errors[field])
   if (invalid) return focusField(invalid)
 
   submitting.value = true
-  const result = await changePassword({ currentPassword: values.current, newPassword: values.next })
+  const wasSet = setMode.value
+  const result = wasSet
+    ? await setPassword({ newPassword: values.next })
+    : await changePassword({ currentPassword: values.current, newPassword: values.next })
   submitting.value = false
   if (!result.ok) return applyFailure(result.failure)
 
@@ -121,7 +194,9 @@ async function submit() {
   await nextTick()
   reset()
   await session.refresh()
-  notify({ variant: 'success', title: t('account.password.toasts.changed') })
+  // A first password turns the page into the change form: the account has one now.
+  if (wasSet) hasPassword.value = true
+  notify({ variant: 'success', title: t(wasSet ? 'account.password.toasts.set' : 'account.password.toasts.changed') })
 }
 </script>
 
@@ -136,14 +211,34 @@ async function submit() {
       {{ $t('account.password.back') }}
     </RouterLink>
 
+    <div v-if="loadState === 'loading'" role="status" class="py-8" data-testid="password-loading"><Spinner /></div>
+    <div v-else-if="loadState === 'failed'" class="space-y-4" data-testid="password-load-failed">
+      <Alert variant="error" :title="$t('account.password.errors.loadFailed')" />
+      <Button variant="secondary" @click="load">{{ $t('account.password.actions.retry') }}</Button>
+    </div>
+    <template v-else>
     <div class="mb-6">
       <h1 :id="headingId" ref="heading" tabindex="-1" class="text-title-sm font-semibold text-text-primary focus:outline-none">
-        {{ $t('account.password.title') }}
+        {{ setMode ? $t('account.password.set.title') : $t('account.password.title') }}
       </h1>
-      <p class="mt-1 text-sm text-text-muted">{{ $t('account.password.subtitle') }}</p>
+      <p class="mt-1 text-sm text-text-muted">{{ setMode ? $t('account.password.set.subtitle') : $t('account.password.subtitle') }}</p>
     </div>
 
     <div v-if="notSet" class="mb-4"><Alert variant="info" :title="notSet" /></div>
+    <div v-if="switchedNotice" class="mb-4"><Alert variant="info" :title="switchedNotice" data-testid="already-set" /></div>
+    <div v-if="reauthMessage" class="mb-4" data-testid="reauth-alert">
+      <Alert variant="info" :title="$t('account.password.reauth.title')" :message="reauthMessage">
+        <template #action>
+          <Button ref="googleRef" variant="secondary" size="md" class="w-full gap-3 sm:w-auto" :start-icon="GoogleIcon" data-testid="reauth-google" @click="reauthenticate">
+            {{ $t('account.password.reauth.action') }}
+          </Button>
+          <p class="mt-2 text-xs text-text-muted">{{ $t('account.password.reauth.help') }}</p>
+        </template>
+      </Alert>
+    </div>
+    <div v-if="lockedMessage" class="mb-4">
+      <Alert variant="warning" :title="$t('account.password.errors.lockedTitle')" :message="lockedMessage" data-testid="locked-alert" />
+    </div>
 
     <Card>
       <form novalidate autocomplete="on" :aria-labelledby="headingId" :aria-busy="submitting" class="space-y-4" @submit.prevent="submit">
@@ -172,6 +267,7 @@ async function submit() {
         </Alert>
 
         <PasswordField
+          v-if="!setMode"
           ref="currentRef"
           v-model="values.current"
           autocomplete="current-password"
@@ -214,11 +310,20 @@ async function submit() {
         />
 
         <Alert v-if="failed" variant="error" :title="$t('account.password.errors.failed')" />
+        <Alert
+          v-if="rateLimitedMessage"
+          variant="warning"
+          :title="$t('account.password.errors.rateLimitedTitle')"
+          :message="rateLimitedMessage"
+          data-testid="rate-limited-alert"
+        />
 
         <div class="flex sm:justify-end">
-          <Button type="submit" size="md" :loading="submitting" class="w-full sm:w-auto">{{ $t('account.password.actions.submit') }}</Button>
+          <Button type="submit" size="md" :loading="submitting" :disabled="cooldown.remaining.value > 0" class="w-full sm:w-auto">{{ submitLabel }}</Button>
         </div>
+        <p class="sr-only" aria-live="polite">{{ announcement }}</p>
       </form>
     </Card>
+    </template>
   </div>
 </template>

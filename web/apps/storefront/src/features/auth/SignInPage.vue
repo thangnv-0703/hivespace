@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import { useCooldown } from '@hivespace/core'
 import { Alert, Button, Input, PasswordField, Spinner } from '@hivespace/ui'
-import { computed, onMounted, reactive, ref } from 'vue'
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { useRoute, useRouter } from 'vue-router'
 
@@ -19,7 +20,7 @@ const router = useRouter()
 const email = ref('')
 const password = ref('')
 const errors = reactive({ email: '', password: '' })
-const formError = ref<{ message: string; code?: string } | null>(null)
+const formError = ref<{ message: string; code?: string; variant: 'error' | 'warning'; title: string } | null>(null)
 const busy = ref(false)
 const googleBusy = ref(false)
 // A failed Google attempt comes back as ?error=<code> (FEAT-004). Read once: the URL drops it so a reload or Back does not
@@ -34,15 +35,31 @@ const googleAlert = computed(() =>
       }
     : null,
 )
+const googleWrap = ref<HTMLElement | null>(null)
 const emailRef = ref<{ focus: () => void } | null>(null)
 const passwordRef = ref<{ focus: () => void } | null>(null)
 
 const returnUrl = computed(() => returnUrlOf(route.query.returnUrl))
 // Without a returnUrl this page was opened directly (a typed address, "Sign in" after verifying). Signing in here would
 // create only the Identity cookie and no gateway session, so start the BFF login, which comes back with a returnUrl.
-const starting = !returnUrl.value
+// Exception (FEAT-005 ui-design "retry"): the gateway's rate-limit redirect cannot know the returnUrl; starting at once would hide
+// its alert, so a known ?error= with no returnUrl shows the alert and a "Try again" button instead.
+const retrying = !returnUrl.value && googleError.value !== null
+const starting = !returnUrl.value && !retrying
+// A returnUrl with max_age is a re-authentication request from the set-password page (technical-design §3.6).
+const reauthenticating = computed(() => new URLSearchParams(returnUrl.value?.split('?')[1] ?? '').has('max_age'))
+const cooldown = useCooldown(60)
+const submitLabel = computed(() =>
+  cooldown.remaining.value > 0 ? t('auth.signIn.submitCooldown', { seconds: cooldown.remaining.value }) : t('auth.signIn.submit'),
+)
+// The countdown is announced at most every 10 s, not every second.
+const announcement = ref('')
+watch(cooldown.remaining, (seconds) => {
+  if (seconds > 0 && (seconds % 10 === 0 || seconds === 1)) announcement.value = t('auth.signIn.submitCooldown', { seconds })
+})
 onMounted(() => {
   if (starting) goTo('/bff/login')
+  else if (retrying) return
   else if (route.query.error !== undefined) {
     const query = { ...route.query }
     delete query.error
@@ -85,7 +102,22 @@ async function submit() {
     }
     return emailRef.value?.focus()
   }
+  if (failure.status === 423) {
+    // Locked (FR-AUTH-012): the password field only invites another rejected attempt, Google still works (design D-2, ui-design D-B).
+    formError.value = { variant: 'warning', title: t('auth.errors.identity.account_locked.title'), message: failure.message ?? '' }
+    password.value = ''
+    await nextTick()
+    googleWrap.value?.querySelector<HTMLElement>('[data-testid=google-button]')?.focus()
+    return
+  }
+  if (failure.status === 429) {
+    formError.value = { variant: 'warning', title: t('auth.errors.common.rate_limited.title'), message: failure.message ?? '' }
+    cooldown.start(failure.retryAfter ?? 60)
+    return
+  }
   formError.value = {
+    variant: 'error',
+    title: t('auth.signIn.failedTitle'),
     message: failure.status === 401 && failure.message ? failure.message : t('auth.errors.network'),
     code: failure.status === 401 ? undefined : failure.code,
   }
@@ -99,7 +131,7 @@ async function submit() {
 <template>
   <AuthPage :title="$t('auth.signIn.title')" :subtitle="$t('auth.signIn.subtitle')">
     <div v-if="starting" role="status" data-testid="signin-starting"><Spinner /></div>
-    <template v-else>
+    <template v-else-if="retrying">
       <Alert
         v-if="googleAlert"
         class="mb-6"
@@ -108,10 +140,29 @@ async function submit() {
         :message="googleAlert.message"
         data-testid="google-alert"
       />
-      <GoogleButton :return-url="returnUrl" :disabled="busy" @start="googleBusy = true" />
+      <Button size="lg" class="w-full" data-testid="signin-retry" @click="goTo('/bff/login')">{{ $t('auth.signIn.retry') }}</Button>
     </template>
-    <form v-if="!starting" class="space-y-4" novalidate :aria-busy="busy" @submit.prevent="submit">
-      <Alert v-if="formError" variant="error" :title="$t('auth.signIn.failedTitle')" :message="formError.message" />
+    <template v-else>
+      <Alert
+        v-if="reauthenticating && !googleAlert && !formError"
+        class="mb-6"
+        variant="info"
+        :title="$t('auth.signIn.reauth.title')"
+        :message="$t('auth.signIn.reauth.message')"
+        data-testid="reauth-notice"
+      />
+      <Alert
+        v-if="googleAlert"
+        class="mb-6"
+        :variant="googleAlert.variant"
+        :title="googleAlert.title"
+        :message="googleAlert.message"
+        data-testid="google-alert"
+      />
+      <div ref="googleWrap"><GoogleButton :return-url="returnUrl" :disabled="busy" @start="googleBusy = true" /></div>
+    </template>
+    <form v-if="!starting && !retrying" class="space-y-4" novalidate :aria-busy="busy" @submit.prevent="submit">
+      <Alert v-if="formError" :variant="formError.variant" :title="formError.title" :message="formError.message" data-testid="form-alert" />
       <p v-if="formError?.code" class="text-xs text-text-muted">{{ formError.code }}</p>
       <Input
         ref="emailRef"
@@ -138,9 +189,10 @@ async function submit() {
         :hide-label="$t('auth.actions.hidePassword')"
         @blur="checkPassword"
       />
-      <Button type="submit" size="lg" class="w-full" :loading="busy" :disabled="googleBusy">{{ $t('auth.signIn.submit') }}</Button>
+      <Button type="submit" size="lg" class="w-full" :loading="busy" :disabled="googleBusy || cooldown.remaining.value > 0">{{ submitLabel }}</Button>
+      <p class="sr-only" aria-live="polite">{{ announcement }}</p>
     </form>
-    <p class="mt-6 text-sm text-text-muted">
+    <p v-if="!retrying" class="mt-6 text-sm text-text-muted">
       {{ $t('auth.signIn.noAccount') }}
       <RouterLink :to="registerTarget" class="text-text-link underline underline-offset-2 hover:text-text-link-hover">
         {{ $t('auth.signIn.createAccount') }}

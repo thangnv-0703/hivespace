@@ -9,4 +9,5 @@ public static class ErrorCodes
     public const string NotFound = "common.not_found";
     public const string Internal = "common.internal";
     public const string DependencyUnavailable = "common.dependency_unavailable";
+    public const string RateLimited = "common.rate_limited";
 }

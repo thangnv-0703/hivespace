@@ -1,0 +1,27 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-23T14:00:00Z" },
+  "title": "FEAT-005 · Account hardening",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 820, "title": "SCR-STF-018 Set a password (set mode)", "expand": "fill" },
+    "SignInLocked.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 820, "title": "SCR-STF-012 Account temporarily locked", "expand": "fill" },
+    "SetPasswordMobile.dc.html": { "x": 0, "y": 940, "w": 390, "h": 900, "title": "SCR-STF-018 Mobile, confirm it's you", "expand": "fill" },
+    "SignInRetry.dc.html": { "x": 470, "y": 940, "w": 390, "h": 700, "title": "SCR-STF-012 Mobile, error without returnUrl", "expand": "fill" },
+    "HardeningAlerts.dc.html": { "x": 940, "y": 940, "w": 560, "h": 900, "title": "New alerts: rate limited, re-auth notice, locked in change mode" },
+    "ProfileSetPasswordCard.dc.html": { "x": 1580, "y": 940, "w": 760, "h": 260, "title": "SCR-STF-016 Password card, no password yet" }
+  },
+  "order": [
+    "Main.dc.html",
+    "SignInLocked.dc.html",
+    "SetPasswordMobile.dc.html",
+    "SignInRetry.dc.html",
+    "HardeningAlerts.dc.html",
+    "ProfileSetPasswordCard.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "FEAT-005: Account hardening", "kind": "title1", "maxW": 2640 }
+  },
+  "designSystems": []
+}

@@ -96,8 +96,11 @@ def test_the_notice_is_in_the_user_language_with_vietnam_time_and_the_password_p
         assert "00:30 23/11/2026" in html
         assert (removed in text) is password_removed
         assert (removed in html) is password_removed
-        assert "http" not in text
-        assert "href" not in html
+        # The only link is the set-a-password one, in the removed-password paragraph (FEAT-005 AC-18).
+        assert ("http://localhost:5080/profile/password" in text) is password_removed
+        assert ('href="http://localhost:5080/profile/password"' in html) is password_removed
+        assert text.count("http") == (1 if password_removed else 0)
+        assert html.count("http") == (1 if password_removed else 0)
 
 
 def test_only_a_link_to_an_existing_account_asks_for_the_email() -> None:
@@ -106,3 +109,14 @@ def test_only_a_link_to_an_existing_account_asks_for_the_email() -> None:
     assert kind.applies({**VALID, "accountCreated": False}) is True
     assert kind.applies({**VALID, "accountCreated": True}) is False
     assert KINDS["PasswordChanged"].applies({}) is True
+
+
+@pytest.mark.parametrize("language", ["vi", "en"])
+def test_ac18_the_removed_password_notice_links_to_the_set_password_page(language: str) -> None:
+    kind = KINDS["ExternalLoginLinked"]
+    data = {**VALID, "language": language, "passwordRemoved": True}
+
+    _, text, html = render_kind(kind, language, kind.context(data, "https://hivespace.example/"))
+
+    assert "https://hivespace.example/profile/password" in text
+    assert 'href="https://hivespace.example/profile/password"' in html

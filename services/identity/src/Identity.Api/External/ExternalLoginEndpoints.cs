@@ -2,6 +2,7 @@ using Identity.Api.Endpoints;
 using Identity.Application.Features.ExternalLogin;
 using Identity.Application.Features.Registration;
 using HiveSpace.BuildingBlocks.Errors;
+using Identity.Domain;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.Extensions.Options;
@@ -27,7 +28,9 @@ public static partial class ExternalLoginEndpoints
         HttpContext http,
         ExternalLoginProviders providers,
         IOptionsMonitor<OpenIdConnectOptions> oidc,
-        ILoggerFactory loggers)
+        RecordSignInFailureHandler failures,
+        ILoggerFactory loggers,
+        CancellationToken ct)
     {
         if (!ExternalLoginProviders.IsKnown(provider))
         {
@@ -39,6 +42,7 @@ public static partial class ExternalLoginEndpoints
         if (providers.Find(provider) is not { } registered)
         {
             LogOutcome(logger, provider, ExternalFailure.Unavailable, null);
+            await failures.HandleAsync(AuditMethod.Google, ExternalFailure.Unavailable, ct);
             return Results.Redirect(ExternalFailure.SignInUrl(ExternalFailure.Unavailable, safeReturnUrl));
         }
 
@@ -53,6 +57,7 @@ public static partial class ExternalLoginEndpoints
         catch (Exception ex) when (!http.RequestAborted.IsCancellationRequested)
         {
             LogOutcome(logger, provider, ExternalFailure.Unavailable, ex.GetType().Name);
+            await failures.HandleAsync(AuditMethod.Google, ExternalFailure.Unavailable, ct);
             return Results.Redirect(ExternalFailure.SignInUrl(ExternalFailure.Unavailable, safeReturnUrl));
         }
 
@@ -70,6 +75,8 @@ public static partial class ExternalLoginEndpoints
         HttpContext http,
         ExternalLoginProviders providers,
         ExternalSignInHandler handler,
+        RecordSignInFailureHandler failures,
+        TimeProvider clock,
         ILoggerFactory loggers,
         CancellationToken ct)
     {
@@ -88,6 +95,7 @@ public static partial class ExternalLoginEndpoints
             || external.Principal?.Identity?.AuthenticationType != registered.Scheme)
         {
             LogOutcome(logger, provider, ExternalFailure.Failed, null);
+            await failures.HandleAsync(AuditMethod.Google, ExternalFailure.Failed, ct);
             return Results.Redirect(ExternalFailure.SignInUrl(ExternalFailure.Failed, returnUrl));
         }
 
@@ -100,7 +108,7 @@ public static partial class ExternalLoginEndpoints
         }
 
         var outcome = result.Value!;
-        await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(outcome.User, outcome.PasswordStamp));
+        await http.SignInAsync(UsersEndpoints.CookieScheme, UsersEndpoints.ToPrincipal(outcome.User, outcome.PasswordStamp, clock.GetUtcNow().ToUnixTimeSeconds(), "google"));
         LogSignedIn(logger, provider, outcome.User.Id);
         return Results.Redirect(returnUrl ?? "/");
     }

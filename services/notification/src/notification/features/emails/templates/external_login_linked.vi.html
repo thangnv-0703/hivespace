@@ -1,4 +1,4 @@
 <p>Xin chào {{ display_name }},</p>
 <p>Tài khoản Google của bạn đã được liên kết với tài khoản HiveSpace lúc {{ linked_at }} (giờ Việt Nam). Từ nay bạn có thể đăng nhập bằng Google.</p>
-{% if password_removed %}<p>Địa chỉ email này chưa được xác minh nên để bảo vệ bạn, mật khẩu trước đây đã bị xóa. Bạn vẫn đăng nhập bằng Google được và có thể đặt mật khẩu mới sau trong trang hồ sơ.</p>
+{% if password_removed %}<p>Địa chỉ email này chưa được xác minh nên để bảo vệ bạn, mật khẩu trước đây đã bị xóa. Bạn vẫn đăng nhập bằng Google được và có thể <a href="{{ set_password_link }}">đặt mật khẩu mới</a> bất cứ lúc nào.</p>
 {% endif %}<p>Nếu không phải bạn thực hiện, hãy liên hệ bộ phận hỗ trợ HiveSpace ngay.</p>

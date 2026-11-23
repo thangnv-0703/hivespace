@@ -20,11 +20,31 @@ interface Call {
 }
 
 const calls: Call[] = []
+const profileCalls: Call[] = []
 
-function mockApi(handler: () => Response | Promise<Response>) {
+const profile = (hasPassword: boolean) => ({
+  userId: 'u1',
+  email: 'an@example.com',
+  displayName: 'An',
+  phone: null,
+  gender: null,
+  dateOfBirth: null,
+  avatarUrl: null,
+  language: 'en',
+  hasPassword,
+})
+
+/** Answers the page's own profile read (FEAT-005: the mode comes from `hasPassword`), and hands every other call to `handler`. */
+function mockApi(handler: () => Response | Promise<Response>, options: { hasPassword?: boolean | (() => Response) } = {}) {
   calls.length = 0
+  profileCalls.length = 0
   return vi.spyOn(globalThis, 'fetch').mockImplementation(async (input) => {
     const request = input as Request
+    if (request.method === 'GET' && new URL(request.url).pathname === '/v1/me/profile') {
+      profileCalls.push({ method: request.method, path: new URL(request.url).pathname, headers: request.headers, body: undefined })
+      const has = options.hasPassword ?? true
+      return typeof has === 'function' ? has() : json(200, profile(has))
+    }
     let body: unknown
     try {
       body = await request.clone().json()
@@ -113,6 +133,7 @@ describe('ChangePasswordPage (SCR-STF-018)', () => {
   })
 
   it('has a hidden username field with the account email for password managers', async () => {
+    mockApi(() => json(204))
     const wrapper = await mountPage(fakeSession())
 
     const username = wrapper.get('input[autocomplete="username"]')
@@ -223,9 +244,164 @@ describe('ChangePasswordPage (SCR-STF-018)', () => {
   })
 
   it('shows the copy in Vietnamese', async () => {
+    mockApi(() => json(204))
     const wrapper = await mountPage(fakeSession(), 'vi')
 
     expect(wrapper.get('h1').text()).toBe('Đổi mật khẩu')
     expect(wrapper.text()).toContain('Mật khẩu hiện tại')
+  })
+})
+
+describe('ChangePasswordPage set mode and new errors (FEAT-005 AC-16)', () => {
+  const setFill = async (wrapper: VueWrapper, next: string, confirm: string = next) => {
+    const fields = wrapper.findAll('input[autocomplete="new-password"]')
+    await fields[0]!.setValue(next)
+    await fields[1]!.setValue(confirm)
+  }
+
+  it('reads the profile once and shows the set form without a current password when hasPassword is false', async () => {
+    mockApi(() => json(204), { hasPassword: false })
+    const wrapper = await mountPage(fakeSession())
+
+    expect(profileCalls).toHaveLength(1)
+    expect(wrapper.get('h1').text()).toBe('Set a password')
+    expect(wrapper.find('input[autocomplete="current-password"]').exists()).toBe(false)
+    expect(wrapper.findAll('input[autocomplete="new-password"]')).toHaveLength(2)
+    expect(wrapper.get('button[type=submit]').text()).toBe('Set password')
+  })
+
+  it('shows the change form when hasPassword is true', async () => {
+    mockApi(() => json(204), { hasPassword: true })
+    const wrapper = await mountPage(fakeSession())
+
+    expect(wrapper.get('h1').text()).toBe('Change password')
+    expect(wrapper.find('input[autocomplete="current-password"]').exists()).toBe(true)
+  })
+
+  it('shows a spinner while the profile loads, and a retry when it fails', async () => {
+    mockApi(() => json(204), { hasPassword: () => json(500, { code: 'common.internal', message: 'x' }) })
+    const wrapper = await mountPage(fakeSession())
+
+    expect(wrapper.find('[data-testid=password-load-failed]').exists()).toBe(true)
+    expect(wrapper.find('form').exists()).toBe(false)
+    await wrapper.get('[data-testid=password-load-failed] button').trigger('click')
+    await flushPromises()
+    expect(profileCalls).toHaveLength(2)
+  })
+
+  it('sends PUT /v1/me/password/initial with the new password only, then refreshes, toasts and switches to change mode', async () => {
+    mockApi(() => json(204), { hasPassword: false })
+    const session = fakeSession()
+    const wrapper = await mountPage(session)
+
+    await setFill(wrapper, 'world5678')
+    ;(wrapper.findAll('input[autocomplete="new-password"]')[1]!.element as HTMLInputElement).focus()
+    await submit(wrapper)
+
+    const put = calls.filter((c) => c.method === 'PUT')
+    expect(put).toHaveLength(1)
+    expect(put[0]!.path).toBe('/v1/me/password/initial')
+    expect(put[0]!.body).toEqual({ newPassword: 'world5678' })
+    expect(put[0]!.headers.get('x-hs-csrf')).toBe('1')
+    expect(session.refresh).toHaveBeenCalledTimes(1)
+    expect(toasts.value.map((t) => t.title)).toEqual(['Password set. You can now also sign in with your email and password.'])
+    expect(wrapper.get('h1').text()).toBe('Change password')
+    expect(wrapper.find('input[autocomplete="current-password"]').exists()).toBe(true)
+  })
+
+  it('403 reauthentication_required shows the alert with Continue with Google, which goes through Google and back here', async () => {
+    mockApi(() => json(403, { code: 'identity.reauthentication_required', message: "For your security, confirm it's you with Google first." }), { hasPassword: false })
+    const goTo = vi.spyOn(navigation, 'goTo').mockImplementation(() => undefined)
+    const wrapper = await mountPage(fakeSession())
+
+    await setFill(wrapper, 'world5678')
+    await submit(wrapper)
+
+    const alert = wrapper.get('[data-testid=reauth-alert]')
+    expect(alert.text()).toContain("Confirm it's you")
+    expect(alert.text()).toContain("For your security, confirm it's you with Google first.")
+    expect(alert.text()).toContain("You'll come back here and enter your new password again.")
+    expect(value(wrapper, 'input[autocomplete="new-password"]', 0)).toBe('world5678') // kept until the browser leaves
+    await wrapper.get('[data-testid=reauth-google]').trigger('click')
+    expect(goTo).toHaveBeenCalledWith('/bff/login?reauth=true&returnUrl=%2Fprofile%2Fpassword')
+  })
+
+  it('409 password_already_set reloads the profile, switches to change mode and says why', async () => {
+    let has = false
+    mockApi(() => json(409, { code: 'identity.password_already_set', message: 'Your account already has a password. Use change password instead.' }), {
+      hasPassword: () => json(200, profile(has)),
+    })
+    const wrapper = await mountPage(fakeSession())
+    has = true
+
+    await setFill(wrapper, 'world5678')
+    await submit(wrapper)
+
+    expect(profileCalls).toHaveLength(2)
+    expect(wrapper.get('h1').text()).toBe('Change password')
+    expect(wrapper.get('[data-testid=already-set]').text()).toContain('Your account already has a password. Use change password instead.')
+  })
+
+  it('400 on the new password in set mode lists the API messages', async () => {
+    mockApi(
+      () => json(400, { code: 'common.validation_failed', message: 'x', details: [{ field: 'newPassword', code: 'identity.password_needs_digit', message: 'Include at least one digit.' }] }),
+      { hasPassword: false },
+    )
+    const wrapper = await mountPage(fakeSession())
+
+    await setFill(wrapper, 'abcdefg1')
+    await submit(wrapper)
+
+    expect(wrapper.text()).toContain('Include at least one digit.')
+  })
+
+  it('423 in change mode shows the locked warning and clears only the current password', async () => {
+    mockApi(() => json(423, { code: 'identity.account_locked', message: 'Too many failed attempts. This account is locked for 15 minutes.' }))
+    const wrapper = await mountPage(fakeSession())
+
+    await fill(wrapper, 'wrong9999', 'world5678')
+    await submit(wrapper)
+
+    const alert = wrapper.get('[data-testid=locked-alert]')
+    expect(alert.attributes('role')).toBe('status')
+    expect(alert.text()).toContain('Account temporarily locked')
+    expect(alert.text()).toContain('Too many failed attempts.')
+    expect(value(wrapper, 'input[autocomplete="current-password"]')).toBe('')
+    expect(value(wrapper, 'input[autocomplete="new-password"]', 0)).toBe('world5678')
+  })
+
+  it.each([
+    ['change', true],
+    ['set', false],
+  ])('429 in %s mode shows the rate-limit warning and counts down on the submit button from Retry-After', async (_name, hasPassword) => {
+    vi.useFakeTimers()
+    try {
+      mockApi(
+        () => new Response(JSON.stringify({ code: 'common.rate_limited', message: 'Too many requests.' }), { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '42' } }),
+        { hasPassword },
+      )
+      const wrapper = await mountPage(fakeSession())
+
+      if (hasPassword) await fill(wrapper, 'hello1234', 'world5678')
+      else await setFill(wrapper, 'world5678')
+      await submit(wrapper)
+
+      expect(wrapper.get('[data-testid=rate-limited-alert]').text()).toContain('Too many requests.')
+      const button = wrapper.get('button[type=submit]')
+      expect(button.text()).toContain('(42 s)')
+      expect(button.attributes('disabled')).toBeDefined()
+      expect(value(wrapper, 'input[autocomplete="new-password"]', 0)).toBe('world5678')
+      await vi.advanceTimersByTimeAsync(42_000)
+      expect(wrapper.get('button[type=submit]').attributes('disabled')).toBeUndefined()
+    } finally {
+      vi.useRealTimers()
+    }
+  })
+
+  it('shows the set copy in Vietnamese', async () => {
+    mockApi(() => json(204), { hasPassword: false })
+    const wrapper = await mountPage(fakeSession(), 'vi')
+
+    expect(wrapper.get('h1').text()).toBe('Đặt mật khẩu')
   })
 })

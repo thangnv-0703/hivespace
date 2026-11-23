@@ -80,6 +80,20 @@ internal static class WebExtensions
             gateway.WithReference(service);
         }
 
+        // Optional, for the stacks that sign in many users from one loopback address (tests/e2e, tests/system): without it the gateway
+        // enforces the real NFR-SEC-005 limit of 10 per minute (FEAT-005 D-9). Set as `RateLimits__PermitLimit` or `RateLimits:PermitLimit`.
+        if (builder.Configuration["RateLimits:PermitLimit"] is { Length: > 0 } permitLimit)
+        {
+            gateway.WithEnvironment("RateLimits__PermitLimit", permitLimit);
+        }
+
+        // Deployed to Container Apps, the ingress appends the client address to X-Forwarded-For; the rate limits need it (FEAT-005 D-6).
+        // Locally nothing trusts the header.
+        if (builder.ExecutionContext.IsPublishMode)
+        {
+            gateway.WithEnvironment("Gateway__TrustForwardedFor", "true");
+        }
+
         return gateway;
     }
 }

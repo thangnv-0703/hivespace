@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.RateLimiting;
 using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;
@@ -18,7 +19,11 @@ public static class GatewayAuth
 {
     public const string AuthenticatedPolicy = "authenticated";
     public const string AuthRateLimitPolicy = "auth";
+    public const string AuthUserRateLimitPolicy = "auth-user";
     public const string CsrfHeader = "X-HS-CSRF";
+
+    /// <summary>True only where a proxy we run appends the client address (the Azure deployment), see <c>UseGatewayAuth</c>.</summary>
+    public const string TrustForwardedForKey = "Gateway:TrustForwardedFor";
 
     public static WebApplicationBuilder AddGatewayAuth(this WebApplicationBuilder builder)
     {
@@ -86,6 +91,11 @@ public static class GatewayAuth
                     o.Events.OnRedirectToIdentityProvider = ctx =>
                     {
                         ctx.ProtocolMessage.IssuerAddress = settings.PublicOrigin + "/connect/authorize";
+                        if (ctx.Properties.Items.ContainsKey(BffEndpoints.ReauthItem))
+                        {
+                            ctx.ProtocolMessage.MaxAge = BffEndpoints.ReauthMaxAgeSeconds;
+                        }
+
                         return Task.CompletedTask;
                     };
 
@@ -101,17 +111,7 @@ public static class GatewayAuth
         services.AddAuthorizationBuilder()
             .AddPolicy(AuthenticatedPolicy, p => p.AddAuthenticationSchemes(SessionAuthenticationHandler.SchemeName).RequireAuthenticatedUser());
 
-        // Hook only: the real sign-in and resend limits arrive with FEAT-005.
-        services.AddRateLimiter(o =>
-        {
-            o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
-            o.AddFixedWindowLimiter(AuthRateLimitPolicy, w =>
-            {
-                w.PermitLimit = 1000;
-                w.Window = TimeSpan.FromMinutes(1);
-                w.QueueLimit = 0;
-            });
-        });
+        AddAuthRateLimits(builder);
 
         // Every route is authenticated unless its configuration says "anonymous" (FR-AUTH-016).
         services.AddSingleton<IProxyConfigFilter, AuthenticatedByDefaultFilter>();
@@ -120,12 +120,65 @@ public static class GatewayAuth
 
     public static WebApplication UseGatewayAuth(this WebApplication app)
     {
+        // Behind the Container Apps ingress the connection address is the ingress, so the client comes from X-Forwarded-For; locally
+        // nothing trusts the header, or a client could pick its own rate-limit partition (FEAT-005 D-6).
+        if (app.Configuration.GetValue<bool>(TrustForwardedForKey))
+        {
+            app.UseForwardedHeaders(new ForwardedHeadersOptions
+            {
+                ForwardedHeaders = ForwardedHeaders.XForwardedFor,
+                ForwardLimit = 1,
+                KnownIPNetworks = { },
+                KnownProxies = { },
+            });
+        }
+
         app.UseMiddleware<CsrfHeaderMiddleware>();
         app.UseAuthentication();
         app.UseRateLimiter();
         app.UseAuthorization();
         return app;
     }
+
+    /// <summary>
+    /// The NFR-SEC-005 limits (FEAT-005 §3.7): <c>auth</c> counts per client IP, <c>auth-user</c> per signed-in user (the IP when there is
+    /// none). In memory, so correct for one gateway replica only (risk R-5). A rejection is a 429 envelope with <c>Retry-After</c>, or,
+    /// for the browser navigation of Google's callback, a redirect to the sign-in page.
+    /// </summary>
+    private static void AddAuthRateLimits(WebApplicationBuilder builder)
+    {
+        var limits = builder.Configuration.GetSection(RateLimitOptions.Section).Get<RateLimitOptions>() ?? new RateLimitOptions();
+
+        FixedWindowRateLimiterOptions Window() => new() { PermitLimit = limits.PermitLimit, Window = limits.Window, QueueLimit = 0 };
+
+        builder.Services.AddRateLimiter(o =>
+        {
+            o.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+            o.AddPolicy(AuthRateLimitPolicy, http =>
+                RateLimitPartition.GetFixedWindowLimiter(ClientIp(http), _ => Window()));
+            o.AddPolicy(AuthUserRateLimitPolicy, http =>
+                RateLimitPartition.GetFixedWindowLimiter(http.User.FindFirst("sub")?.Value is { } sub ? "user:" + sub : ClientIp(http), _ => Window()));
+            o.OnRejected = async (context, cancellationToken) =>
+            {
+                var http = context.HttpContext;
+                if (http.Request.Path.StartsWithSegments("/connect/external", StringComparison.Ordinal))
+                {
+                    // A browser navigation: the user lands on the sign-in page with the reason, not on a JSON body.
+                    http.Response.Redirect("/signin?error=" + ErrorCodes.RateLimited);
+                    return;
+                }
+
+                if (context.Lease.TryGetMetadata(MetadataName.RetryAfter, out var retryAfter))
+                {
+                    http.Response.Headers.RetryAfter = ((int)Math.Ceiling(retryAfter.TotalSeconds)).ToString(System.Globalization.CultureInfo.InvariantCulture);
+                }
+
+                await ApiErrorResponder.WriteAsync(http, new ApiException(ErrorCodes.RateLimited));
+            };
+        });
+    }
+
+    private static string ClientIp(HttpContext http) => "ip:" + (http.Connection.RemoteIpAddress?.ToString() ?? "unknown");
 
     // Keys live in Azurite (blob "dataprotection") so every gateway instance reads the same cookies (design §3.4).
     // Tests and a bare `dotnet run` have no storage and use the default key ring; a deployed gateway always has "blobs".

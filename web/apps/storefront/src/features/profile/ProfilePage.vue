@@ -24,6 +24,7 @@ type Field = 'displayName' | 'phone' | 'gender' | 'dateOfBirth'
 type Focusable = { focus: () => void }
 
 const state = ref<'loading' | 'ready' | 'failed'>('loading')
+const hasPassword = ref(true)
 const loadFailure = ref<Failure | null>(null)
 const email = ref('')
 const displayName = ref('')
@@ -75,6 +76,7 @@ const dateClass = computed(() => (errors.dateOfBirth ? '!border-feedback-error-i
 const hasDate = computed(() => Boolean(date.day || date.month || date.year))
 
 function fill(profile: Profile) {
+  hasPassword.value = profile.hasPassword
   email.value = profile.email
   displayName.value = profile.displayName
   savedName.value = profile.displayName
@@ -344,10 +346,10 @@ onMounted(load)
       <section :aria-labelledby="passwordHeadingId">
         <Card>
           <h2 :id="passwordHeadingId" class="text-lg font-semibold text-text-primary">{{ $t('profile.password.title') }}</h2>
-          <p class="mb-3 mt-1 text-sm text-text-muted">{{ $t('profile.password.body') }}</p>
+          <p class="mb-3 mt-1 text-sm text-text-muted">{{ hasPassword ? $t('profile.password.body') : $t('profile.password.setBody') }}</p>
           <RouterLink v-slot="{ href, navigate }" to="/profile/password" custom>
             <Button variant="secondary" size="md" :href="href" class="w-full sm:w-auto" @click="navigate">
-              {{ $t('profile.password.action') }}
+              {{ hasPassword ? $t('profile.password.action') : $t('profile.password.setAction') }}
             </Button>
           </RouterLink>
         </Card>

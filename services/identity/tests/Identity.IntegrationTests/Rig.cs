@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Features.ExternalLogin;
+using Identity.Application.Features.Lockout;
 using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
@@ -30,15 +31,21 @@ public sealed class Rig : IAsyncDisposable
         Register = new RegisterUserHandler(users, Hasher, Tokens, outbox, clock);
         Verify = new VerifyEmailHandler(users, Tokens, clock);
         Resend = new ResendVerificationEmailHandler(users, Tokens, outbox, clock);
-        SignIn = new SignInHandler(users, Hasher);
+        Recorder = new LockoutRecorder(users, users, users, clock);
+        SignIn = new SignInHandler(users, Hasher, users, users, Recorder, clock);
         GetProfile = new GetMyProfileHandler(users);
         UpdateProfile = new UpdateMyProfileHandler(users, outbox, clock);
         UpdateLanguage = new UpdateMyLanguageHandler(users, outbox, clock);
-        ChangePassword = new ChangeMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, clock);
-        ExternalSignIn = new ExternalSignInHandler(users, new OpenIddictSessionRevoker(_db), outbox, clock);
+        ChangePassword = new ChangeMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, users, Recorder, clock);
+        SetPassword = new SetMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, clock);
+        ExternalSignIn = new ExternalSignInHandler(users, new OpenIddictSessionRevoker(_db), outbox, users, clock);
     }
 
+    public LockoutRecorder Recorder { get; }
+
     public ExternalSignInHandler ExternalSignIn { get; }
+
+    public SetMyPasswordHandler SetPassword { get; }
 
     public ChangeMyPasswordHandler ChangePassword { get; }
 

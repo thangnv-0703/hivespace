@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>FEAT-005 alerts</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+</style>
+</helmet>
+<div style="width: 560px; box-sizing: border-box; padding: 32px; background: #ffffff; display: flex; flex-direction: column; gap: 16px">
+  <p style="margin: 0; font-size: 12px; line-height: 18px; color: #667085">SCR-STF-012: 429 on submit. Warning alert, Sign in disabled with a countdown from Retry-After.</p>
+  <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 8px; background: #fffaeb; color: #b54708">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <div>
+      <div style="font-size: 14px; line-height: 20px; font-weight: 600">Too many attempts</div>
+      <div style="margin-top: 4px; font-size: 14px; line-height: 20px">Too many requests. Please wait a minute and try again.</div>
+    </div>
+  </div>
+  <button type="button" disabled style="width: 100%; height: 48px; border: 0; border-radius: 8px; background: #e4e7ec; color: #667085; font: 500 16px 'Outfit','Noto Sans',sans-serif">Sign in (42 s)</button>
+
+  <p style="margin: 16px 0 0; font-size: 12px; line-height: 18px; color: #667085">SCR-STF-012: <code>?error=common.rate_limited</code> after a rate-limited Google callback (with returnUrl).</p>
+  <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 8px; background: #fffaeb; color: #b54708">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <div>
+      <div style="font-size: 14px; line-height: 20px; font-weight: 600">Too many attempts</div>
+      <div style="margin-top: 4px; font-size: 14px; line-height: 20px">Too many sign-in attempts from this network. Wait a minute, then try again.</div>
+    </div>
+  </div>
+
+  <p style="margin: 16px 0 0; font-size: 12px; line-height: 18px; color: #667085">SCR-STF-012: returnUrl carries max_age (re-authentication from Set a password).</p>
+  <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 8px; background: #f0f9ff; color: #026aa2">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0086c9" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+    <div>
+      <div style="font-size: 14px; line-height: 20px; font-weight: 600">Confirm it's you</div>
+      <div style="margin-top: 4px; font-size: 14px; line-height: 20px">For your security, sign in again to continue.</div>
+    </div>
+  </div>
+
+  <p style="margin: 16px 0 0; font-size: 12px; line-height: 18px; color: #667085">SCR-STF-018 change mode: 423 above the form; the current-password field is cleared.</p>
+  <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 8px; background: #fffaeb; color: #b54708">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none; margin-top: 1px"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+    <div>
+      <div style="font-size: 14px; line-height: 20px; font-weight: 600">Account temporarily locked</div>
+      <div style="margin-top: 4px; font-size: 14px; line-height: 20px">Too many failed attempts. This account is locked for 15 minutes. Try again later, or sign in with Google.</div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

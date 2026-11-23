@@ -11,6 +11,6 @@ public sealed class GetMyProfileHandler(IUserRepository users)
         var user = await users.FindByIdAsync(userId, cancellationToken).ConfigureAwait(false);
         return user is null
             ? Result<ProfileView>.Fail(ErrorCodes.Unauthenticated)
-            : Result<ProfileView>.Ok(ProfileView.From(user));
+            : Result<ProfileView>.Ok(ProfileView.From(user, await users.FindCredentialAsync(userId, cancellationToken).ConfigureAwait(false) is not null));
     }
 }

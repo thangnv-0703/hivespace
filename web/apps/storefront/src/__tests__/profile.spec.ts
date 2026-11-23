@@ -52,6 +52,7 @@ const PROFILE = {
   dateOfBirth: '1995-04-30',
   avatarUrl: null,
   language: 'vi',
+  hasPassword: true,
 }
 const SESSION = { isAuthenticated: true, userId: PROFILE.userId, email: PROFILE.email, displayName: 'Lan Tran', emailVerified: true, roles: ['Buyer'], language: 'en' }
 
@@ -94,6 +95,18 @@ describe('copy', () => {
 describe('ProfilePage (SCR-STF-016)', () => {
   beforeEach(() => {
     mockApi({ 'GET /v1/me/profile': () => json(200, PROFILE) })
+  })
+
+  it('the Password card says Change password when the account has a password and Set a password when it has none (FEAT-005 AC-16)', async () => {
+    const withPassword = (await mountPage(fakeSession())).wrapper
+    expect(withPassword.get('a[href="/profile/password"]').text()).toBe('Change password')
+    expect(withPassword.text()).toContain('Change the password you use to sign in.')
+    withPassword.unmount()
+
+    mockApi({ 'GET /v1/me/profile': () => json(200, { ...PROFILE, hasPassword: false }) })
+    const without = (await mountPage(fakeSession())).wrapper
+    expect(without.get('a[href="/profile/password"]').text()).toBe('Set a password')
+    expect(without.text()).toContain("Your account doesn't have a password yet. Set one to also sign in with your email.")
   })
 
   it('goes to the change password page when the Password card button is clicked', async () => {

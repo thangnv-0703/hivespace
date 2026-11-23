@@ -47,7 +47,9 @@
     "password": {
       "title": "Mật khẩu",
       "body": "Đổi mật khẩu bạn dùng để đăng nhập. Các thiết bị khác sẽ bị đăng xuất.",
-      "action": "Đổi mật khẩu"
+      "action": "Đổi mật khẩu",
+      "setBody": "Tài khoản của bạn chưa có mật khẩu. Hãy đặt mật khẩu để có thể đăng nhập bằng email.",
+      "setAction": "Đặt mật khẩu"
     }
   }
 }
