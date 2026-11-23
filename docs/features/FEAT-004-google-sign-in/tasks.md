@@ -43,7 +43,7 @@ The screen change (Google button, divider, error alerts on SCR-STF-012) is owned
       - `returnUrl` and unknown provider cases (AC-10);
       - a log-capture test with no code, token, client secret or email in the output (AC-7, AC-16).
       `ExternalFailure.Classify` has unit tests for each branch. The Identity architecture tests stay green. FEAT-003's `hs.idp` tests pass or are updated for the exact-match rule.
-- [ ] T6 — Notification:
+- [x] T6 — Notification:
       - `ExternalLoginLinked` entry in `KINDS` with the `applies` check, and the contacts projection event list;
       - pydantic `ExternalLoginLinked` model validated by the dispatcher before any write;
       - `external_login_linked.{vi,en}.{txt,html}`.

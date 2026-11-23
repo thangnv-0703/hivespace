@@ -294,3 +294,96 @@ async def test_an_invalid_password_event_writes_nothing_and_sends_nothing(engine
     assert sender.sent == []
     assert await _count(engine, "email_records") == 0
     assert await _count(engine, "inbox") == 0
+
+
+# ---- FEAT-004: ExternalLoginLinked (AC-12) ----
+
+
+def _linked_event(
+    language: str = "vi", account_created: bool = False, password_removed: bool = False
+) -> Envelope:
+    return Envelope.model_validate(
+        {
+            "eventId": str(uuid.uuid4()),
+            "eventType": "ExternalLoginLinked",
+            "eventVersion": 1,
+            "occurredAt": datetime.now(UTC).isoformat(),
+            "producer": "identity",
+            "correlationId": "corr-1",
+            "data": {
+                "userId": str(uuid.uuid4()),
+                "email": "an@gmail.com",
+                "displayName": "An",
+                "language": language,
+                "provider": "google",
+                "accountCreated": account_created,
+                "passwordRemoved": password_removed,
+                "linkedAt": "2026-11-22T17:30:00+00:00",
+            },
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("language", "subject", "removed"),
+    [
+        ("vi", "Tài khoản Google đã được liên kết với HiveSpace", "mật khẩu trước đây đã bị xóa"),
+        ("en", "Google account linked to HiveSpace", "the earlier password was removed"),
+    ],
+)
+@pytest.mark.parametrize("password_removed", [False, True])
+async def test_a_link_to_an_existing_account_sends_one_notice_in_the_user_language(
+    engine: AsyncEngine, language: str, subject: str, removed: str, password_removed: bool
+) -> None:
+    sender = FakeSender()
+
+    await make_handler(engine, sender, BASE_URL)(_linked_event(language, password_removed=password_removed))
+
+    assert [m.subject for m in sender.sent] == [subject]
+    assert sender.sent[0].to == "an@gmail.com"
+    assert "00:30 23/11/2026" in sender.sent[0].text
+    assert (removed in sender.sent[0].text) is password_removed
+    async with engine.connect() as conn:
+        row = (await conn.execute(text("SELECT template, status, language FROM email_records"))).one()
+    assert (row.template, row.status, row.language) == ("external_login_linked", "sent", language)
+    assert await _count(engine, "contacts") == 1
+
+
+async def test_a_google_created_account_sends_nothing_but_gets_a_contact(engine: AsyncEngine) -> None:
+    sender = FakeSender()
+    event = _linked_event("en", account_created=True)
+
+    await make_handler(engine, sender, BASE_URL)(event)
+
+    assert sender.sent == []
+    assert await _count(engine, "email_records") == 0
+    async with engine.connect() as conn:
+        contact = (await conn.execute(text("SELECT email, display_name, language FROM contacts"))).one()
+    assert (contact.email, contact.display_name, contact.language) == ("an@gmail.com", "An", "en")
+    assert await _count(engine, "inbox") == 1
+
+
+async def test_a_link_event_delivered_twice_sends_once(engine: AsyncEngine) -> None:
+    sender = FakeSender()
+    handle = make_handler(engine, sender, BASE_URL)
+    event = _linked_event()
+
+    await handle(event)
+    await handle(event)
+
+    assert len(sender.sent) == 1
+    assert await _count(engine, "email_records") == 1
+
+
+async def test_an_invalid_link_event_writes_nothing_and_sends_nothing(engine: AsyncEngine) -> None:
+    sender = FakeSender()
+    bad = _linked_event()
+    bad.data["idToken"] = "eyJ-leaked"
+
+    with pytest.raises(ValueError, match="idToken"):
+        await make_handler(engine, sender, BASE_URL)(bad)
+
+    assert sender.sent == []
+    assert await _count(engine, "email_records") == 0
+    assert await _count(engine, "contacts") == 0
+    assert await _count(engine, "inbox") == 0

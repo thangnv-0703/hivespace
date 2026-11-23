@@ -1,0 +1,7 @@
+Hello {{ display_name }},
+
+Your Google account was linked to your HiveSpace account at {{ linked_at }} (Vietnam time). You can now sign in with Google.
+{% if password_removed %}
+This email address had not been verified, so for your security the earlier password was removed. You can keep signing in with Google and set a new password later from your profile.
+{% endif %}
+If this was not you, contact HiveSpace support right away.
