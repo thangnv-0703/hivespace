@@ -36,7 +36,7 @@ public sealed class Rig : IAsyncDisposable
         GetProfile = new GetMyProfileHandler(users);
         UpdateProfile = new UpdateMyProfileHandler(users, outbox, clock);
         UpdateLanguage = new UpdateMyLanguageHandler(users, outbox, clock);
-        ChangePassword = new ChangeMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, clock);
+        ChangePassword = new ChangeMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, users, Recorder, clock);
         ExternalSignIn = new ExternalSignInHandler(users, new OpenIddictSessionRevoker(_db), outbox, users, clock);
     }
 

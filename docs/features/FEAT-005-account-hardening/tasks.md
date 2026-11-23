@@ -20,7 +20,7 @@ The screen states (SCR-STF-012 locked and rate-limited, SCR-STF-018 set mode and
       (design §3.2, §3.6 cookie part, §5.2; FR-AUTH-011, FR-AUTH-012; NFR-SEC-009; D-1, D-2, D-4, D-7)
       Done when: unit tests show the hasher is not called for a locked account (AC-2) and Testcontainers integration tests pass for AC-1, AC-2 (with a fake `TimeProvider`), AC-3, AC-4 (ten parallel failures), AC-6, AC-7 (Google with the fake IdP while locked) and AC-8 (audit rows and their content, same transaction).
       > Note (implementation): `LockoutRecorder` retries up to `Threshold + 1` = 6 times, not 3. Ten parallel failures need more than three rounds (AC-4 returned 500 with three); every conflict means another failure committed, and after five the account is locked and failures write nothing, so six always ends. Google audit rows also cover the `start` unavailable and `complete` pre-handler failures.
-- [ ] T4 — Lockout in change password: locked check first, wrong current password through `LockoutRecorder` (423 when it locks), a correct current password clears the lockout.
+- [x] T4 — Lockout in change password: locked check first, wrong current password through `LockoutRecorder` (423 when it locks), a correct current password clears the lockout.
       (design §3.3; FR-AUTH-025 note, FR-AUTH-012; UC-026 2a)
       Done when: integration tests pass for AC-5, and FEAT-003's change-password tests stay green.
 - [ ] T5 — Audit retention: `AuditRetentionSweeper` (start and every 6 hours, 90 days) registered in Identity.
