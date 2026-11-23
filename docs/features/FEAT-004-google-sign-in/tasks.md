@@ -54,7 +54,7 @@ The screen change (Google button, divider, error alerts on SCR-STF-012) is owned
       - a duplicate delivery sends once;
       - a schema-sync unit test;
       - the verification and password-changed email tests stay green.
-- [ ] T7 — Local wiring: AppHost starts `tools/fake-idp` on a fixed local port and sets `Identity__Google__ClientId`, `ClientSecret` (generated into `.local/dev-secrets` like the OIDC client secrets) and `Authority`, unless `.local/dev-secrets/google.json` provides a real client. Update `docs/repo-structure.md` for `tools/fake-idp/` and the README note on running with real Google (OQ-32).
+- [x] T7 — Local wiring: AppHost starts `tools/fake-idp` on a fixed local port and sets `Identity__Google__ClientId`, `ClientSecret` (generated into `.local/dev-secrets` like the OIDC client secrets) and `Authority`, unless `.local/dev-secrets/google.json` provides a real client. Update `docs/repo-structure.md` for `tools/fake-idp/` and the README note on running with real Google (OQ-32).
       (design §3.6, §5.6; D-7)
       Done when: `dotnet run --project apphost/HiveSpace.AppHost` starts the fake IdP and Identity with Google configured, and `GET /connect/external/google/start` through the gateway redirects to the fake IdP. `tests/system` still passes.
 - [ ] T8 — UI integration (after ui-design):

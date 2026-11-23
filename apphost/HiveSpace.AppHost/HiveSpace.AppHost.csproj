@@ -24,6 +24,7 @@
     <ProjectReference Include="..\..\services\order\src\Order.Api\Order.Api.csproj" />
     <ProjectReference Include="..\..\services\payment\src\Payment.Api\Payment.Api.csproj" />
     <ProjectReference Include="..\..\services\media\src\Media.Api\Media.Api.csproj" />
+    <ProjectReference Include="..\..\tools\fake-idp\src\FakeIdp\FakeIdp.csproj" />
   </ItemGroup>
 
 </Project>
