@@ -13,7 +13,7 @@ The screen states (SCR-STF-012 locked and rate-limited, SCR-STF-018 set mode and
       - `contracts/features/identity/lockout.feature`, `set-password.feature`, and the locked plus en-language scenarios in `change-password.feature`.
       (design §3.1–§3.8; AC-17)
       Done when: Spectral shows 0 errors, the vi/en key-parity check passes, the regenerated web client compiles, and `tests/contract` discovers the new scenarios (red).
-- [ ] T2 — Schema and domain: `LockoutPolicy`, `SignInLockout`, `AuditEntry`/`AuditMethod`; `IdentityDbContext` mappings (`sign_in_lockouts` with `xmin`, `audit_entries` with checks and indexes); migration `AddLockoutAndAudit`.
+- [x] T2 — Schema and domain: `LockoutPolicy`, `SignInLockout`, `AuditEntry`/`AuditMethod`; `IdentityDbContext` mappings (`sign_in_lockouts` with `xmin`, `audit_entries` with checks and indexes); migration `AddLockoutAndAudit`.
       (design §4, §5.2 Domain; FR-AUTH-011; D-3, D-4)
       Done when: the migration applies clean up and down on a database at FEAT-004's `AddExternalLogins` (`MigrationTests`). Unit tests for `SignInLockout.RecordFailure`/`IsLocked` cover: lock on the fifth failure, window expiry restarting at 1, a finished lock restarting at 1, `IsLocked` at the exact boundary (AC-1, AC-3 domain part).
 - [ ] T3 — Lockout and audit in sign-in: ports `ILockoutStore`, `IAuditLog`, `ConcurrencyConflictException`; `EfUserRepository` implementation and exception mapping; `LockoutRecorder` with 3 tries; `SignInHandler` in the order of design §3.2; `sign-in` endpoint returns 423 and adds `auth_time`/`amr=pwd` to `hs.idp`; Google audit rows in FEAT-004's `ExternalSignInHandler` and `RecordSignInFailureHandler` for `OnRemoteFailure`.

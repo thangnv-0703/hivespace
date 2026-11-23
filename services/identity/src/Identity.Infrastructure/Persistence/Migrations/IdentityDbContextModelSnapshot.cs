@@ -67,6 +67,56 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("outbox", (string)null);
                 });
 
+            modelBuilder.Entity("Identity.Domain.AuditEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<string>("CorrelationId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("correlation_id");
+
+                    b.Property<string>("Method")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("method");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("occurred_at");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)")
+                        .HasColumnName("reason");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)")
+                        .HasColumnName("type");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("UserId", "OccurredAt");
+
+                    b.ToTable("audit_entries", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_audit_entries_method", "method in ('password','google','password_change')");
+
+                            t.HasCheckConstraint("ck_audit_entries_type", "type in ('sign_in_succeeded','sign_in_failed','account_locked')");
+                        });
+                });
+
             modelBuilder.Entity("Identity.Domain.Credential", b =>
                 {
                     b.Property<Guid>("UserId")
@@ -144,6 +194,38 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("role_grants", null, t =>
                         {
                             t.HasCheckConstraint("ck_role_grants_role", "role in ('Buyer', 'Seller')");
+                        });
+                });
+
+            modelBuilder.Entity("Identity.Domain.SignInLockout", b =>
+                {
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<int>("FailedCount")
+                        .HasColumnType("integer")
+                        .HasColumnName("failed_count");
+
+                    b.Property<DateTimeOffset?>("LockedUntil")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("locked_until");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.Property<DateTimeOffset>("WindowStartedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("window_started_at");
+
+                    b.HasKey("UserId");
+
+                    b.ToTable("sign_in_lockouts", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_sign_in_lockouts_failed_count", "failed_count between 1 and 5");
                         });
                 });
 
@@ -490,6 +572,15 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.HasOne("Identity.Domain.User", null)
                         .WithMany("Roles")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Identity.Domain.SignInLockout", b =>
+                {
+                    b.HasOne("Identity.Domain.User", null)
+                        .WithOne()
+                        .HasForeignKey("Identity.Domain.SignInLockout", "UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

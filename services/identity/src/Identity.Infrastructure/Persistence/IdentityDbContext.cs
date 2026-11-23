@@ -15,6 +15,10 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
 
     public DbSet<ExternalLogin> ExternalLogins => Set<ExternalLogin>();
 
+    public DbSet<SignInLockout> SignInLockouts => Set<SignInLockout>();
+
+    public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(e =>
@@ -90,6 +94,41 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
             e.HasIndex(l => new { l.Provider, l.Subject }).IsUnique();
             e.HasIndex(l => new { l.UserId, l.Provider }).IsUnique();
             e.HasOne<User>().WithMany().HasForeignKey(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<SignInLockout>(e =>
+        {
+            e.ToTable("sign_in_lockouts", t => t.HasCheckConstraint("ck_sign_in_lockouts_failed_count", "failed_count between 1 and 5"));
+            e.HasKey(l => l.UserId);
+            e.Property(l => l.UserId).HasColumnName("user_id").ValueGeneratedNever();
+            e.Property(l => l.FailedCount).HasColumnName("failed_count");
+            e.Property(l => l.WindowStartedAt).HasColumnName("window_started_at");
+            e.Property(l => l.LockedUntil).HasColumnName("locked_until");
+            // Postgres's own row version: a concurrent failure makes the update fail, and the recorder reapplies (design D-3).
+            e.Property<uint>("Version").IsRowVersion();
+            e.HasOne<User>().WithOne().HasForeignKey<SignInLockout>(l => l.UserId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<AuditEntry>(e =>
+        {
+            e.ToTable("audit_entries", t =>
+            {
+                t.HasCheckConstraint("ck_audit_entries_type", "type in ('sign_in_succeeded','sign_in_failed','account_locked')");
+                t.HasCheckConstraint("ck_audit_entries_method", "method in ('password','google','password_change')");
+            });
+            e.HasKey(a => a.Id);
+            e.Property(a => a.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(a => a.OccurredAt).HasColumnName("occurred_at");
+            e.Property(a => a.Type).HasColumnName("type").HasMaxLength(32);
+            e.Property(a => a.Method).HasColumnName("method").HasMaxLength(16)
+                .HasConversion(m => m == AuditMethod.PasswordChange ? "password_change" : m.ToString().ToLowerInvariant(),
+                    v => v == "password_change" ? AuditMethod.PasswordChange : Enum.Parse<AuditMethod>(v, true));
+            // No foreign key: an audit row outlives nothing and blocks nothing (design §4).
+            e.Property(a => a.UserId).HasColumnName("user_id");
+            e.Property(a => a.Reason).HasColumnName("reason").HasMaxLength(64);
+            e.Property(a => a.CorrelationId).HasColumnName("correlation_id").HasMaxLength(64);
+            e.HasIndex(a => a.OccurredAt);
+            e.HasIndex(a => new { a.UserId, a.OccurredAt });
         });
 
         modelBuilder.AddOutboxAndInbox();

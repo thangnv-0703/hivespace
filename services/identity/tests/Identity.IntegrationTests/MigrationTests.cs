@@ -9,7 +9,7 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
 {
     private static readonly string[] ExpectedTables =
     [
-        "users", "credentials", "role_grants", "verification_tokens", "external_logins", "outbox", "inbox",
+        "users", "credentials", "role_grants", "verification_tokens", "external_logins", "sign_in_lockouts", "audit_entries", "outbox", "inbox",
         "OpenIddictApplications", "OpenIddictAuthorizations", "OpenIddictScopes", "OpenIddictTokens",
     ];
 
@@ -95,6 +95,44 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
         Assert.DoesNotContain("external_logins", before);
         Assert.Contains("users", before);
         Assert.Contains("external_logins", after);
+    }
+
+    [Fact]
+    public async Task AddLockoutAndAudit_applies_down_and_up_after_AddExternalLogins()
+    {
+        await using var db = postgres.CreateContext();
+        var migrator = db.GetService<IMigrator>();
+
+        await migrator.MigrateAsync("20261123022324_AddExternalLogins", TestContext.Current.CancellationToken);
+        var before = await ListTables(db);
+        await migrator.MigrateAsync(cancellationToken: TestContext.Current.CancellationToken);
+        var after = await ListTables(db);
+
+        Assert.DoesNotContain("sign_in_lockouts", before);
+        Assert.DoesNotContain("audit_entries", before);
+        Assert.Contains("sign_in_lockouts", after);
+        Assert.Contains("audit_entries", after);
+    }
+
+    [Fact]
+    public async Task Lockout_and_audit_checks_reject_values_outside_the_design()
+    {
+        await using var db = postgres.CreateContext();
+        var ct = TestContext.Current.CancellationToken;
+        var id = Guid.CreateVersion7();
+        await db.Database.ExecuteSqlAsync(
+            $"""
+            insert into users (id, email, normalized_email, display_name, language, created_at, updated_at)
+            values ({id}, {"l@x.com"}, {"l@x.com"}, {"L"}, {"vi"}, now(), now())
+            """,
+            ct);
+
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into sign_in_lockouts (user_id, failed_count, window_started_at) values ({id}, {6}, now())", ct));
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into audit_entries (id, occurred_at, type, method) values ({Guid.CreateVersion7()}, now(), {"other"}, {"password"})", ct));
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into audit_entries (id, occurred_at, type, method) values ({Guid.CreateVersion7()}, now(), {"sign_in_failed"}, {"code"})", ct));
     }
 
     [Fact]
