@@ -7,7 +7,7 @@ setDefaultTimeout(240_000)
 
 Before({ tags: '@service:identity' }, async function (this: ContractWorld) {
   this.service = await getService('identity')
-  await this.service.db.query('truncate table users, outbox cascade')
+  await this.service.db.query('truncate table users, outbox, audit_entries cascade')
 })
 
 Before({ tags: '@service:catalog' }, async function (this: ContractWorld) {

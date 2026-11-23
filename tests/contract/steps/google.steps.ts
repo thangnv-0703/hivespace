@@ -15,7 +15,7 @@ interface Hop {
 
 const publicOrigin = 'http://localhost:5080'
 
-function jar(world: ContractWorld): Map<string, string> {
+export function jar(world: ContractWorld): Map<string, string> {
   return ((world as unknown as { cookies?: Map<string, string> }).cookies ??= new Map())
 }
 
@@ -43,7 +43,7 @@ async function identityGet(world: ContractWorld, route: string): Promise<Hop> {
   return hop
 }
 
-async function next(world: ContractWorld, body: Record<string, string>): Promise<void> {
+export async function next(world: ContractWorld, body: Record<string, string>): Promise<void> {
   const response = await fetch(`${world.service.fakeIdpUrl}/__fake/next`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
@@ -58,7 +58,7 @@ function startRoute(returnUrl: string | undefined, provider = 'google'): string 
 }
 
 /** start → Google authorize → callback → complete; stops at the first redirect that leaves the flow. */
-async function signInWithGoogle(world: ContractWorld, returnUrl?: string): Promise<string | null> {
+export async function signInWithGoogle(world: ContractWorld, returnUrl?: string): Promise<string | null> {
   hops(world).length = 0
   const start = await identityGet(world, startRoute(returnUrl))
   if (!start.location?.startsWith(world.service.fakeIdpUrl!)) return start.location

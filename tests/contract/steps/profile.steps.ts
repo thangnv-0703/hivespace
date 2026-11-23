@@ -17,7 +17,11 @@ async function signIn(world: ContractWorld, email: string, displayName: string, 
   await world.post('/v1/users/sign-in', { email, password })
   assert.equal(world.response!.status, 200)
   const cookie = world.response!.headers.getSetCookie().find((c) => c.startsWith('hs.idp='))!.split(';')[0]!
+  await tokenForCookie(world, cookie)
+}
 
+/** Authorization code with PKCE for the browser holding `cookie` (`hs.idp=…`), then the bearer access token into `world.accessToken`. */
+export async function tokenForCookie(world: ContractWorld, cookie: string): Promise<void> {
   const verifier = b64url(randomBytes(32))
   const challenge = b64url(createHash('sha256').update(verifier).digest())
   const query = new URLSearchParams({
@@ -30,7 +34,7 @@ async function signIn(world: ContractWorld, email: string, displayName: string, 
     code_challenge_method: 'S256',
   })
   const authorize = await fetch(`${world.service.baseUrl}/connect/authorize?${query}`, { headers: { cookie }, redirect: 'manual' })
-  const code = new URL(authorize.headers.get('location')!).searchParams.get('code')
+  const code = new URL(authorize.headers.get('location')!, world.service.baseUrl).searchParams.get('code')
   assert.ok(code, 'authorize did not return a code')
 
   const token = await fetch(`${world.service.baseUrl}/connect/token`, {
@@ -60,14 +64,19 @@ function isoDate(yearsAgo: number, dayOffset = 0): string {
   return d.toISOString().slice(0, 10)
 }
 
-/** The same access token with another audience, re-signed with the service's own key (the signature is valid, only `aud` differs). */
-function wrongAudience(world: ContractWorld): string {
+/** The same access token with other claims, re-signed with the service's own key (the signature is valid, only the claims differ). */
+export function resign(world: ContractWorld, change: Record<string, unknown>): string {
   const [header, payload] = world.accessToken!.split('.') as [string, string]
   const claims = JSON.parse(Buffer.from(payload, 'base64url').toString()) as Record<string, unknown>
-  claims.aud = 'other-api'
+  Object.assign(claims, change)
   const input = `${header}.${b64url(JSON.stringify(claims))}`
   const signature = sign('sha256', Buffer.from(input), { key: createPrivateKey(world.service.signingKeyPem!), dsaEncoding: 'ieee-p1363' })
   return `${input}.${b64url(signature)}`
+}
+
+/** The same access token with another audience. */
+function wrongAudience(world: ContractWorld): string {
+  return resign(world, { aud: 'other-api' })
 }
 
 function tampered(world: ContractWorld): string {

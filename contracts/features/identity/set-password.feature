@@ -30,7 +30,7 @@ Feature: Set a first password
   @operation:setMyPassword @FR-AUTH-027
   Scenario: An account that already has a password cannot set one
     Given a Google-only user "an@example.com" who signed in with Google just now
-    And the account has a password "hello1234"
+    And the account has a password
     When the user sets the password "world5678"
     Then the response status is 409
     And the error code is "identity.password_already_set"
