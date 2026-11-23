@@ -6,7 +6,7 @@
 
 The screen states (SCR-STF-012 locked and rate-limited, SCR-STF-018 set mode and re-authentication prompt, SCR-STF-016 card label) are owned by ui-design's output ([ui-design.md](ui-design.md), [mockups/](mockups/)); T10 only wires them. UC-002 and UC-026 are not among the critical flows of architecture §8 (Testing row), so no E2E task is owed; T11 only keeps the existing E2E suite green under the new limits.
 
-- [ ] T1 — Contracts first:
+- [x] T1 — Contracts first:
       - error codes `identity.account_locked` (423), `identity.reauthentication_required` (403), `identity.password_already_set` (409), `common.rate_limited` (429) with vi/en messages;
       - `identity.yaml`: 423 on `signIn` and `changeMyPassword`, 429 on the three limited operations, new `setMyPassword` (`PUT /v1/me/password/initial`, `PasswordSet`), `Profile.hasPassword`;
       - `gateway.yaml`: `reauth` on `/bff/login`;

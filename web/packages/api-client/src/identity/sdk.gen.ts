@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SignInData, SignInErrors, SignInResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
+import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SetMyPasswordData, SetMyPasswordErrors, SetMyPasswordResponses, SignInData, SignInErrors, SignInResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -110,6 +110,22 @@ export const updateMyLanguage = <ThrowOnError extends boolean = false>(options: 
 export const changeMyPassword = <ThrowOnError extends boolean = false>(options: Options<ChangeMyPasswordData, ThrowOnError>): RequestResult<ChangeMyPasswordResponses, ChangeMyPasswordErrors, ThrowOnError> => (options.client ?? client).put<ChangeMyPasswordResponses, ChangeMyPasswordErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/me/password',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set a first password on an account that has none, after a recent Google sign-in (FR-AUTH-027).
+ *
+ * Needs an access token whose `amr` contains `google` and whose `auth_time` is at most 10 minutes old. Signs out every other session and keeps this one; queues `PasswordChanged/v1`. The response carries `Set-Cookie: hs.idp` when the request had a valid `hs.idp` for the same user.
+ *
+ */
+export const setMyPassword = <ThrowOnError extends boolean = false>(options: Options<SetMyPasswordData, ThrowOnError>): RequestResult<SetMyPasswordResponses, SetMyPasswordErrors, ThrowOnError> => (options.client ?? client).put<SetMyPasswordResponses, SetMyPasswordErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/me/password/initial',
     ...options,
     headers: {
         'Content-Type': 'application/json',

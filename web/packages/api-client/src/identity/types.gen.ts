@@ -17,6 +17,10 @@ export type PasswordChange = {
     newPassword: string;
 };
 
+export type PasswordSet = {
+    newPassword: string;
+};
+
 export type Profile = {
     userId: Id;
     /**
@@ -35,6 +39,10 @@ export type Profile = {
      */
     avatarUrl: string | null;
     language: Language;
+    /**
+     * True when the account has a password; false for a Google-only account (FR-AUTH-027).
+     */
+    readonly hasPassword: boolean;
 };
 
 /**
@@ -223,6 +231,14 @@ export type SignInErrors = {
      * `identity.invalid_credentials` (same body for every failure cause).
      */
     401: Error;
+    /**
+     * `identity.account_locked`: five wrong attempts within 15 minutes lock the account for 15 minutes (FR-AUTH-011, FR-AUTH-012). Also the attempt that causes the lock.
+     */
+    423: Error;
+    /**
+     * `common.rate_limited` from the gateway (NFR-SEC-005), with `Retry-After`.
+     */
+    429: Error;
 };
 
 export type SignInError = SignInErrors[keyof SignInErrors];
@@ -365,6 +381,14 @@ export type ChangeMyPasswordErrors = {
      * `identity.password_not_set`: the account has no password (Google-created account).
      */
     409: Error;
+    /**
+     * `identity.account_locked`: five wrong attempts within 15 minutes lock the account for 15 minutes (FR-AUTH-011, FR-AUTH-012). Also the attempt that causes the lock.
+     */
+    423: Error;
+    /**
+     * `common.rate_limited` from the gateway (NFR-SEC-005), with `Retry-After`.
+     */
+    429: Error;
 };
 
 export type ChangeMyPasswordError = ChangeMyPasswordErrors[keyof ChangeMyPasswordErrors];
@@ -377,3 +401,50 @@ export type ChangeMyPasswordResponses = {
 };
 
 export type ChangeMyPasswordResponse = ChangeMyPasswordResponses[keyof ChangeMyPasswordResponses];
+
+export type SetMyPasswordData = {
+    body: PasswordSet;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/me/password/initial';
+};
+
+export type SetMyPasswordErrors = {
+    /**
+     * `common.validation_failed` with the password rule codes on `newPassword`.
+     */
+    400: Error;
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+    /**
+     * `identity.reauthentication_required`: no Google sign-in in the last 10 minutes.
+     */
+    403: Error;
+    /**
+     * `identity.password_already_set`: the account already has a password.
+     */
+    409: Error;
+    /**
+     * `common.rate_limited` from the gateway (NFR-SEC-005), with `Retry-After`.
+     */
+    429: Error;
+};
+
+export type SetMyPasswordError = SetMyPasswordErrors[keyof SetMyPasswordErrors];
+
+export type SetMyPasswordResponses = {
+    /**
+     * Password set; other sessions are signed out.
+     */
+    204: void;
+};
+
+export type SetMyPasswordResponse = SetMyPasswordResponses[keyof SetMyPasswordResponses];
