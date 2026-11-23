@@ -6,9 +6,13 @@ import { defineBddProject } from 'playwright-bdd'
 const baseURL = process.env.BASE_URL ?? 'http://localhost:5080'
 process.env.SELLER_URL ??= 'http://seller.localhost:5080'
 
-const desktop = { ...devices['Desktop Chrome'] }
+// Cloud sessions: launch the image's own Chromium when its version does not match the pinned Playwright
+// (set by scripts/cloud-setup.sh). Unset locally and in CI, where `playwright install` provides the browser.
+const launchOptions = process.env.PW_CHROMIUM_PATH ? { executablePath: process.env.PW_CHROMIUM_PATH } : {}
+
+const desktop = { ...devices['Desktop Chrome'], launchOptions }
 // EIR-UI-003: the UI works at 360 px.
-const mobile = { ...devices['Desktop Chrome'], viewport: { width: 360, height: 780 } }
+const mobile = { ...devices['Desktop Chrome'], viewport: { width: 360, height: 780 }, launchOptions }
 
 // User journeys are Gherkin in features/ (ADR-0026); `bddgen` turns them into Playwright tests first.
 const journeys = { features: 'features/**/*.feature', steps: ['steps/**/*.ts', 'support/fixtures.ts'] }
