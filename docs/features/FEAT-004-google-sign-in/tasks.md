@@ -29,7 +29,7 @@ The screen change (Google button, divider, error alerts on SCR-STF-012) is owned
       - unverified or missing email, empty subject, a user already linked to another subject each fail with the right code and write nothing (AC-5, AC-6);
       - two concurrent first sign-ins give one user and one link (AC-11);
       - the sign-in handler still returns `identity.invalid_credentials` for a credential-less user, same result as an unknown email (AC-9).
-- [ ] T4 — Fake IdP (`tools/fake-idp`, added to `HiveSpace.slnx`): discovery, JWKS, `/authorize`, `/token`, and the `/__fake/next` control endpoint with the outcomes in design §5.6; PKCE, client secret and `redirect_uri` checks.
+- [x] T4 — Fake IdP (`tools/fake-idp`, added to `HiveSpace.slnx`): discovery, JWKS, `/authorize`, `/token`, and the `/__fake/next` control endpoint with the outcomes in design §5.6; PKCE, client secret and `redirect_uri` checks.
       (design §5.6; D-7; dev-standards §10)
       Done when: its own tests drive one full code flow for `ok`, and show that each failure outcome produces the response the integration tests expect (a bad signature really fails signature validation, and so on). It builds with no warnings.
 - [ ] T5 — Identity API: `hs.ext` cookie, the `google` OpenID Connect scheme and registry (`ExternalLoginProviders`), `AddExternalLogins` configuration, `start` and `complete` endpoints, `ExternalFailure.Classify`, `OnRedirectToIdentityProvider` / `OnMessageReceived` / `OnRemoteFailure`, the exact `pwd_at` match in `ConnectEndpoints.PasswordStampMatchesAsync`, no secret in logs.

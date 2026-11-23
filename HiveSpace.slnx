@@ -75,4 +75,12 @@
   <Folder Name="/tests/system/">
     <Project Path="tests/system/HiveSpace.SystemTests/HiveSpace.SystemTests.csproj" />
   </Folder>
+  <Folder Name="/tools/" />
+  <Folder Name="/tools/fake-idp/" />
+  <Folder Name="/tools/fake-idp/src/">
+    <Project Path="tools/fake-idp/src/FakeIdp/FakeIdp.csproj" />
+  </Folder>
+  <Folder Name="/tools/fake-idp/tests/">
+    <Project Path="tools/fake-idp/tests/FakeIdp.Tests/FakeIdp.Tests.csproj" />
+  </Folder>
 </Solution>
