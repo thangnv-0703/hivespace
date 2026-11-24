@@ -22,7 +22,8 @@ public sealed class ShopRegistrationFlowTests(StackFixture stack)
     public async Task A_buyer_registers_a_shop_through_the_gateway_refreshes_the_session_and_reads_the_shop_on_the_seller_host()
     {
         var email = $"system-shop-{Guid.NewGuid():N}@example.com";
-        using var gateway = stack.App.CreateHttpClient("gateway");
+        // Redirects are followed by hand: every host reaches the same gateway endpoint, and the Location headers name the fixed local ports.
+        using var gateway = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { BaseAddress = stack.App.GetEndpoint("gateway") };
         var browser = new Browser(gateway);
 
         // A buyer with a verified email, signed in on the storefront host (hs.idp).
@@ -124,7 +125,17 @@ public sealed class ShopRegistrationFlowTests(StackFixture stack)
         {
             for (var hop = 0; hop < 10; hop++)
             {
-                using var response = await SendAsync(host, HttpMethod.Get, path);
+                HttpResponseMessage response;
+                try
+                {
+                    response = await SendAsync(host, HttpMethod.Get, path);
+                }
+                catch (HttpRequestException e)
+                {
+                    throw new InvalidOperationException($"GET {host}{path}", e);
+                }
+
+                using var _ = response;
                 if (response.StatusCode is not (HttpStatusCode.Redirect or HttpStatusCode.Found or HttpStatusCode.SeeOther))
                 {
                     Assert.True(response.IsSuccessStatusCode, $"GET http://{host}{path} ended with {response.StatusCode}");

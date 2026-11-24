@@ -131,6 +131,8 @@ services/order/
 
 Dependency direction: `Api → Application → Domain`, `Infrastructure → Application`. Domain references nothing.
 
+Domain folders group by aggregate or concept (Identity: `Users/`, `Shops/`, `SignIn/`, `Verification/`, `Auditing/`); the namespace stays flat (`Identity.Domain`).
+
 ### 4.2 .NET, lean (Media shown)
 
 ```
