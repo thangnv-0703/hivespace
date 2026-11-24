@@ -42,14 +42,14 @@
 | FR-AUTH-035 | an account is locked, reject code sign-in without evaluating the submitted code. | Should | Active | CR-7 | UC-029 | ADR-0008, features/FEAT-006-email-code-sign-in/technical-design.md, features/FEAT-006-email-code-sign-in/ui-design.md | FEAT-006 | features/FEAT-006-email-code-sign-in/acceptance-report.md |
 | FR-AUTH-036 | a user whose account is unverified signs in with a correct code, mark the email … | Should | Active | CR-7 | UC-029 | ADR-0008, features/FEAT-006-email-code-sign-in/technical-design.md | FEAT-006 | features/FEAT-006-email-code-sign-in/acceptance-report.md |
 | FR-ROLE-001 | support the roles Buyer and Seller, and every registered user shall hold the Buy… | Must | Active | P0-1 | UC-001 | ADR-0008, features/FEAT-001-register-and-sign-in/technical-design.md | FEAT-001 | features/FEAT-001-register-and-sign-in/acceptance-report.md |
-| FR-ROLE-002 | a buyer completes shop registration, grant the Seller role while retaining the B… | Must | Active | P0-1, US-11 | UC-003 | ADR-0001, ADR-0008 | FEAT-009 | _TBD_ |
-| FR-ROLE-003 | a user without the Seller role requests a seller-only function, then reject the … | Must | Active | P0-1 | UC-003, UC-005, UC-014 | ADR-0008 | FEAT-009 | _TBD_ |
+| FR-ROLE-002 | a buyer completes shop registration, grant the Seller role while retaining the B… | Must | Active | P0-1, US-11 | UC-003 | ADR-0001, ADR-0008, features/FEAT-009-register-shop/technical-design.md, features/FEAT-009-register-shop/ui-design.md | FEAT-009 | _TBD_ |
+| FR-ROLE-003 | a user without the Seller role requests a seller-only function, then reject the … | Must | Active | P0-1 | UC-003, UC-005, UC-014 | ADR-0008, features/FEAT-009-register-shop/technical-design.md | FEAT-009 | _TBD_ |
 | FR-ROLE-004 | a user requests to view or change a cart, order, address, shop or product owned … | Must | Active | Inferred | UC-004, UC-006, UC-013, UC-014, UC-028 | ADR-0008 | Foundations | _TBD_ |
 | FR-ROLE-005 | evaluate authorization on the server for every protected request. | Must | Active | Inferred | UC-002 | ADR-0008 | Foundations | _TBD_ |
-| FR-SHOP-001 | a verified buyer submits shop registration with a shop name and a seller type (i… | Must | Active | P0-1, US-11 | UC-003 | _TBD_ | FEAT-009 | _TBD_ |
-| FR-SHOP-002 | a user who already owns a shop submits shop registration, then reject it. | Should | Active | Inferred | UC-003 | _TBD_ | FEAT-009 | _TBD_ |
-| FR-SHOP-003 | the submitted shop name is already used by another shop, then reject it. | Should | Active | Inferred | UC-003 | _TBD_ | FEAT-009 | _TBD_ |
-| FR-SHOP-004 | record the seller type without verifying it. | Must | Active | PRD §3 | UC-003 | _TBD_ | FEAT-009 | _TBD_ |
+| FR-SHOP-001 | a verified buyer submits shop registration with a shop name and a seller type (i… | Must | Active | P0-1, US-11 | UC-003 | features/FEAT-009-register-shop/technical-design.md, features/FEAT-009-register-shop/ui-design.md | FEAT-009 | _TBD_ |
+| FR-SHOP-002 | a user who already owns a shop submits shop registration, then reject it. | Should | Active | Inferred | UC-003 | features/FEAT-009-register-shop/technical-design.md, features/FEAT-009-register-shop/ui-design.md | FEAT-009 | _TBD_ |
+| FR-SHOP-003 | the submitted shop name is already used by another shop, then reject it. | Should | Active | Inferred | UC-003 | features/FEAT-009-register-shop/technical-design.md, features/FEAT-009-register-shop/ui-design.md | FEAT-009 | _TBD_ |
+| FR-SHOP-004 | record the seller type without verifying it. | Must | Active | PRD §3 | UC-003 | features/FEAT-009-register-shop/technical-design.md, features/FEAT-009-register-shop/ui-design.md | FEAT-009 | _TBD_ |
 | FR-SHOP-005 | a shop owner submits shop profile changes (name, description), save them. | Must | Active | P0-2, US-12 | UC-004 | _TBD_ | FEAT-010 | _TBD_ |
 | FR-SHOP-006 | a shop owner submits a pickup address (contact name, phone, province, district, … | Must | Active | P0-2, US-12 | UC-004 | _TBD_ | FEAT-010 | _TBD_ |
 | FR-SHOP-007 | a shop owner submits payout bank details (bank name, account number, account hol… | Must | Active | P0-2, US-12 | UC-004 | _TBD_ | FEAT-010 | _TBD_ |

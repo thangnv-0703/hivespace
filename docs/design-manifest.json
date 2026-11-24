@@ -5,6 +5,105 @@
     "note": "No design tool connected. Screens missing from a design source are specified for code and adapted from references/hivespace.web (user decision 2026-11-17); overridable per screen."
   },
   "screens": {
+    "SCR-SEL-001": {
+      "name": "Register shop",
+      "surface": "SEL",
+      "feature": "FEAT-009",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-009-register-shop/ui-design.md#scr-sel-001--register-shop"
+      },
+      "reference": "references/hivespace.web/apps/seller/src/pages/RegisterStorePage.vue",
+      "states": {
+        "covered": [
+          "default",
+          "starting",
+          "submitting",
+          "error (client, server fields, name taken, network)",
+          "unverified"
+        ],
+        "gaps": [],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "POST /v1/shops",
+        "POST /bff/session/refresh",
+        "GET /bff/user",
+        "POST /v1/users/verification-email"
+      ],
+      "conformance": {
+        "result": "corrected",
+        "corrections": [
+          "description, address and logo fields cut (FEAT-010, FEAT-035; not in ShopRegistration)",
+          "left label column -> labels above controls",
+          "FullscreenLoader on submit -> button loading state",
+          "raw gray/red utilities -> role tokens and Alert",
+          "grid background and footer copyright -> AuthLayout brand panel",
+          "validation error toast -> field errors",
+          "seller type radio group added (FR-SHOP-001)"
+        ],
+        "escalations": []
+      },
+      "status": "designed",
+      "designed_at": "2026-11-24",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-009-register-shop/mockups/Main.dc.html",
+          "docs/features/FEAT-009-register-shop/mockups/RegisterMobile.dc.html",
+          "docs/features/FEAT-009-register-shop/mockups/RegisterErrors.dc.html",
+          "docs/features/FEAT-009-register-shop/mockups/RegisterUnverified.dc.html",
+          "docs/features/FEAT-009-register-shop/mockups/AccountMenus.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/6wUtB4tPe162T63YL5GLsR",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
+    },
+    "SCR-SEL-002": {
+      "name": "Dashboard",
+      "surface": "SEL",
+      "feature": "FEAT-009",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-009-register-shop/ui-design.md#scr-sel-002--dashboard"
+      },
+      "reference": null,
+      "states": {
+        "covered": [
+          "new shop",
+          "loading",
+          "error",
+          "all done (spec, reachable from FEAT-010)"
+        ],
+        "gaps": [
+          "order counts by status (FEAT-025)",
+          "low-stock variants (FEAT-013)"
+        ],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "GET /v1/shops/me"
+      ],
+      "conformance": {
+        "result": "pass",
+        "corrections": [],
+        "escalations": [],
+        "notes": [
+          "setup checklist composed from Card, Button, Badge and lucide icons; design.md section 4.8 has no entry for it yet (open item toward ux-foundations, non-blocking)"
+        ]
+      },
+      "status": "designed",
+      "designed_at": "2026-11-24",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-009-register-shop/mockups/Dashboard.dc.html",
+          "docs/features/FEAT-009-register-shop/mockups/DashboardStates.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/6wUtB4tPe162T63YL5GLsR",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
+    },
     "SCR-STF-012": {
       "name": "Sign in",
       "surface": "STF",

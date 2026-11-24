@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Dashboard states</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="width: 960px; height: 1120px; box-sizing: border-box; background: #f9fafb; padding: 32px; display: flex; flex-direction: column; gap: 32px; font-size: 14px">
+  <section aria-label="Loading" style="display: flex; flex-direction: column; gap: 12px">
+    <p style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #667085">Loading</p>
+    <h2 style="margin: 0; font-size: 30px; line-height: 38px; font-weight: 600">Dashboard</h2>
+    <div aria-hidden="true" style="width: 200px; height: 16px; border-radius: 4px; background: #f2f4f7"></div>
+    <div role="status" aria-label="Loading" style="background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="width: 180px; height: 20px; border-radius: 4px; background: #f2f4f7"></div>
+      <div style="height: 56px; border-radius: 8px; background: #f2f4f7"></div>
+      <div style="height: 56px; border-radius: 8px; background: #f2f4f7"></div>
+    </div>
+  </section>
+  <section aria-label="Error" style="display: flex; flex-direction: column; gap: 12px">
+    <p style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #667085">Error</p>
+    <div role="alert" style="display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 16px; border-radius: 8px; background: #fef3f2; color: #b42318">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d92d20" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <p style="margin: 0; flex: 1 1 300px">We couldn't load your shop. Check your connection and try again.</p>
+      <button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054; font: 500 14px 'Outfit',sans-serif">Retry</button>
+    </div>
+  </section>
+  <section aria-label="All done" style="display: flex; flex-direction: column; gap: 12px">
+    <p style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #667085">All done (reachable after FEAT-010)</p>
+    <div style="background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; box-shadow: 0 1px 3px rgba(16,24,40,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px">
+        <h3 style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 600">Set up your shop</h3>
+        <span style="color: #667085">2 of 2 done</span>
+      </div>
+      <p style="margin: 0; color: #027a48">Your shop is ready to publish products.</p>
+      <ul style="list-style: none; margin: 0; padding: 0; border-top: 1px solid #e4e7ec">
+        <li style="display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 16px 0; border-bottom: 1px solid #e4e7ec">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#039855" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+          <div style="flex: 1"><p style="margin: 0; font-weight: 500">Pickup address <span style="display: inline-flex; align-items: center; height: 22px; margin-left: 8px; padding: 0 8px; border-radius: 4px; background: #ecfdf3; color: #027a48; font-size: 12px; font-weight: 500">Done</span></p><p style="margin: 0; color: #667085">Where carriers collect your orders.</p></div>
+        </li>
+        <li style="display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 16px 0; border-bottom: 1px solid #e4e7ec">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#039855" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+          <div style="flex: 1"><p style="margin: 0; font-weight: 500">Payout details <span style="display: inline-flex; align-items: center; height: 22px; margin-left: 8px; padding: 0 8px; border-radius: 4px; background: #ecfdf3; color: #027a48; font-size: 12px; font-weight: 500">Done</span></p><p style="margin: 0; color: #667085">The bank account for your earnings. Nothing is paid out yet.</p></div>
+        </li>
+      </ul>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":960,"height":1120}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

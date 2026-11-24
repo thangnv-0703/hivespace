@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Open your shop</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+.panel{display:none}
+@media (min-width:1024px){.panel{display:flex}}
+</style>
+</helmet>
+<div style="display: flex; width: 100%; min-height: 820px; background: #ffffff">
+  <section style="flex: 1 1 0; min-width: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 72px 24px 40px">
+    <div style="position: absolute; top: 16px; right: 16px; display: flex; gap: 8px; align-items: center">
+      <button type="button" aria-label="Language: English" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid #e4e7ec; border-radius: 8px; background: #ffffff; color: #344054; font: 500 14px 'Outfit','Noto Sans',sans-serif">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>EN
+      </button>
+      <button type="button" aria-label="Switch to dark theme" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #e4e7ec; border-radius: 8px; background: #ffffff; color: #344054">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      </button>
+      <button type="button" aria-label="Account menu" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 8px; border: 0; border-radius: 8px; background: transparent; color: #101828; font: 500 14px 'Outfit','Noto Sans',sans-serif">
+        <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 9999px; background: #dde9ff; color: #2a31d8; font-size: 12px; font-weight: 600">LN</span>Linh Nguyen
+      </button>
+    </div>
+    <main style="width: 100%; max-width: 448px">
+      <a href="#" style="display: inline-block; margin-bottom: 32px; text-decoration: none; color: #101828; font: 700 22px 'Outfit',sans-serif">HiveSpace</a>
+      <h1 style="margin: 0 0 8px; font-size: 30px; line-height: 38px; font-weight: 600; color: #101828">Open your shop on HiveSpace</h1>
+      <p style="margin: 0 0 32px; font-size: 14px; line-height: 20px; color: #667085">Two details and you're a seller. You keep your buyer account.</p>
+      <form style="display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="shop-name" style="font-size: 14px; font-weight: 500; color: #344054">Shop name <span aria-hidden="true" style="color: #d92d20">*</span></label>
+          <input id="shop-name" type="text" maxlength="60" aria-describedby="shop-name-help" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828; box-shadow: 0 1px 2px rgba(16,24,40,0.05)" placeholder="e.g. Tiệm Bánh An">
+          <p id="shop-name-help" style="margin: 0; font-size: 12px; line-height: 18px; color: #667085">3–60 characters. Buyers see this name, exactly as you write it.</p>
+        </div>
+        <fieldset style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 6px">
+          <legend style="padding: 0; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Seller type <span aria-hidden="true" style="color: #d92d20">*</span></legend>
+          <label style="display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 14px; color: #101828"><input type="radio" name="seller-type" value="individual" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Individual</label>
+          <label style="display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 14px; color: #101828"><input type="radio" name="seller-type" value="business" style="width: 20px; height: 20px; margin: 0; accent-color: #465fff">Business</label>
+          <p style="margin: 0; font-size: 12px; line-height: 18px; color: #667085">We record this as you choose it and don't verify it.</p>
+        </fieldset>
+        <button type="submit" style="margin-top: 8px; height: 44px; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 14px 'Outfit','Noto Sans',sans-serif">Open my shop</button>
+        <p style="margin: 0; font-size: 12px; line-height: 18px; color: #667085">Next you can add your pickup address and payout details.</p>
+      </form>
+    </main>
+  </section>
+  <aside class="panel" style="flex: 1 1 0; min-width: 0; position: relative; overflow: hidden; align-items: center; justify-content: center; background: #161950; color: #ffffff; padding: 48px">
+    <svg width="420" height="420" viewBox="0 0 420 420" aria-hidden="true" style="position: absolute; top: 0; right: 0; opacity: 0.35"><g stroke="#465fff" stroke-width="1" fill="none"><path d="M0 60h420M0 120h420M0 180h420M0 240h420M0 300h420M0 360h420M60 0v420M120 0v420M180 0v420M240 0v420M300 0v420M360 0v420"/></g></svg>
+    <div style="position: relative; max-width: 380px; display: flex; flex-direction: column; align-items: center; gap: 24px; text-align: center">
+      <svg width="140" height="120" viewBox="0 0 140 120" aria-hidden="true"><g fill="none" stroke="#9cb9ff" stroke-width="2"><path d="M40 10l26 15v30L40 70 14 55V25z"/><path d="M100 10l26 15v30l-26 15-26-15V25z"/><path d="M70 60l26 15v30l-26 15-26-15V75z" fill="#465fff" fill-opacity="0.35"/></g></svg>
+      <h2 style="margin: 0; font-size: 30px; line-height: 38px; font-weight: 600">Sell to buyers across Vietnam</h2>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: #dde9ff">List products, take orders and ship from one place.</p>
+    </div>
+  </aside>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
