@@ -22,7 +22,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
 - [x] T4 — Code generator and store: `ISignInCodeGenerator` + `Security/SignInCodeGenerator`; `ISignInChallengeStore` in `EfUserRepository`; `SignInChallengeConflictException` and the `ConcurrencyConflictException` mapping for challenges.
       (design §5.2 Application ports, Infrastructure; NFR-SEC-016; D-7)
       Done when: unit tests show `NewCode` is six digits and uses the CSPRNG path, `HashCode` differs for the same code under two ids, `Matches` uses `FixedTimeEquals` and rejects a wrong code; an integration test shows a second open challenge for one `email_hash` raises `SignInChallengeConflictException`.
-- [ ] T5 — Request a code: `RequestSignInCodeHandler` (§3.2 order) and the `requestSignInCode` endpoint (`TooSoon` → `ApiException` with `RetryAfterSeconds`).
+- [x] T5 — Request a code: `RequestSignInCodeHandler` (§3.2 order) and the `requestSignInCode` endpoint (`TooSoon` → `ApiException` with `RetryAfterSeconds`).
       (design §3.2, §5.2; FR-AUTH-028, FR-AUTH-029, FR-AUTH-033, FR-AUTH-034; UC-029 main 1–2, 2a, 3a, 1a; D-1, D-4)
       Done when: Testcontainers integration tests pass for AC-1, AC-2 (request part), AC-3 (fake `TimeProvider`, parallel requests) and AC-4 (superseded challenge part), and the malformed-email case of AC-11.
 - [ ] T6 — Lockout staging: `LockoutRecorder.StageFailureAsync`/`StageSuccessAsync`, with `RecordFailureAsync`/`RecordSuccessAsync` rebuilt on them.

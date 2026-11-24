@@ -1,5 +1,6 @@
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
+using Identity.Application.Features.CodeSignIn;
 using Identity.Application.Features.ExternalLogin;
 using Identity.Application.Features.Lockout;
 using Identity.Application.Features.Password;
@@ -48,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<ResendVerificationEmailHandler>();
         services.AddScoped<LockoutRecorder>();
         services.AddScoped<SignInHandler>();
+        services.AddScoped<RequestSignInCodeHandler>();
         services.AddScoped<RecordSignInFailureHandler>();
         services.AddScoped<ChangeMyPasswordHandler>();
         services.AddScoped<SetMyPasswordHandler>();
