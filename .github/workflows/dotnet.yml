@@ -40,6 +40,9 @@ jobs:
         run: |
           dotnet list HiveSpace.slnx package --vulnerable --include-transitive 2>&1 | tee vuln.txt
           ! grep -E "High|Critical" vuln.txt
+      # The AppHost reads the Postgres password from user-secrets (22b6f37); CI has none, so give it a throwaway one.
+      - name: AppHost Postgres password (CI only)
+        run: dotnet user-secrets set "Parameters:postgres-password" "ci-only-postgres-password" --project apphost/HiveSpace.AppHost
       # Integration and contract tests use Testcontainers; GitHub's ubuntu runners have Docker.
       - name: Test
         run: dotnet test --solution HiveSpace.slnx --no-build -c Release
