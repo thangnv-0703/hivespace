@@ -13,18 +13,23 @@ export class ContractWorld extends World {
   /** The signed-in user's access token and id, set by the profile steps. */
   accessToken?: string
   userId?: string
+  /** The Identity session cookie (`hs.idp=…`) of the signed-in user, so a new token can be issued after a role change. */
+  idpCookie?: string
+  /** Another user's id, for spoofing and ownership checks (FEAT-009). */
+  otherUserId?: string
   /** The sign-in code challenge in play and the code emailed for it (FEAT-006), plus the one before it. */
   challengeId?: string
   code?: string
   earlierChallengeId?: string
   earlierCode?: string
 
-  async send(method: string, route: string, payload?: unknown, language?: string, bearer?: string | null): Promise<void> {
+  async send(method: string, route: string, payload?: unknown, language?: string, bearer?: string | null, spoofedUserId?: string): Promise<void> {
     const headers: Record<string, string> = {}
     const token = bearer === undefined ? this.accessToken : bearer
     if (token) headers['authorization'] = `Bearer ${token}`
     if (payload !== undefined) headers['content-type'] = 'application/json'
     if (language) headers['accept-language'] = language
+    if (spoofedUserId) headers['x-user-id'] = spoofedUserId
     this.response = await fetch(this.service.baseUrl + route, {
       method,
       headers,

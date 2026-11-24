@@ -1,4 +1,4 @@
-using HiveSpace.BuildingBlocks.Errors;
+﻿using HiveSpace.BuildingBlocks.Errors;
 using Identity.Api.Endpoints;
 using Identity.Api.External;
 using Identity.Api.Oidc;
@@ -33,7 +33,12 @@ builder.Services.AddAuthentication(UsersEndpoints.CookieScheme)
 builder.Services.AddAuthorizationBuilder()
     .AddPolicy(MeEndpoints.Policy, policy => policy
         .AddAuthenticationSchemes(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)
-        .RequireAuthenticatedUser());
+        .RequireAuthenticatedUser())
+    // Seller-only functions check the role claim of the validated token, in the service (FR-ROLE-003, FEAT-009 D-2).
+    .AddPolicy(ShopEndpoints.SellerPolicy, policy => policy
+        .AddAuthenticationSchemes(OpenIddictValidationAspNetCoreDefaults.AuthenticationScheme)
+        .RequireAuthenticatedUser()
+        .RequireClaim("role", "Seller"));
 builder.Services.AddApiErrors();
 builder.Services.AddIdentityOpenIddict(builder.Configuration);
 
@@ -53,6 +58,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", defaultValue: true))
 
 app.MapUsersEndpoints();
 app.MapMeEndpoints();
+app.MapShopEndpoints();
 app.MapConnectEndpoints();
 app.MapExternalLoginEndpoints();
 

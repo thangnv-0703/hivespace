@@ -72,7 +72,7 @@ Feature: Register a shop and become a seller
     When the user registers a shop with an extra key "ownerId"
     Then the response status is 400
     And the error code is "common.validation_failed"
-    And the details include "ownerId"
+    And the details name the field "ownerId"
 
   @operation:registerShop @FR-SHOP-001
   Scenario: An unverified email cannot register a shop
@@ -98,7 +98,7 @@ Feature: Register a shop and become a seller
     Then the response status is 409
     And the error code is "identity.shop_name_taken"
     And the user has the roles "Buyer"
-    And exactly 1 ShopRegistered event was queued
+    And exactly 0 ShopRegistered event was queued
 
   @operation:registerShop @FR-SHOP-003
   Scenario: Names that differ by an accent are different names
@@ -148,7 +148,7 @@ Feature: Register a shop and become a seller
     When the user registers a shop named "My Own Shop" of type "individual" with a spoofed X-User-Id of the other user
     Then the response status is 201
     And the shop is owned by the signed-in user
-    And the user registered a shop and refreshed the token
+    And the user refreshes the token
     When the user reads the shop with a spoofed X-User-Id of the other user
     Then the response status is 200
     And the shop has name "My Own Shop", type "individual" and an unfinished setup
