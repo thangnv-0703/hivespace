@@ -1,0 +1,44 @@
+{
+  "shop": {
+    "onboarding": {
+      "title": "Open your shop on HiveSpace",
+      "subtitle": "Two details and you're a seller. You keep your buyer account.",
+      "brandHeading": "Sell to buyers across Vietnam",
+      "brandBody": "List products, take orders and ship from one place."
+    },
+    "register": {
+      "loading": "Checking your account",
+      "name": "Shop name",
+      "nameHint": "3–60 characters. Buyers see this name, exactly as you write it.",
+      "type": {
+        "label": "Seller type",
+        "individual": "Individual",
+        "business": "Business",
+        "hint": "We record this as you choose it and don't verify it."
+      },
+      "submit": "Open my shop",
+      "next": "Next you can add your pickup address and payout details."
+    },
+    "errors": {
+      "nameRequired": "Enter a shop name.",
+      "nameTooShort": "Use at least 3 characters.",
+      "nameInvalid": "This shop name isn't valid. Try another.",
+      "nameTaken": "This shop name is already taken. Try another.",
+      "typeRequired": "Choose a seller type.",
+      "submit": "We couldn't open your shop. Try again.",
+      "network": "We couldn't send the email. Try again."
+    },
+    "unverified": {
+      "title": "Verify your email first",
+      "body": "We sent a link to {email}. Open it, then come back here.",
+      "still": "We still see your email as unverified.",
+      "resend": "Resend email",
+      "resendWait": "Resend email ({seconds}s)",
+      "sent": "Email sent.",
+      "recheck": "I've verified it"
+    },
+    "toasts": {
+      "opened": "Your shop is open"
+    }
+  }
+}

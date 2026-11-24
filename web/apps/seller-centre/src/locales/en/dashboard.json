@@ -1,0 +1,30 @@
+{
+  "dashboard": {
+    "title": "Dashboard",
+    "retry": "Retry",
+    "sellerType": {
+      "individual": "Individual",
+      "business": "Business"
+    },
+    "errors": {
+      "load": "We couldn't load your shop. Try again."
+    },
+    "setup": {
+      "title": "Set up your shop",
+      "progress": "{done} of {total} done",
+      "intro": "Finish these before you publish your first product.",
+      "ready": "Your shop is ready to publish products.",
+      "done": "Done",
+      "pickupAddress": {
+        "title": "Pickup address",
+        "description": "Where carriers collect your orders.",
+        "action": "Add address"
+      },
+      "payout": {
+        "title": "Payout details",
+        "description": "The bank account for your earnings. Nothing is paid out yet.",
+        "action": "Add bank details"
+      }
+    }
+  }
+}

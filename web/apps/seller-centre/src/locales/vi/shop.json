@@ -1,0 +1,44 @@
+{
+  "shop": {
+    "onboarding": {
+      "title": "Mở cửa hàng của bạn trên HiveSpace",
+      "subtitle": "Chỉ hai thông tin là bạn đã thành người bán. Tài khoản mua hàng vẫn giữ nguyên.",
+      "brandHeading": "Bán hàng cho người mua khắp Việt Nam",
+      "brandBody": "Đăng sản phẩm, nhận đơn và giao hàng ở cùng một nơi."
+    },
+    "register": {
+      "loading": "Đang kiểm tra tài khoản",
+      "name": "Tên cửa hàng",
+      "nameHint": "Từ 3–60 ký tự. Người mua thấy đúng tên bạn nhập.",
+      "type": {
+        "label": "Loại người bán",
+        "individual": "Cá nhân",
+        "business": "Doanh nghiệp",
+        "hint": "Chúng tôi ghi nhận theo lựa chọn của bạn và không xác minh."
+      },
+      "submit": "Mở cửa hàng",
+      "next": "Tiếp theo, bạn có thể thêm địa chỉ lấy hàng và thông tin nhận tiền."
+    },
+    "errors": {
+      "nameRequired": "Nhập tên cửa hàng.",
+      "nameTooShort": "Dùng ít nhất 3 ký tự.",
+      "nameInvalid": "Tên cửa hàng này không hợp lệ. Hãy thử tên khác.",
+      "nameTaken": "Tên cửa hàng này đã có người dùng. Hãy thử tên khác.",
+      "typeRequired": "Chọn loại người bán.",
+      "submit": "Chúng tôi chưa mở được cửa hàng của bạn. Hãy thử lại.",
+      "network": "Chúng tôi chưa gửi được email. Hãy thử lại."
+    },
+    "unverified": {
+      "title": "Hãy xác minh email trước",
+      "body": "Chúng tôi đã gửi một liên kết đến {email}. Hãy mở liên kết đó rồi quay lại đây.",
+      "still": "Chúng tôi vẫn thấy email của bạn chưa được xác minh.",
+      "resend": "Gửi lại email",
+      "resendWait": "Gửi lại email ({seconds} giây)",
+      "sent": "Đã gửi email.",
+      "recheck": "Tôi đã xác minh"
+    },
+    "toasts": {
+      "opened": "Cửa hàng của bạn đã được mở"
+    }
+  }
+}

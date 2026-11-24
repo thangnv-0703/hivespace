@@ -1,12 +1,14 @@
 <script setup lang="ts">
 // Seller centre shell (ux-foundations B2, design.md §4) built on the shared AppShell.
 // Section pages arrive with their slices (FEAT-009 onward); the links show the IA only.
-import { setLocale, type Locale } from '@hivespace/core'
+import { AccountMenu, useLanguagePreference } from '@/features/auth'
 import { AppShell, LanguageSwitcher, ThemeToggle, type SidebarMenuGroup } from '@hivespace/ui'
-import { ClipboardList, LayoutGrid, Package, Settings, UserRound } from '@lucide/vue'
+import { ClipboardList, LayoutGrid, Package, Settings } from '@lucide/vue'
 import { computed } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink, useRoute } from 'vue-router'
+
+import { notify } from '../toasts'
 
 const i18n = useI18n()
 const route = useRoute()
@@ -41,24 +43,16 @@ const labels = computed(() => ({
   skipToContent: i18n.t('common.skipToContent'),
 }))
 
-function changeLocale(value: string) {
-  setLocale(i18n.locale, value as Locale)
-}
+const language = useLanguagePreference((title) => notify({ variant: 'error', title }))
 </script>
 
 <template>
   <AppShell :menu-groups="menuGroups" :active-path="route.path" :link-as="RouterLink" :labels="labels">
     <template #actions>
-      <LanguageSwitcher :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
+      <LanguageSwitcher :model-value="language.locale.value" :label="$t('common.language')" @update:model-value="language.change" />
       <ThemeToggle :label="$t('common.toggleTheme')" />
       <a :href="`${storefrontOrigin}/`" class="hidden px-2 text-sm text-text-link hover:text-text-link-hover md:inline">{{ $t('nav.storefront') }}</a>
-      <!-- STUB: account menu arrives with sign-in (FEAT-001). -->
-      <span class="inline-flex min-h-11 items-center gap-2 rounded-lg px-2 text-sm text-text-secondary">
-        <span class="inline-flex size-9 items-center justify-center rounded-full bg-bg-subtle">
-          <UserRound class="size-5" aria-hidden="true" />
-        </span>
-        <span class="hidden md:inline">{{ $t('nav.account') }}</span>
-      </span>
+      <AccountMenu />
     </template>
     <slot />
   </AppShell>

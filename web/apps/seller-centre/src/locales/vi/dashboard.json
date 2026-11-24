@@ -1,0 +1,30 @@
+{
+  "dashboard": {
+    "title": "Tổng quan",
+    "retry": "Thử lại",
+    "sellerType": {
+      "individual": "Cá nhân",
+      "business": "Doanh nghiệp"
+    },
+    "errors": {
+      "load": "Chúng tôi chưa tải được cửa hàng của bạn. Hãy thử lại."
+    },
+    "setup": {
+      "title": "Thiết lập cửa hàng",
+      "progress": "Xong {done}/{total}",
+      "intro": "Hoàn tất các bước này trước khi đăng sản phẩm đầu tiên.",
+      "ready": "Cửa hàng của bạn đã sẵn sàng đăng sản phẩm.",
+      "done": "Xong",
+      "pickupAddress": {
+        "title": "Địa chỉ lấy hàng",
+        "description": "Nơi đơn vị vận chuyển đến lấy đơn hàng của bạn.",
+        "action": "Thêm địa chỉ"
+      },
+      "payout": {
+        "title": "Thông tin nhận tiền",
+        "description": "Tài khoản ngân hàng nhận tiền bán hàng. Hiện chưa có khoản nào được chi trả.",
+        "action": "Thêm tài khoản ngân hàng"
+      }
+    }
+  }
+}

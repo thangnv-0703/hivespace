@@ -6,7 +6,8 @@
     "searchPlaceholder": "Tìm kiếm...",
     "breadcrumb": "Đường dẫn",
     "home": "Trang chủ",
-    "skipToContent": "Chuyển đến nội dung chính"
+    "skipToContent": "Chuyển đến nội dung chính",
+    "close": "Đóng"
   },
   "nav": {
     "label": "Điều hướng kênh người bán",
@@ -22,10 +23,6 @@
     "openMenu": "Mở menu",
     "account": "Tài khoản",
     "closeMenu": "Đóng menu"
-  },
-  "dashboard": {
-    "title": "Tổng quan",
-    "subtitle": "Đăng ký cửa hàng để bắt đầu bán hàng."
   },
   "errors": {
     "backDashboard": "Về trang tổng quan",
