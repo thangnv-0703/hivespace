@@ -40,7 +40,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
 - [x] T10 — Wire the real path: gateway test for the code endpoints under `auth`; system test in `tests/system` for request → Mailpit email → submit.
       (design §5.3, §6; NFR-SEC-005; FR-AUTH-028, FR-AUTH-030, FR-NOTIF-016)
       Done when: the gateway test passes for AC-15 and `dotnet test --project tests/system/HiveSpace.SystemTests` passes for AC-14.
-- [ ] T11 — Web wiring: `api.ts` calls, `codeChallenge.ts`, `CodeRequestPage.vue` (SCR-STF-021, `/signin/code`), `CodeEntryPage.vue` (SCR-STF-022, `/signin/code/enter`), the SCR-STF-012 link, routes, exports, vi/en keys — realizing ui-design's specs for these screens.
+- [x] T11 — Web wiring: `api.ts` calls, `codeChallenge.ts`, `CodeRequestPage.vue` (SCR-STF-021, `/signin/code`), `CodeEntryPage.vue` (SCR-STF-022, `/signin/code/enter`), the SCR-STF-012 link, routes, exports, vi/en keys — realizing ui-design's specs for these screens.
       (design §5.5; FR-AUTH-028..033, FR-AUTH-035; UC-029; screens per [ui-design.md](ui-design.md), visual reference in [mockups/](mockups/))
       Done when: Vitest component tests pass for AC-17, the screens render and match their ui-design specs, and `pnpm turbo run lint typecheck test build` passes (Sheriff, key parity).
 - [ ] T12 — Contract steps: step definitions for `code-sign-in.feature` (read the code from the outbox row, fake clock or direct `expires_at` update for expiry, lock via the FEAT-005 steps).
