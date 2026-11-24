@@ -51,6 +51,11 @@ public static partial class ApiErrorResponder
                 .Select(d => d with { Message = d.Message ?? MessageCatalog.MessageOf(d.Code, language) })
                 .ToList();
             context.Response.StatusCode = MessageCatalog.StatusOf(api.Code);
+            if (api.RetryAfterSeconds is { } retryAfter)
+            {
+                context.Response.Headers.RetryAfter = retryAfter.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
+
             await context.Response.WriteAsJsonAsync(
                 new ApiError(api.Code, MessageCatalog.MessageOf(api.Code, language), details));
             return;

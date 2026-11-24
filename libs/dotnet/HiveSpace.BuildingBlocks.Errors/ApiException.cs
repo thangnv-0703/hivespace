@@ -19,6 +19,9 @@ public sealed class ApiException : Exception
 
     public IReadOnlyList<FieldError>? Details { get; }
 
+    /// <summary>When set, the response carries <c>Retry-After</c> with this many seconds (e.g. a 429 that states the wait).</summary>
+    public int? RetryAfterSeconds { get; init; }
+
     /// <summary>A <c>common.validation_failed</c> failure listing every unmet rule at once.</summary>
     public static ApiException Validation(IReadOnlyList<FieldError> details) =>
         new(ErrorCodes.ValidationFailed, details);

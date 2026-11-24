@@ -71,6 +71,29 @@ public sealed class ApiErrorTests
     }
 
     [Fact]
+    public async Task Retry_after_is_written_when_the_exception_carries_it()
+    {
+        // FEAT-006 AC-16
+        var context = await RunContext(new ApiException("identity.sign_in_code_too_soon") { RetryAfterSeconds = 42 }, "en");
+
+        Assert.Equal(429, context.Response.StatusCode);
+        Assert.Equal("42", context.Response.Headers.RetryAfter.ToString());
+        context.Response.Body.Position = 0;
+        using var doc = await JsonDocument.ParseAsync(context.Response.Body, cancellationToken: TestContext.Current.CancellationToken);
+        Assert.Equal("identity.sign_in_code_too_soon", doc.RootElement.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task No_retry_after_header_without_it()
+    {
+        // FEAT-006 AC-16
+        var context = await RunContext(new ApiException("identity.sign_in_code_too_soon"), "en");
+
+        Assert.Equal(429, context.Response.StatusCode);
+        Assert.False(context.Response.Headers.ContainsKey("Retry-After"));
+    }
+
+    [Fact]
     public async Task Unexpected_exception_stays_a_500_without_leaking_its_message()
     {
         var (status, body) = await Run(new InvalidOperationException("secret detail"), "en");
@@ -82,15 +105,21 @@ public sealed class ApiErrorTests
 
     private static async Task<(int Status, JsonElement Body)> Run(Exception exception, string language)
     {
+        var context = await RunContext(exception, language);
+
+        context.Response.Body.Position = 0;
+        using var doc = await JsonDocument.ParseAsync(context.Response.Body, cancellationToken: TestContext.Current.CancellationToken);
+        return (context.Response.StatusCode, doc.RootElement.Clone());
+    }
+
+    private static async Task<DefaultHttpContext> RunContext(Exception exception, string language)
+    {
         var services = new ServiceCollection().AddLogging().BuildServiceProvider();
         var context = new DefaultHttpContext { RequestServices = services };
         context.Request.Headers.AcceptLanguage = language;
         context.Response.Body = new MemoryStream();
 
         await ApiErrorResponder.WriteAsync(context, exception);
-
-        context.Response.Body.Position = 0;
-        using var doc = await JsonDocument.ParseAsync(context.Response.Body, cancellationToken: TestContext.Current.CancellationToken);
-        return (context.Response.StatusCode, doc.RootElement.Clone());
+        return context;
     }
 }

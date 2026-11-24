@@ -13,7 +13,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
       - `contracts/features/identity/code-sign-in.feature`.
       (design §3.1–§3.4, §3.6; AC-18)
       Done when: Spectral shows 0 errors, the vi/en key-parity check passes, the regenerated web client compiles, and `tests/contract` discovers the new scenarios (red).
-- [ ] T2 — `Retry-After` on `ApiException`: optional `RetryAfterSeconds`; `ApiErrorResponder` writes the header when set.
+- [x] T2 — `Retry-After` on `ApiException`: optional `RetryAfterSeconds`; `ApiErrorResponder` writes the header when set.
       (design §3.5)
       Done when: `HiveSpace.BuildingBlocks.Errors.Tests` pass with a case for AC-16 (header with the value, no header without it).
 - [ ] T3 — Schema and domain: `SignInCodePolicy`, `SignInCodeChallenge` and `ChallengeEndReason`, `AuditMethod.Code`; `IdentityDbContext` mapping (`sign_in_code_challenges` with checks, the three indexes incl. the partial unique one, `xmin`; `code` in `ck_audit_entries_method`); migration `AddSignInCodeChallenges`.
