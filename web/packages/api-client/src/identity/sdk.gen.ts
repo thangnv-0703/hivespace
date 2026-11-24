@@ -82,6 +82,8 @@ export const requestSignInCode = <ThrowOnError extends boolean = false>(options:
 
 /**
  * Check an emailed code and start the Identity session (cookie `hs.idp`, `amr` `otp`).
+ *
+ * The code is compared only for an open, unexpired challenge of an account that is not locked (FR-AUTH-035). A wrong code counts on the challenge (five end it, FR-AUTH-032) and on the account's lockout (FR-AUTH-031). A correct code is accepted once and verifies the email (FR-AUTH-030, FR-AUTH-036).
  */
 export const signInWithCode = <ThrowOnError extends boolean = false>(options: Options<SignInWithCodeData, ThrowOnError>): RequestResult<SignInWithCodeResponses, SignInWithCodeErrors, ThrowOnError> => (options.client ?? client).post<SignInWithCodeResponses, SignInWithCodeErrors, ThrowOnError>({
     url: '/v1/users/sign-in/code',
