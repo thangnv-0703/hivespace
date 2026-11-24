@@ -37,7 +37,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
 - [x] T9 — Notification: pydantic `SignInCodeRequested`, validation in `dispatch.py`, `CONTACT_EVENTS`, `KINDS["SignInCodeRequested"]`, templates `sign_in_code.{vi,en}.{txt,html}`.
       (design §5.4; FR-NOTIF-016, FR-LOC-005)
       Done when: `uv run pytest && uv run mypy && uv run lint-imports` pass, with tests for AC-13 (vi and en content, dedupe on redelivery, rejected payloads write nothing, contact upsert) and a test that keeps the pydantic model and the JSON schema in step.
-- [ ] T10 — Wire the real path: gateway test for the code endpoints under `auth`; system test in `tests/system` for request → Mailpit email → submit.
+- [x] T10 — Wire the real path: gateway test for the code endpoints under `auth`; system test in `tests/system` for request → Mailpit email → submit.
       (design §5.3, §6; NFR-SEC-005; FR-AUTH-028, FR-AUTH-030, FR-NOTIF-016)
       Done when: the gateway test passes for AC-15 and `dotnet test --project tests/system/HiveSpace.SystemTests` passes for AC-14.
 - [ ] T11 — Web wiring: `api.ts` calls, `codeChallenge.ts`, `CodeRequestPage.vue` (SCR-STF-021, `/signin/code`), `CodeEntryPage.vue` (SCR-STF-022, `/signin/code/enter`), the SCR-STF-012 link, routes, exports, vi/en keys — realizing ui-design's specs for these screens.
