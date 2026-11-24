@@ -453,6 +453,92 @@ paths:
             application/json:
               schema:
                 $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/shops:
+    post:
+      operationId: registerShop
+      summary: Register the caller's shop and grant the Seller role in one transaction (FR-SHOP-001, FR-ROLE-002).
+      description: >-
+        The owner is always the token's `sub`. Needs a verified email, read from the database. One shop per user
+        (FR-SHOP-002) and one normalized name per shop (FR-SHOP-003). The access token shows `role: Seller` after the next
+        session refresh (`POST /bff/session/refresh`).
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShopRegistration'
+      responses:
+        '201':
+          description: Shop created; the caller is now a seller.
+          headers:
+            Location: { description: "`/v1/shops/me`", schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyShop'
+        '400':
+          description: "`common.validation_failed` with one details entry per invalid field (`name`, `sellerType`); an unknown key is a field error too."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '403':
+          description: "`identity.email_not_verified`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '409':
+          description: "`identity.shop_already_owned` or `identity.shop_name_taken`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/shops/me:
+    get:
+      operationId: getMyShop
+      summary: The caller's own shop. Seller role required (FR-ROLE-003).
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      responses:
+        '200':
+          description: The shop.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyShop'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '403':
+          description: "`common.forbidden`: the token has no Seller role."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '404':
+          description: "`common.not_found`: a Seller role without a shop (not reachable through the API)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
 components:
   securitySchemes:
     bearer:
@@ -533,6 +619,37 @@ components:
         dateOfBirth:
           type: [string, 'null']
           format: date
+    SellerType:
+      type: string
+      enum: [individual, business]
+      description: Recorded, never verified (FR-SHOP-004).
+    ShopRegistration:
+      type: object
+      required: [name, sellerType]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: Trimmed, inner whitespace collapsed, 3 to 60 characters, no control characters.
+        sellerType:
+          $ref: '#/components/schemas/SellerType'
+    MyShop:
+      type: object
+      required: [shopId, name, sellerType, createdAt, setup]
+      properties:
+        shopId:
+          $ref: './shared/components.yaml#/components/schemas/Id'
+        name: { type: string }
+        sellerType:
+          $ref: '#/components/schemas/SellerType'
+        createdAt: { type: string, format: date-time }
+        setup:
+          type: object
+          description: Feeds the seller-centre setup checklist; both stay false until FEAT-010.
+          required: [pickupAddress, payout]
+          properties:
+            pickupAddress: { type: boolean }
+            payout: { type: boolean }
     SignInCodeRequest:
       type: object
       required: [email]

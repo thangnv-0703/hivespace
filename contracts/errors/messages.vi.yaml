@@ -41,3 +41,12 @@ identity.external_login_denied: "Bạn đã hủy đăng nhập bằng Google. H
 identity.external_email_unverified: "Google không xác nhận được địa chỉ email này nên chúng tôi không thể đăng nhập bằng email đó. Hãy dùng tài khoản Google khác hoặc đăng nhập bằng email và mật khẩu."
 identity.external_login_failed: "Chúng tôi không thể hoàn tất đăng nhập bằng Google. Hãy thử lại hoặc đăng nhập bằng email và mật khẩu."
 identity.external_login_unavailable: "Google hiện không khả dụng. Hãy đăng nhập bằng email và mật khẩu, hoặc thử lại sau."
+
+identity.email_not_verified: "Hãy xác minh địa chỉ email trước khi đăng ký gian hàng."
+identity.shop_already_owned: "Bạn đã có gian hàng."
+identity.shop_name_taken: "Tên gian hàng này đã được sử dụng. Hãy chọn tên khác."
+identity.shop_name_required: "Nhập tên gian hàng."
+identity.shop_name_too_short: "Dùng ít nhất 3 ký tự."
+identity.shop_name_too_long: "Dùng tối đa 60 ký tự."
+identity.shop_name_invalid: "Tên gian hàng chứa ký tự không được phép."
+identity.seller_type_invalid: "Chọn Cá nhân hoặc Doanh nghiệp."

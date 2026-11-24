@@ -45,3 +45,12 @@ codes:
   identity.external_email_unverified: { http: 401 }
   identity.external_login_failed: { http: 401 }
   identity.external_login_unavailable: { http: 503 }
+  # Register a shop (FEAT-009).
+  identity.email_not_verified: { http: 403 }
+  identity.shop_already_owned: { http: 409 }
+  identity.shop_name_taken: { http: 409 }
+  identity.shop_name_required: { http: 400 }
+  identity.shop_name_too_short: { http: 400 }
+  identity.shop_name_too_long: { http: 400 }
+  identity.shop_name_invalid: { http: 400 }
+  identity.seller_type_invalid: { http: 400 }

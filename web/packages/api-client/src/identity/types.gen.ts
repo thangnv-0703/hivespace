@@ -58,6 +58,33 @@ export type ProfileUpdate = {
     dateOfBirth: string | null;
 };
 
+/**
+ * Recorded, never verified (FR-SHOP-004).
+ */
+export type SellerType = 'individual' | 'business';
+
+export type ShopRegistration = {
+    /**
+     * Trimmed, inner whitespace collapsed, 3 to 60 characters, no control characters.
+     */
+    name: string;
+    sellerType: SellerType;
+};
+
+export type MyShop = {
+    shopId: Id;
+    name: string;
+    sellerType: SellerType;
+    createdAt: string;
+    /**
+     * Feeds the seller-centre setup checklist; both stay false until FEAT-010.
+     */
+    setup: {
+        pickupAddress: boolean;
+        payout: boolean;
+    };
+};
+
 export type SignInCodeRequest = {
     email: string;
 };
@@ -556,3 +583,85 @@ export type SetMyPasswordResponses = {
 };
 
 export type SetMyPasswordResponse = SetMyPasswordResponses[keyof SetMyPasswordResponses];
+
+export type RegisterShopData = {
+    body: ShopRegistration;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/shops';
+};
+
+export type RegisterShopErrors = {
+    /**
+     * `common.validation_failed` with one details entry per invalid field (`name`, `sellerType`); an unknown key is a field error too.
+     */
+    400: Error;
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+    /**
+     * `identity.email_not_verified`.
+     */
+    403: Error;
+    /**
+     * `identity.shop_already_owned` or `identity.shop_name_taken`.
+     */
+    409: Error;
+};
+
+export type RegisterShopError = RegisterShopErrors[keyof RegisterShopErrors];
+
+export type RegisterShopResponses = {
+    /**
+     * Shop created; the caller is now a seller.
+     */
+    201: MyShop;
+};
+
+export type RegisterShopResponse = RegisterShopResponses[keyof RegisterShopResponses];
+
+export type GetMyShopData = {
+    body?: never;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/shops/me';
+};
+
+export type GetMyShopErrors = {
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+    /**
+     * `common.forbidden`: the token has no Seller role.
+     */
+    403: Error;
+    /**
+     * `common.not_found`: a Seller role without a shop (not reachable through the API).
+     */
+    404: Error;
+};
+
+export type GetMyShopError = GetMyShopErrors[keyof GetMyShopErrors];
+
+export type GetMyShopResponses = {
+    /**
+     * The shop.
+     */
+    200: MyShop;
+};
+
+export type GetMyShopResponse = GetMyShopResponses[keyof GetMyShopResponses];

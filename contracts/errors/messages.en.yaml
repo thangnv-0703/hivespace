@@ -41,3 +41,12 @@ identity.external_login_denied: "You cancelled the Google sign-in. Try again, or
 identity.external_email_unverified: "Google could not confirm this email address, so we cannot sign you in with it. Use another Google account, or sign in with your email and password."
 identity.external_login_failed: "We could not complete the Google sign-in. Please try again, or sign in with your email and password."
 identity.external_login_unavailable: "Google is not available right now. Sign in with your email and password, or try again later."
+
+identity.email_not_verified: "Verify your email address before registering a shop."
+identity.shop_already_owned: "You already have a shop."
+identity.shop_name_taken: "This shop name is already taken. Choose another name."
+identity.shop_name_required: "Enter a shop name."
+identity.shop_name_too_short: "Use at least 3 characters."
+identity.shop_name_too_long: "Use at most 60 characters."
+identity.shop_name_invalid: "The shop name contains characters that are not allowed."
+identity.seller_type_invalid: "Choose Individual or Business."

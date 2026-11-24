@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivespace.dev/events/ShopRegistered/v1.schema.json",
+  "title": "ShopRegistered v1 (producer: identity). A buyer registered a shop and became a seller (FEAT-009). Correlation id is the shop id.",
+  "type": "object",
+  "required": ["shopId", "ownerUserId", "name", "sellerType", "registeredAt"],
+  "properties": {
+    "shopId": { "type": "string", "format": "uuid" },
+    "ownerUserId": { "type": "string", "format": "uuid" },
+    "name": { "type": "string", "minLength": 3, "maxLength": 60 },
+    "sellerType": { "type": "string", "enum": ["individual", "business"] },
+    "registeredAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}
