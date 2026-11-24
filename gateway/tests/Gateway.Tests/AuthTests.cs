@@ -401,6 +401,53 @@ public sealed class AuthTests : IClassFixture<GatewayTestHost>
         Assert.Equal("common.forbidden", body.GetProperty("code").GetString());
     }
 
+    // ---- FEAT-009 T6: /v1/shops routes (AC-10, AC-11) ----
+
+    [Theory]
+    [InlineData("POST", "/v1/shops")]
+    [InlineData("GET", "/v1/shops/me")]
+    public async Task Ac10_the_shop_endpoints_without_a_session_are_401_at_the_gateway(string method, string path)
+    {
+        using var client = _host.NewClient();
+        using var request = new HttpRequestMessage(new HttpMethod(method), path) { Content = method == "GET" ? null : JsonContent.Create(new { }) };
+        request.Headers.Add("X-HS-CSRF", "1");
+
+        var (status, body) = await SendAsync(client, request);
+
+        Assert.Equal(HttpStatusCode.Unauthorized, status);
+        Assert.Equal("common.unauthenticated", body.GetProperty("code").GetString());
+    }
+
+    [Fact]
+    public async Task Registering_a_shop_without_the_csrf_header_is_403()
+    {
+        using var client = _host.NewClient();
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10)), UniqueRefresh());
+
+        var (status, body) = await SendAsync(client, new HttpRequestMessage(HttpMethod.Post, "/v1/shops") { Content = JsonContent.Create(new { }) });
+
+        Assert.Equal(HttpStatusCode.Forbidden, status);
+        Assert.Equal("common.forbidden", body.GetProperty("code").GetString());
+    }
+
+    [Theory]
+    [InlineData("POST", "/v1/shops")]
+    [InlineData("GET", "/v1/shops/me")]
+    public async Task Ac10_with_a_session_a_shop_request_is_relayed_with_the_bearer_token_and_a_spoofed_identity_is_replaced(string method, string path)
+    {
+        using var client = _host.NewClient();
+        await _host.SignInAsync(client, _host.CreateAccessToken(DateTimeOffset.UtcNow.AddMinutes(10), subject: "alice"), UniqueRefresh());
+        using var request = new HttpRequestMessage(new HttpMethod(method), path) { Content = method == "GET" ? null : JsonContent.Create(new { }) };
+        request.Headers.Add("X-HS-CSRF", "1");
+        request.Headers.Add("X-User-Id", "bob");
+
+        var (status, body) = await SendAsync(client, request);
+
+        Assert.Equal(HttpStatusCode.OK, status);
+        Assert.StartsWith("Bearer ", body.GetProperty("authorization").GetString(), StringComparison.Ordinal);
+        Assert.Equal("alice", body.GetProperty("userId").GetString());
+    }
+
     /// <summary>The fake Identity accepts any token starting with <c>good-refresh</c>; a fresh one per test keeps the single-flight cache of an earlier test out of the count.</summary>
     private static string UniqueRefresh() => "good-refresh-" + Guid.NewGuid().ToString("N");
 
