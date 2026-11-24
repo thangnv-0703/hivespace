@@ -43,7 +43,43 @@ public sealed class ExternalLoginConflictException(Exception inner) : Exception(
 /// Raised by <see cref="IUserRepository.SaveChangesAsync"/> when two failed attempts for one account raced: the lockout row changed
 /// or was inserted since it was read. Nothing stays staged, so the caller reads it again and reapplies (FEAT-005 D-3).
 /// </summary>
-public sealed class ConcurrencyConflictException(Exception inner) : Exception("The lockout changed concurrently.", inner);
+public sealed class ConcurrencyConflictException(Exception inner) : Exception("A lockout or challenge changed concurrently.", inner);
+
+/// <summary>
+/// Raised by <see cref="IUserRepository.SaveChangesAsync"/> when the "one open challenge per address" index rejects an insert:
+/// another code request for the address committed first (FEAT-006 §3.2).
+/// </summary>
+public sealed class SignInChallengeConflictException(Exception inner) : Exception("Another sign-in code was issued for the address.", inner);
+
+/// <summary>Six-digit sign-in codes and the hashes stored for them (NFR-SEC-016, FEAT-006 D-7).</summary>
+public interface ISignInCodeGenerator
+{
+    /// <summary>Six digits from a cryptographically secure generator.</summary>
+    string NewCode();
+
+    /// <summary>The stored hash of a code, salted with its challenge id.</summary>
+    byte[] HashCode(Guid challengeId, string code);
+
+    /// <summary>Compares a presented code with the stored hash in constant time.</summary>
+    bool Matches(Guid challengeId, string code, byte[] codeHash);
+
+    /// <summary>The stored hash of a normalized email; the plain address is never stored for a challenge (D-3).</summary>
+    byte[] HashEmail(string normalizedEmail);
+}
+
+/// <summary>Sign-in code challenges (FR-AUTH-028). Changes are staged and committed by <see cref="IUserRepository.SaveChangesAsync"/>.</summary>
+public interface ISignInChallengeStore
+{
+    Task<SignInCodeChallenge?> FindAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>The most recently created challenge for the address, in any state.</summary>
+    Task<SignInCodeChallenge?> FindNewestAsync(byte[] emailHash, CancellationToken cancellationToken);
+
+    /// <summary>The challenges of the address that have not ended.</summary>
+    Task<IReadOnlyList<SignInCodeChallenge>> FindOpenAsync(byte[] emailHash, CancellationToken cancellationToken);
+
+    void Add(SignInCodeChallenge challenge);
+}
 
 /// <summary>Lockout rows (FR-AUTH-011). Changes are staged and committed by <see cref="IUserRepository.SaveChangesAsync"/>.</summary>
 public interface ILockoutStore
@@ -112,6 +148,7 @@ public interface IUserRepository
     /// <exception cref="EmailInUseException">The unique index on the normalized email rejected the insert.</exception>
     /// <exception cref="ExternalLoginConflictException">A unique index of <c>external_logins</c> rejected the insert.</exception>
     /// <exception cref="CredentialExistsException">The primary key of <c>credentials</c> rejected the insert.</exception>
-    /// <exception cref="ConcurrencyConflictException">The lockout row of the account changed or appeared since it was read.</exception>
+    /// <exception cref="ConcurrencyConflictException">The lockout row of the account, or a sign-in code challenge, changed or appeared since it was read.</exception>
+    /// <exception cref="SignInChallengeConflictException">The open-challenge index of <c>sign_in_code_challenges</c> rejected the insert.</exception>
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }
