@@ -25,7 +25,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
 - [x] T5 — Request a code: `RequestSignInCodeHandler` (§3.2 order) and the `requestSignInCode` endpoint (`TooSoon` → `ApiException` with `RetryAfterSeconds`).
       (design §3.2, §5.2; FR-AUTH-028, FR-AUTH-029, FR-AUTH-033, FR-AUTH-034; UC-029 main 1–2, 2a, 3a, 1a; D-1, D-4)
       Done when: Testcontainers integration tests pass for AC-1, AC-2 (request part), AC-3 (fake `TimeProvider`, parallel requests) and AC-4 (superseded challenge part), and the malformed-email case of AC-11.
-- [ ] T6 — Lockout staging: `LockoutRecorder.StageFailureAsync`/`StageSuccessAsync`, with `RecordFailureAsync`/`RecordSuccessAsync` rebuilt on them.
+- [x] T6 — Lockout staging: `LockoutRecorder.StageFailureAsync`/`StageSuccessAsync`, with `RecordFailureAsync`/`RecordSuccessAsync` rebuilt on them.
       (design §5.2 Application; D-5)
       Done when: every FEAT-005 lockout, sign-in and change-password test (unit and integration) passes unchanged.
 - [ ] T7 — Sign in with a code: `SignInWithCodeHandler` (§3.3 order, one save per attempt, bounded retry), `SignInOutcome.PasswordStamp` nullable, `signInWithCode` endpoint signing into `hs.idp` with `amr=otp`; audit rows with method `code`.

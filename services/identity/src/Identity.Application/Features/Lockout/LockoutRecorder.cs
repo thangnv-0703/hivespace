@@ -22,41 +22,51 @@ public sealed class LockoutRecorder(ILockoutStore lockouts, IAuditLog audit, IUs
     {
         for (var attempt = 1; ; attempt++)
         {
-            var now = clock.GetUtcNow();
-            var lockout = await lockouts.FindAsync(userId, cancellationToken).ConfigureAwait(false);
-            bool locked;
-            if (lockout is null)
-            {
-                lockout = SignInLockout.Start(userId, now);
-                lockouts.Add(lockout);
-                locked = false;
-            }
-            else
-            {
-                locked = lockout.RecordFailure(now);
-            }
-
-            var reason = lockout.IsLocked(now) && !locked ? "identity.account_locked" : failureReason;
-            if (reason is not null)
-            {
-                audit.Add(AuditEntry.SignInFailed(userId, method, reason, now));
-            }
-
-            if (locked)
-            {
-                audit.Add(AuditEntry.AccountLocked(userId, method, now));
-            }
-
+            var locked = await StageFailureAsync(userId, method, failureReason, cancellationToken).ConfigureAwait(false);
             try
             {
                 await users.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
-                return lockout.IsLocked(now);
+                return locked;
             }
             catch (ConcurrencyConflictException) when (attempt < Attempts)
             {
                 // Another failure committed first and the repository dropped what was staged: read it again.
             }
         }
+    }
+
+    /// <summary>
+    /// Stages one failure and its audit rows without saving, so a caller can commit it with its own changes (FEAT-006 D-5); the caller
+    /// owns the save and the retry on <see cref="ConcurrencyConflictException"/>. Returns true when the account is locked after it.
+    /// </summary>
+    public async Task<bool> StageFailureAsync(Guid userId, AuditMethod method, string? failureReason, CancellationToken cancellationToken)
+    {
+        var now = clock.GetUtcNow();
+        var lockout = await lockouts.FindAsync(userId, cancellationToken).ConfigureAwait(false);
+        bool locked;
+        if (lockout is null)
+        {
+            lockout = SignInLockout.Start(userId, now);
+            lockouts.Add(lockout);
+            locked = false;
+        }
+        else
+        {
+            locked = lockout.RecordFailure(now);
+        }
+
+        var reason = lockout.IsLocked(now) && !locked ? "identity.account_locked" : failureReason;
+        if (reason is not null)
+        {
+            audit.Add(AuditEntry.SignInFailed(userId, method, reason, now));
+        }
+
+        if (locked)
+        {
+            audit.Add(AuditEntry.AccountLocked(userId, method, now));
+        }
+
+        return lockout.IsLocked(now);
     }
 
     /// <summary>Stages the removal of the account's lockout row, if there is one: the count is "consecutive" (AC-3).</summary>
@@ -73,8 +83,7 @@ public sealed class LockoutRecorder(ILockoutStore lockouts, IAuditLog audit, IUs
     {
         for (var attempt = 1; ; attempt++)
         {
-            await ClearAsync(userId, cancellationToken).ConfigureAwait(false);
-            audit.Add(AuditEntry.SignInSucceeded(userId, method, clock.GetUtcNow()));
+            await StageSuccessAsync(userId, method, cancellationToken).ConfigureAwait(false);
             try
             {
                 await users.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
@@ -85,5 +94,12 @@ public sealed class LockoutRecorder(ILockoutStore lockouts, IAuditLog audit, IUs
                 // A parallel failure changed the row we were removing: read it again.
             }
         }
+    }
+
+    /// <summary>Stages the lockout removal and <c>sign_in_succeeded</c> without saving (FEAT-006 D-5); the caller owns the save.</summary>
+    public async Task StageSuccessAsync(Guid userId, AuditMethod method, CancellationToken cancellationToken)
+    {
+        await ClearAsync(userId, cancellationToken).ConfigureAwait(false);
+        audit.Add(AuditEntry.SignInSucceeded(userId, method, clock.GetUtcNow()));
     }
 }
