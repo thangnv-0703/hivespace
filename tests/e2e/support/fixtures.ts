@@ -6,6 +6,7 @@ export interface World {
   displayName: string
   password: string
   verifyLink?: string
+  shopName?: string
 }
 
 export const test = base.extend<{ world: World }>({
