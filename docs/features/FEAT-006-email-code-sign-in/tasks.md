@@ -16,7 +16,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
 - [x] T2 — `Retry-After` on `ApiException`: optional `RetryAfterSeconds`; `ApiErrorResponder` writes the header when set.
       (design §3.5)
       Done when: `HiveSpace.BuildingBlocks.Errors.Tests` pass with a case for AC-16 (header with the value, no header without it).
-- [ ] T3 — Schema and domain: `SignInCodePolicy`, `SignInCodeChallenge` and `ChallengeEndReason`, `AuditMethod.Code`; `IdentityDbContext` mapping (`sign_in_code_challenges` with checks, the three indexes incl. the partial unique one, `xmin`; `code` in `ck_audit_entries_method`); migration `AddSignInCodeChallenges`.
+- [x] T3 — Schema and domain: `SignInCodePolicy`, `SignInCodeChallenge` and `ChallengeEndReason`, `AuditMethod.Code`; `IdentityDbContext` mapping (`sign_in_code_challenges` with checks, the three indexes incl. the partial unique one, `xmin`; `code` in `ck_audit_entries_method`); migration `AddSignInCodeChallenges`.
       (design §4, §5.2 Domain; FR-AUTH-028, FR-AUTH-032, FR-AUTH-033, FR-AUTH-034; D-3)
       Done when: the migration applies clean up and down on a database at `AddLockoutAndAudit` (`MigrationTests`), and unit tests for the challenge cover: expiry at the exact boundary, `RetryAfter` before and at 60 s, the fifth `RecordWrongCode` ending it with `attempts` and a sixth changing nothing, `Supersede`/`MarkUsed` on an ended challenge changing nothing.
 - [ ] T4 — Code generator and store: `ISignInCodeGenerator` + `Security/SignInCodeGenerator`; `ISignInChallengeStore` in `EfUserRepository`; `SignInChallengeConflictException` and the `ConcurrencyConflictException` mapping for challenges.

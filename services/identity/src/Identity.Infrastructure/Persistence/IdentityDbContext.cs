@@ -19,6 +19,8 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
 
     public DbSet<AuditEntry> AuditEntries => Set<AuditEntry>();
 
+    public DbSet<SignInCodeChallenge> SignInCodeChallenges => Set<SignInCodeChallenge>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(e =>
@@ -114,7 +116,7 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
             e.ToTable("audit_entries", t =>
             {
                 t.HasCheckConstraint("ck_audit_entries_type", "type in ('sign_in_succeeded','sign_in_failed','account_locked')");
-                t.HasCheckConstraint("ck_audit_entries_method", "method in ('password','google','password_change')");
+                t.HasCheckConstraint("ck_audit_entries_method", "method in ('password','google','password_change','code')");
             });
             e.HasKey(a => a.Id);
             e.Property(a => a.Id).HasColumnName("id").ValueGeneratedNever();
@@ -129,6 +131,38 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
             e.Property(a => a.CorrelationId).HasColumnName("correlation_id").HasMaxLength(64);
             e.HasIndex(a => a.OccurredAt);
             e.HasIndex(a => new { a.UserId, a.OccurredAt });
+        });
+
+        modelBuilder.Entity<SignInCodeChallenge>(e =>
+        {
+            e.ToTable("sign_in_code_challenges", t =>
+            {
+                t.HasCheckConstraint("ck_sign_in_code_challenges_failed_count", "failed_count between 0 and 5");
+                t.HasCheckConstraint("ck_sign_in_code_challenges_end_reason", "end_reason in ('used','superseded','attempts')");
+                t.HasCheckConstraint("ck_sign_in_code_challenges_ended", "(ended_at is null) = (end_reason is null)");
+            });
+            e.HasKey(c => c.Id);
+            e.Property(c => c.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(c => c.EmailHash).HasColumnName("email_hash");
+            e.Property(c => c.UserId).HasColumnName("user_id");
+            e.Property(c => c.CodeHash).HasColumnName("code_hash");
+            e.Property(c => c.FailedCount).HasColumnName("failed_count").HasDefaultValue(0);
+            e.Property(c => c.CreatedAt).HasColumnName("created_at");
+            e.Property(c => c.ExpiresAt).HasColumnName("expires_at");
+            e.Property(c => c.EndedAt).HasColumnName("ended_at");
+            e.Property(c => c.EndReason).HasColumnName("end_reason").HasMaxLength(16)
+                .HasConversion(r => r.HasValue ? r.Value.ToString().ToLowerInvariant() : null,
+                    v => v == null ? null : Enum.Parse<ChallengeEndReason>(v, true));
+            e.Ignore(c => c.IsEnded);
+            e.Ignore(c => c.ResendAvailableAt);
+            // "Newest challenge for this address" (the 60-second rule, FR-AUTH-033).
+            e.HasIndex(c => new { c.EmailHash, c.CreatedAt }).IsDescending(false, true);
+            // One open challenge per address: closes the race between two parallel requests (design §3.2).
+            e.HasIndex(c => c.EmailHash).IsUnique().HasFilter("ended_at is null").HasDatabaseName("ix_sign_in_code_challenges_open");
+            e.HasIndex(c => c.ExpiresAt);
+            // Row version: parallel submissions of one challenge conflict and are retried (design §3.3).
+            e.Property<uint>("Version").IsRowVersion();
+            e.HasOne<User>().WithMany().HasForeignKey(c => c.UserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.AddOutboxAndInbox();

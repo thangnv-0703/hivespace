@@ -111,7 +111,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
 
                     b.ToTable("audit_entries", null, t =>
                         {
-                            t.HasCheckConstraint("ck_audit_entries_method", "method in ('password','google','password_change')");
+                            t.HasCheckConstraint("ck_audit_entries_method", "method in ('password','google','password_change','code')");
 
                             t.HasCheckConstraint("ck_audit_entries_type", "type in ('sign_in_succeeded','sign_in_failed','account_locked')");
                         });
@@ -194,6 +194,79 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("role_grants", null, t =>
                         {
                             t.HasCheckConstraint("ck_role_grants_role", "role in ('Buyer', 'Seller')");
+                        });
+                });
+
+            modelBuilder.Entity("Identity.Domain.SignInCodeChallenge", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<byte[]>("CodeHash")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("code_hash");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<byte[]>("EmailHash")
+                        .IsRequired()
+                        .HasColumnType("bytea")
+                        .HasColumnName("email_hash");
+
+                    b.Property<string>("EndReason")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("end_reason");
+
+                    b.Property<DateTimeOffset?>("EndedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("ended_at");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<int>("FailedCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("failed_count");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("user_id");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("EmailHash")
+                        .IsUnique()
+                        .HasDatabaseName("ix_sign_in_code_challenges_open")
+                        .HasFilter("ended_at is null");
+
+                    b.HasIndex("ExpiresAt");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("EmailHash", "CreatedAt")
+                        .IsDescending(false, true);
+
+                    b.ToTable("sign_in_code_challenges", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_sign_in_code_challenges_end_reason", "end_reason in ('used','superseded','attempts')");
+
+                            t.HasCheckConstraint("ck_sign_in_code_challenges_ended", "(ended_at is null) = (end_reason is null)");
+
+                            t.HasCheckConstraint("ck_sign_in_code_challenges_failed_count", "failed_count between 0 and 5");
                         });
                 });
 
@@ -574,6 +647,14 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("Identity.Domain.SignInCodeChallenge", b =>
+                {
+                    b.HasOne("Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
                 });
 
             modelBuilder.Entity("Identity.Domain.SignInLockout", b =>

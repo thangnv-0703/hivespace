@@ -6,6 +6,7 @@ public enum AuditMethod
     Password,
     Google,
     PasswordChange,
+    Code,
 }
 
 /// <summary>
