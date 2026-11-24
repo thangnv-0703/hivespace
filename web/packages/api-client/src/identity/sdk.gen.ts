@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SetMyPasswordData, SetMyPasswordErrors, SetMyPasswordResponses, SignInData, SignInErrors, SignInResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
+import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, RequestSignInCodeData, RequestSignInCodeErrors, RequestSignInCodeResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SetMyPasswordData, SetMyPasswordErrors, SetMyPasswordResponses, SignInData, SignInErrors, SignInResponses, SignInWithCodeData, SignInWithCodeErrors, SignInWithCodeResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -59,6 +59,32 @@ export const resendVerificationEmail = <ThrowOnError extends boolean = false>(op
  */
 export const signIn = <ThrowOnError extends boolean = false>(options: Options<SignInData, ThrowOnError>): RequestResult<SignInResponses, SignInErrors, ThrowOnError> => (options.client ?? client).post<SignInResponses, SignInErrors, ThrowOnError>({
     url: '/v1/users/sign-in',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Email a 6-digit sign-in code. Same 201 for any well-formed email (no enumeration, FR-AUTH-029).
+ *
+ * Ends every open code of the address and issues a new one valid for 5 minutes (FR-AUTH-028, FR-AUTH-034). The code is emailed only when an account exists. One request per address per 60 seconds (FR-AUTH-033).
+ */
+export const requestSignInCode = <ThrowOnError extends boolean = false>(options: Options<RequestSignInCodeData, ThrowOnError>): RequestResult<RequestSignInCodeResponses, RequestSignInCodeErrors, ThrowOnError> => (options.client ?? client).post<RequestSignInCodeResponses, RequestSignInCodeErrors, ThrowOnError>({
+    url: '/v1/users/sign-in/code-challenges',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Check an emailed code and start the Identity session (cookie `hs.idp`, `amr` `otp`).
+ */
+export const signInWithCode = <ThrowOnError extends boolean = false>(options: Options<SignInWithCodeData, ThrowOnError>): RequestResult<SignInWithCodeResponses, SignInWithCodeErrors, ThrowOnError> => (options.client ?? client).post<SignInWithCodeResponses, SignInWithCodeErrors, ThrowOnError>({
+    url: '/v1/users/sign-in/code',
     ...options,
     headers: {
         'Content-Type': 'application/json',

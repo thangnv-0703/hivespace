@@ -35,6 +35,11 @@ codes:
   identity.account_locked: { http: 423 }
   identity.reauthentication_required: { http: 403 }
   identity.password_already_set: { http: 409 }
+  # Email-code sign-in (FEAT-006).
+  identity.sign_in_code_invalid: { http: 401 }
+  identity.sign_in_code_expired: { http: 401 }
+  identity.sign_in_challenge_ended: { http: 401 }
+  identity.sign_in_code_too_soon: { http: 429 }
   # Google sign-in (FEAT-004): these travel only in the /signin?error= redirect, http is the nearest status.
   identity.external_login_denied: { http: 401 }
   identity.external_email_unverified: { http: 401 }

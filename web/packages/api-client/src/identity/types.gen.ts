@@ -58,6 +58,34 @@ export type ProfileUpdate = {
     dateOfBirth: string | null;
 };
 
+export type SignInCodeRequest = {
+    email: string;
+};
+
+export type SignInChallenge = {
+    challengeId: Id;
+    /**
+     * When the code stops working (5 minutes after issue).
+     */
+    expiresAt: string;
+    /**
+     * When a new code can be requested (60 seconds after issue).
+     */
+    resendAvailableAt: string;
+};
+
+export type SignInWithCodeRequest = {
+    challengeId: string;
+    /**
+     * The six digits from the email.
+     */
+    code: string;
+    /**
+     * Honored only when it is a local path starting with `/connect/authorize`.
+     */
+    returnUrl?: string;
+};
+
 /**
  * Every rejection uses this shape; `code` is stable, `message` is localized (FR-LOC-004).
  */
@@ -253,6 +281,86 @@ export type SignInResponses = {
 };
 
 export type SignInResponse = SignInResponses[keyof SignInResponses];
+
+export type RequestSignInCodeData = {
+    body: SignInCodeRequest;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/users/sign-in/code-challenges';
+};
+
+export type RequestSignInCodeErrors = {
+    /**
+     * `common.validation_failed` for a malformed email.
+     */
+    400: Error;
+    /**
+     * `identity.sign_in_code_too_soon`: a code was requested for this address less than 60 seconds ago; or `common.rate_limited` from the gateway (NFR-SEC-005). Both carry `Retry-After`.
+     */
+    429: Error;
+};
+
+export type RequestSignInCodeError = RequestSignInCodeErrors[keyof RequestSignInCodeErrors];
+
+export type RequestSignInCodeResponses = {
+    /**
+     * A challenge was issued.
+     */
+    201: SignInChallenge;
+};
+
+export type RequestSignInCodeResponse = RequestSignInCodeResponses[keyof RequestSignInCodeResponses];
+
+export type SignInWithCodeData = {
+    body: SignInWithCodeRequest;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/users/sign-in/code';
+};
+
+export type SignInWithCodeErrors = {
+    /**
+     * `common.validation_failed` when the code is not six digits (detail on `code`). Not counted.
+     */
+    400: Error;
+    /**
+     * `identity.sign_in_code_invalid` (wrong code), `identity.sign_in_code_expired` (past its 5 minutes) or `identity.sign_in_challenge_ended` (used, replaced, five wrong codes, or unknown challenge). Same bodies whether or not the email has an account.
+     */
+    401: Error;
+    /**
+     * `identity.account_locked`: the account is locked (FR-AUTH-035); the code is not checked. Also the wrong code that causes the lock.
+     */
+    423: Error;
+    /**
+     * `common.rate_limited` from the gateway (NFR-SEC-005), with `Retry-After`.
+     */
+    429: Error;
+};
+
+export type SignInWithCodeError = SignInWithCodeErrors[keyof SignInWithCodeErrors];
+
+export type SignInWithCodeResponses = {
+    /**
+     * Signed in; `Set-Cookie` carries `hs.idp`.
+     */
+    200: {
+        redirectUrl: string;
+    };
+};
+
+export type SignInWithCodeResponse = SignInWithCodeResponses[keyof SignInWithCodeResponses];
 
 export type GetMyProfileData = {
     body?: never;

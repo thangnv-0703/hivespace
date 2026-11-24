@@ -6,7 +6,7 @@
 
 The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned by ui-design's output ([ui-design.md](ui-design.md), [mockups/](mockups/)); T11 only wires them. `CodeInput` is provisional under ui-design escalation E-1. UC-029 is not among the critical flows of architecture §8.6, so no E2E task is owed; T10 adds a system test for the real Identity → broker → Notification → Mailpit path instead.
 
-- [ ] T1 — Contracts first:
+- [x] T1 — Contracts first:
       - error codes `identity.sign_in_code_invalid` (401), `identity.sign_in_code_expired` (401), `identity.sign_in_challenge_ended` (401), `identity.sign_in_code_too_soon` (429) with vi/en messages;
       - `identity.yaml`: `requestSignInCode` (`POST /v1/users/sign-in/code-challenges`, `SignInCodeRequest`, `201 SignInChallenge`, 400, 429 with `Retry-After`), `signInWithCode` (`POST /v1/users/sign-in/code`, `SignInWithCodeRequest`, `200 {redirectUrl}` with `Set-Cookie`, 400, 401, 423, 429 from the gateway);
       - `contracts/events/SignInCodeRequested/v1.schema.json`;
