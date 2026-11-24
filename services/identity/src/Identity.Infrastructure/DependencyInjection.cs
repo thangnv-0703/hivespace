@@ -50,6 +50,7 @@ public static class DependencyInjection
         services.AddScoped<LockoutRecorder>();
         services.AddScoped<SignInHandler>();
         services.AddScoped<RequestSignInCodeHandler>();
+        services.AddScoped<SignInWithCodeHandler>();
         services.AddScoped<RecordSignInFailureHandler>();
         services.AddScoped<ChangeMyPasswordHandler>();
         services.AddScoped<SetMyPasswordHandler>();

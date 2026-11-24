@@ -43,7 +43,10 @@ public sealed class Rig : IAsyncDisposable
         SetPassword = new SetMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, clock);
         ExternalSignIn = new ExternalSignInHandler(users, new OpenIddictSessionRevoker(_db), outbox, users, clock);
         RequestCode = new RequestSignInCodeHandler(users, users, Codes, outbox, clock);
+        SignInWithCode = new SignInWithCodeHandler(users, users, Codes, users, users, Recorder, clock);
     }
+
+    public SignInWithCodeHandler SignInWithCode { get; }
 
     public RequestSignInCodeHandler RequestCode { get; }
 

@@ -28,7 +28,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
 - [x] T6 — Lockout staging: `LockoutRecorder.StageFailureAsync`/`StageSuccessAsync`, with `RecordFailureAsync`/`RecordSuccessAsync` rebuilt on them.
       (design §5.2 Application; D-5)
       Done when: every FEAT-005 lockout, sign-in and change-password test (unit and integration) passes unchanged.
-- [ ] T7 — Sign in with a code: `SignInWithCodeHandler` (§3.3 order, one save per attempt, bounded retry), `SignInOutcome.PasswordStamp` nullable, `signInWithCode` endpoint signing into `hs.idp` with `amr=otp`; audit rows with method `code`.
+- [x] T7 — Sign in with a code: `SignInWithCodeHandler` (§3.3 order, one save per attempt, bounded retry), `SignInOutcome.PasswordStamp` nullable, `signInWithCode` endpoint signing into `hs.idp` with `amr=otp`; audit rows with method `code`.
       (design §3.3, §5.2; FR-AUTH-030, FR-AUTH-031, FR-AUTH-032, FR-AUTH-035, FR-AUTH-036; NFR-SEC-009, NFR-SEC-016; UC-029 main 3–5, 4a, 4b, 4c; D-5, D-8)
       Done when: a unit test shows `Matches` is not called for a locked account (AC-8 spy part), and integration tests pass for AC-2 (submit part), AC-4 (old code rejected), AC-5 (incl. `/connect/authorize` for an account with and without a password, the parallel correct submits), AC-6, AC-7, AC-8 (shared lockout, ten parallel wrong codes), AC-9, AC-10 and the rest of AC-11.
 - [ ] T8 — Challenge purge: `SignInChallengeSweeper` (start and hourly, 1 day after expiry) registered in Identity.

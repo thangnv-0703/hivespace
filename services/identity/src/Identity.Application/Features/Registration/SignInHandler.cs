@@ -7,8 +7,8 @@ namespace Identity.Application.Features.Registration;
 
 public sealed record SignInCommand(string? Email, string? Password, string? ReturnUrl);
 
-/// <summary>The signed-in user, where the browser goes next, the password stamp and the moment of this interactive sign-in.</summary>
-public sealed record SignInOutcome(User User, string RedirectUrl, long PasswordStamp, DateTimeOffset AuthTime);
+/// <summary>The signed-in user, where the browser goes next, the password stamp (null without a password) and the moment of this interactive sign-in.</summary>
+public sealed record SignInOutcome(User User, string RedirectUrl, long? PasswordStamp, DateTimeOffset AuthTime);
 
 /// <summary>
 /// FR-AUTH-009, FR-AUTH-010: unknown email, wrong password and no password all fail the same way. An unverified email may
