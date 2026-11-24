@@ -1,6 +1,7 @@
 import { createHiveI18n } from '@hivespace/core'
 import { flushPromises, mount } from '@vue/test-utils'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { ref } from 'vue'
 import { createMemoryHistory, createRouter } from 'vue-router'
 
 import { RegisterShopPage, shopSessionKey, type ShopSession } from '../features/shop'
@@ -131,6 +132,18 @@ describe('RegisterShopPage (SCR-SEL-001)', () => {
     expect(resend).toHaveBeenCalledWith('an@example.com')
     expect(wrapper.text()).toContain('Email sent.')
     expect(wrapper.get('[data-testid=resend]').attributes('disabled')).toBeDefined()
+  })
+
+  it('refreshes the session once on load when the claim says unverified, so a user who verified since signing in can register (AC-4, D-3)', async () => {
+    const verified = ref(false)
+    const refresh = vi.fn<() => Promise<void>>(async () => {
+      verified.value = true
+    })
+    const { wrapper } = await mountPage({ emailVerified: () => verified.value, refresh })
+
+    expect(refresh).toHaveBeenCalledTimes(1)
+    expect(wrapper.text()).not.toContain('Verify your email first')
+    expect(wrapper.get('button[type=submit]').attributes('disabled')).toBeUndefined()
   })
 
   it('shows the unverified state when the API answers email_not_verified', async () => {
