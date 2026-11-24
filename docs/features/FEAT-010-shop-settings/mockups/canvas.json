@@ -1,0 +1,27 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-24T14:00:00Z" },
+  "title": "FEAT-010 · Shop settings",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 820, "title": "SCR-SEL-007 Shop profile (default)", "expand": "fill" },
+    "PickupPayout.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 1000, "title": "SCR-SEL-008 Pickup and payout (saved)", "expand": "fill" },
+    "PickupPayoutFirst.dc.html": { "x": 2720, "y": 0, "w": 1280, "h": 1180, "title": "SCR-SEL-008 First visit", "expand": "fill" },
+    "PickupPayoutErrors.dc.html": { "x": 0, "y": 1300, "w": 800, "h": 1180, "title": "SCR-SEL-008 Errors and change payout" },
+    "PickupPayoutMobile.dc.html": { "x": 880, "y": 1300, "w": 390, "h": 1700, "title": "SCR-SEL-008 Mobile, first visit", "expand": "fill" },
+    "States.dc.html": { "x": 1350, "y": 1300, "w": 960, "h": 760, "title": "Loading, ready toast, sidebar group" }
+  },
+  "order": [
+    "Main.dc.html",
+    "PickupPayout.dc.html",
+    "PickupPayoutFirst.dc.html",
+    "PickupPayoutErrors.dc.html",
+    "PickupPayoutMobile.dc.html",
+    "States.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "FEAT-010: Shop settings (profile, pickup address, payout)", "kind": "title1", "maxW": 4000 }
+  },
+  "designSystems": []
+}

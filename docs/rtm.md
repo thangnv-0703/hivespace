@@ -50,12 +50,12 @@
 | FR-SHOP-002 | a user who already owns a shop submits shop registration, then reject it. | Should | Active | Inferred | UC-003 | features/FEAT-009-register-shop/technical-design.md, features/FEAT-009-register-shop/ui-design.md | FEAT-009 | features/FEAT-009-register-shop/acceptance-report.md |
 | FR-SHOP-003 | the submitted shop name is already used by another shop, then reject it. | Should | Active | Inferred | UC-003 | features/FEAT-009-register-shop/technical-design.md, features/FEAT-009-register-shop/ui-design.md | FEAT-009 | features/FEAT-009-register-shop/acceptance-report.md |
 | FR-SHOP-004 | record the seller type without verifying it. | Must | Active | PRD §3 | UC-003 | features/FEAT-009-register-shop/technical-design.md, features/FEAT-009-register-shop/ui-design.md | FEAT-009 | features/FEAT-009-register-shop/acceptance-report.md |
-| FR-SHOP-005 | a shop owner submits shop profile changes (name, description), save them. | Must | Active | P0-2, US-12 | UC-004 | _TBD_ | FEAT-010 | _TBD_ |
-| FR-SHOP-006 | a shop owner submits a pickup address (contact name, phone, province, district, … | Must | Active | P0-2, US-12 | UC-004 | _TBD_ | FEAT-010 | _TBD_ |
-| FR-SHOP-007 | a shop owner submits payout bank details (bank name, account number, account hol… | Must | Active | P0-2, US-12 | UC-004 | _TBD_ | FEAT-010 | _TBD_ |
-| FR-SHOP-008 | required shop fields are missing or invalid, then reject the submission and iden… | Must | Active | P0-2 | UC-003, UC-004 | _TBD_ | FEAT-010 | _TBD_ |
+| FR-SHOP-005 | a shop owner submits shop profile changes (name, description), save them. | Must | Active | P0-2, US-12 | UC-004 | features/FEAT-010-shop-settings/technical-design.md, features/FEAT-010-shop-settings/ui-design.md | FEAT-010 | _TBD_ |
+| FR-SHOP-006 | a shop owner submits a pickup address (contact name, phone, province, district, … | Must | Active | P0-2, US-12 | UC-004 | features/FEAT-010-shop-settings/technical-design.md, features/FEAT-010-shop-settings/ui-design.md | FEAT-010 | _TBD_ |
+| FR-SHOP-007 | a shop owner submits payout bank details (bank name, account number, account hol… | Must | Active | P0-2, US-12 | UC-004 | features/FEAT-010-shop-settings/technical-design.md, features/FEAT-010-shop-settings/ui-design.md | FEAT-010 | _TBD_ |
+| FR-SHOP-008 | required shop fields are missing or invalid, then reject the submission and iden… | Must | Active | P0-2 | UC-003, UC-004 | features/FEAT-010-shop-settings/technical-design.md, features/FEAT-010-shop-settings/ui-design.md | FEAT-010 | _TBD_ |
 | FR-SHOP-009 | any user opens a shop page, show the shop name, logo, cover image, description, … | Must | Active | P0-2, US-10 | UC-004, UC-009 | ADR-0011 | FEAT-011 | _TBD_ |
-| FR-SHOP-010 | a shop owner opens shop settings, show the profile (including logo and cover ima… | Must | Active | P0-2 | UC-004 | _TBD_ | FEAT-010 | _TBD_ |
+| FR-SHOP-010 | a shop owner opens shop settings, show the profile (including logo and cover ima… | Must | Active | P0-2 | UC-004 | features/FEAT-010-shop-settings/technical-design.md, features/FEAT-010-shop-settings/ui-design.md | FEAT-010 | _TBD_ |
 | FR-SHOP-011 | a seller attempts to publish a product before the shop has a pickup address and … | Should | Active | Inferred, US-12 | UC-004, UC-005 | _TBD_ | FEAT-012 | _TBD_ |
 | FR-ADDR-001 | a buyer submits a delivery address (recipient name, phone, province, district, w… | Should | Active | Inferred | UC-011 | _TBD_ | FEAT-008 | _TBD_ |
 | FR-ADDR-002 | a buyer edits or deletes a saved address, apply the change without altering the … | Should | Active | Inferred | UC-011 | _TBD_ | FEAT-008 | _TBD_ |
@@ -276,7 +276,7 @@
 | NFR-SEC-005 | Rate limits: register, sign-in, resend-verification and sign-in code at most 10 … | Should | Active | Inferred, CR-7 | UC-029 | ADR-0008 | FEAT-005 | _TBD_ |
 | NFR-SEC-006 | Automated tests shall verify that a user cannot read or change another user's re… | Should | Active | Inferred | — | ADR-0009, ADR-0019 | Foundations | _TBD_ |
 | NFR-SEC-007 | Secrets shall not be stored in the repository; CI shall fail on detected secrets… | Must | Active | P0-12 | — | ADR-0005, ADR-0015 | Foundations | _TBD_ |
-| NFR-SEC-008 | Bank account numbers shall be encrypted at rest and shown masked except the last… | Should | Active | Inferred | UC-004 | _TBD_ | FEAT-010 | _TBD_ |
+| NFR-SEC-008 | Bank account numbers shall be encrypted at rest and shown masked except the last… | Should | Active | Inferred | UC-004 | features/FEAT-010-shop-settings/technical-design.md | FEAT-010 | _TBD_ |
 | NFR-SEC-009 | keep an audit log, retained at least 90 days, of sign-in success and failure, lo… | Should | Active | Inferred, CR-7 | — | ADR-0008, ADR-0013 | FEAT-005 | _TBD_ |
 | NFR-SEC-010 | pass user text to the LLM only as data, shall validate LLM output against a fixe… | Must | Active | P0-11 | UC-008 | ADR-0014 | FEAT-019 | _TBD_ |
 | NFR-SEC-011 | neither store nor process payment card numbers. | Must | Active | P0-7 | UC-012 | _TBD_ | FEAT-029 | _TBD_ |

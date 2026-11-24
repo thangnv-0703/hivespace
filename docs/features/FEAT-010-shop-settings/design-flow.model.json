@@ -1,0 +1,110 @@
+{
+  "meta": {
+    "title": "FEAT-010 — Shop settings: profile, pickup address, payout",
+    "subtitle": "Design solution from <code>technical-design.md</code>: a seller saves the shop profile, the pickup address and the payout bank details; the account number is encrypted and only its last four digits are shown. Pick a flow to follow one UC-004 path; click any arrow for its data contract.",
+    "description": "A seller opens Settings in the seller centre (or a checklist button on the dashboard). The pages read GET /v1/shops/me, which now returns the description, the pickup address and the payout with only the last four digits, and computes the setup checklist. Each section saves on its own PUT sub-resource under policy seller: profile (name, description), pickup-address (six free-text fields, Vietnamese phone in E.164) and payout (bank name, account number, holder). Identity validates every field together (FR-SHOP-008), encrypts the account number with AES-256-GCM using the active key from configuration and the shop id as associated data, and stores ciphertext, key id and last four digits on the shops row. A profile change, or the moment the shop's setup becomes complete, writes a ShopChanged/v1 outbox row carrying only public fields, setupComplete and a monotonic version. Nothing consumes it yet; Notification acknowledges it.",
+    "viewBox": [1280, 640],
+    "links": [
+      {"href": "technical-design.md", "label": "technical-design.md"},
+      {"href": "../FEAT-009-register-shop/design-flow.html", "label": "FEAT-009 flow"},
+      {"href": "../../architecture-flow.html", "label": "Architecture"}
+    ],
+    "kindLabels": {"security": "Gateway / secrets", "backend": "Event bus", "database": "Store", "external": "Person / external"},
+    "edgeLabels": {"dashed": "Event", "security": "Key / auth"},
+    "overview": [
+      ["Implements", "FR-SHOP-005..008, FR-SHOP-010 (logo and cover deferred), NFR-SEC-008; supports FR-ROLE-003, FR-ROLE-004, FR-SHOP-009, FR-SHOP-011"],
+      ["Realizes", "UC-004 (main 1–3, exception 3a)"],
+      ["Screens", "SCR-SEL-007, SCR-SEL-008; SCR-SEL-002 checklist becomes live"],
+      ["Builds", "PUT /v1/shops/me/profile, /pickup-address, /payout; extended GET /v1/shops/me; event ShopChanged/v1; Spectral rule hs-no-bank-number-in-responses"],
+      ["Schema", "shops: description, profile_version, pickup_* and payout_* columns (owned types, all-or-none checks), xmin row version"],
+      ["Depends on", "FEAT-009 (shop, policy seller, seller-centre session), FEAT-002 (PUT pattern, PhoneNumber)"]
+    ],
+    "footnote": "Source: <code>docs/features/FEAT-010-shop-settings/technical-design.md</code> (§3 contracts, §4 schema, §5 components, §7 decisions, §8 open items). Generated with html-flow-diagram; edit <code>design-flow.model.json</code> and rebuild."
+  },
+  "frames": [],
+  "nodes": [
+    {"id": "browser", "kind": "external", "x": 20, "y": 290, "w": 150, "h": 50, "label": "Browser", "sub": "seller", "desc": "The seller, signed in on the seller host (<code>hs.bff.sel</code>, FEAT-009). Never holds a token."},
+    {"id": "sel", "kind": "frontend", "x": 220, "y": 270, "w": 190, "h": 76, "label": "Seller centre SPA", "sub": "SCR-SEL-007, 008", "sub2": "dashboard checklist", "desc": "<code>features/settings</code>: <code>ShopProfilePage</code> at <code>/settings/profile</code> and <code>PickupPayoutPage</code> at <code>/settings/pickup-payout</code> (<code>/settings</code> redirects to the profile). Each section saves on its own and renders the returned <code>MyShop</code>. Payout shows <code>•••• 1234</code>; changing it asks for the full number again (D-4). Dashboard checklist buttons now go to <code>/settings/pickup-payout</code>."},
+    {"id": "gw", "kind": "security", "x": 470, "y": 80, "w": 190, "h": 440, "label": "Gateway + BFF", "sub": "routes unchanged", "sub2": "CSRF on PUT", "desc": "No change: <code>/v1/shops/{**rest}</code> already routes to Identity with policy <code>authenticated</code>; non-GET calls need <code>X-HS-CSRF: 1</code>; the access token is relayed as a bearer."},
+    {"id": "identity", "kind": "service", "x": 740, "y": 80, "w": 200, "h": 440, "label": "Identity", "sub": "shop settings", "sub2": "policy seller", "desc": "Three PUT handlers plus the extended <code>GET /v1/shops/me</code>. Validates every field together, checks rename uniqueness, encrypts the account number through <code>IBankAccountProtector</code> (AES-256-GCM), retries up to 3 times on a row-version conflict, and queues <code>ShopChanged</code> when the public profile or readiness changes."},
+    {"id": "idb", "kind": "database", "x": 1040, "y": 80, "w": 190, "h": 80, "label": "identitydb", "sub": "shops (+ settings)", "sub2": "outbox", "desc": "<code>shops</code> gains <code>description</code>, <code>profile_version</code>, six <code>pickup_*</code> columns and five <code>payout_*</code> columns (ciphertext <code>bytea</code>, <code>last4</code>, <code>key_id</code>), both groups all-or-none by check; <code>xmin</code> row version. Migration <code>AddShopSettings</code>."},
+    {"id": "key", "kind": "security", "x": 1040, "y": 200, "w": 190, "h": 56, "label": "Bank key", "sub": "config · key id v1", "desc": "<code>Identity:BankEncryption</code>: <code>ActiveKeyId</code> and <code>Keys:{id}</code> (32 bytes, base64). Locally generated by the AppHost's <code>DevSecrets</code> into <code>.local/dev-secrets</code>; deployed from the vault (FEAT-037). Validated at start-up."},
+    {"id": "bus", "kind": "backend", "x": 1040, "y": 300, "w": 190, "h": 50, "label": "Service Bus", "sub": "topic hivespace-events", "sigil": "service", "desc": "One topic; subscriptions exist for inventory and notification only."},
+    {"id": "notif", "kind": "service", "x": 1040, "y": 390, "w": 190, "h": 56, "label": "Notification", "sub": "ignores the event", "desc": "No handler for <code>ShopChanged</code>: inbox row, acknowledged, no email."},
+    {"id": "catalog", "kind": "service", "x": 1040, "y": 480, "w": 190, "h": 56, "label": "Catalog / Search-AI", "sub": "later consumers", "ghost": true, "desc": "Not in this slice. Catalog (FEAT-011/012) keeps a shop snapshot and enforces FR-SHOP-011 from <code>setupComplete</code>; Search-AI (FEAT-018) shows the shop name."}
+  ],
+  "edges": [
+    {"id": "e1", "from": "browser", "to": "sel", "s": "emphasis", "label": "form", "data": {"p": "Profile (name, description) · pickup address (contactName, phone, province, district, ward, street) · payout (bankName, accountNumber, accountHolder)", "f": "SPA forms", "c": "conf", "s": "Client checks mirror the server rules; the server decides. The account number field is never pre-filled."}},
+    {"id": "e2", "from": "sel", "to": "gw", "s": "emphasis", "label": "API", "data": {"p": "GET /v1/shops/me · PUT /v1/shops/me/profile · PUT /v1/shops/me/pickup-address · PUT /v1/shops/me/payout", "f": "HTTPS JSON (X-HS-CSRF, Accept-Language), cookie hs.bff.sel", "c": "conf", "s": "Responses: 200 MyShop (payout.accountNumberLast4 only); 400 validation_failed with details; 401; 403 common.forbidden; 404; 409 shop_name_taken", "w": "Each PUT returns the whole MyShop"}},
+    {"id": "e3", "from": "gw", "to": "identity", "s": "emphasis", "label": "relay", "data": {"p": "The same calls with Authorization: Bearer (role Seller)", "f": "HTTP", "c": "conf", "s": "Policy seller in Identity; the shop is always the one owned by sub; X-User-* headers stripped"}},
+    {"id": "e4", "from": "identity", "to": "key", "s": "security", "label": "key", "fromAt": 0.42, "data": {"p": "Active key id and 32-byte AES keys by id", "f": "Options bound at start-up", "c": "restr", "s": "Never logged; start-up fails when the active key is missing or the wrong size"}},
+    {"id": "e5", "from": "identity", "to": "idb", "s": "default", "label": "write", "fromAt": 0.06, "toAt": 0.3, "data": {"p": "Update shops: description, profile_version, pickup_*, payout_bank_name, payout_account_holder, payout_account_ciphertext (0x01|nonce|tag|ct, AAD = shop id), payout_account_last4, payout_key_id; outbox ShopChanged when due", "f": "EF Core · one SaveChanges · xmin row version", "c": "conf", "s": "The digits are never stored in clear; ix_shops_normalized_name maps a rename race to 409", "w": "Bounded retry (3) on concurrency conflict (D-9)"}},
+    {"id": "e6", "from": "identity", "to": "idb", "s": "default", "label": "read", "fromAt": 0.18, "toAt": 0.8, "data": {"p": "Shop by owner_user_id = sub; normalized name taken by another shop?", "f": "EF Core", "c": "internal", "s": "Payout read as last4 only; ciphertext is never decrypted to render"}},
+    {"id": "e7", "from": "identity", "to": "bus", "s": "dashed", "label": "event", "fromAt": 0.6, "data": {"p": "ShopChanged/v1 {shopId, ownerUserId, name, description, sellerType, setupComplete, version, changedAt}", "f": "Event envelope · JSON schema v1", "c": "internal", "s": "No address, phone or bank field (FR-SHOP-009); correlation id = shop id", "w": "Profile change or setupComplete flip only; after commit, at least once"}},
+    {"id": "e8", "from": "bus", "to": "notif", "s": "dashed", "data": {"p": "ShopChanged", "f": "Service Bus subscription", "c": "internal", "s": "Inbox dedupe by eventId; no handler, acknowledged"}},
+    {"id": "g1", "from": "bus", "to": "catalog", "s": "ghost", "ghost": true, "fromSide": "right", "toSide": "right", "via": [[1258, 325], [1258, 508]], "label": "later", "lx": 1262, "ly": 420, "data": {"p": "ShopRegistered + ShopChanged → shop snapshot (FEAT-011/012, FEAT-018)", "f": "Service Bus subscription", "c": "internal", "s": "Drop events whose version is not higher (ADR-0003)", "w": "Subscription must exist before demo shops, or backfill"}}
+  ],
+  "flows": {
+    "all": {"title": "FEAT-010 design solution", "intro": "Open settings, save profile, pickup address and payout, and the refused paths."},
+    "view": {"title": "Open shop settings (UC-004 1)", "button": "View", "color": "frontend", "tags": ["UC-004 1", "FR-SHOP-010", "AC-7"], "steps": [
+      {"e": ["e1", "e2", "e3"], "t": "<strong>Open settings</strong> from the sidebar or a dashboard checklist button; <code>GET /v1/shops/me</code> relayed with the bearer."},
+      {"e": ["e6"], "t": "<strong>Read</strong> the caller's shop; the payout is mapped to <code>accountNumberLast4</code>; <code>setup</code> is computed from what exists."},
+      {"e": ["e2", "e1"], "t": "<strong>200 MyShop</strong>: profile, pickup address, bank name, holder and <code>•••• 4567</code>."}
+    ]},
+    "profile": {"title": "Save the shop profile (UC-004 2–3)", "button": "Profile", "color": "frontend", "tags": ["FR-SHOP-005", "AC-1, AC-9, AC-10"], "steps": [
+      {"e": ["e1", "e2", "e3"], "t": "<strong>Submit</strong> name and description; <code>PUT /v1/shops/me/profile</code>."},
+      {"e": ["e6"], "t": "<strong>Validate</strong> both fields; if the normalized name changed, check no other shop holds it."},
+      {"e": ["e5"], "t": "<strong>Update</strong> the profile, <code>profile_version + 1</code>, outbox <code>ShopChanged</code>, one commit."},
+      {"e": ["e7", "e8"], "t": "<strong>Event</strong> relayed after commit; Notification acknowledges it; <strong>200 MyShop</strong>."}
+    ]},
+    "address": {"title": "Save the pickup address (UC-004 2–3)", "button": "Address", "color": "frontend", "tags": ["FR-SHOP-006", "AC-3"], "steps": [
+      {"e": ["e1", "e2", "e3"], "t": "<strong>Submit</strong> six fields; <code>PUT /v1/shops/me/pickup-address</code>."},
+      {"e": ["e5"], "t": "<strong>Store</strong> trimmed text and the phone in E.164; <code>ShopChanged</code> only if this completes setup."},
+      {"e": ["e2", "e1"], "t": "<strong>200 MyShop</strong> with <code>setup.pickupAddress: true</code>."}
+    ]},
+    "payout": {"title": "Save payout details, encrypted (UC-004 2–3)", "button": "Payout", "color": "security", "tags": ["FR-SHOP-007", "NFR-SEC-008", "AC-4, AC-5, AC-11"], "steps": [
+      {"e": ["e1", "e2", "e3"], "t": "<strong>Submit</strong> bank name, full account number and holder; <code>PUT /v1/shops/me/payout</code>."},
+      {"e": ["e4"], "t": "<strong>Encrypt</strong> the digits with AES-256-GCM under the active key; associated data = shop id."},
+      {"e": ["e5"], "t": "<strong>Store</strong> ciphertext, key id and last four digits; no payout is started; <code>ShopChanged</code> if setup is now complete."},
+      {"e": ["e7", "e8"], "t": "<strong>Readiness event</strong> (<code>setupComplete: true</code>) when this save completes setup."},
+      {"e": ["e2", "e1"], "t": "<strong>200 MyShop</strong> with <code>accountNumberLast4</code> only; the checklist shows complete."}
+    ]},
+    "invalid": {"title": "Invalid or missing fields (UC-004 3a)", "button": "Invalid", "color": "security", "tags": ["FR-SHOP-008", "AC-6"], "steps": [
+      {"e": ["e1", "e2", "e3"], "t": "<strong>Submit</strong> a section with several bad fields."},
+      {"e": ["e3", "e2"], "t": "<strong>400</strong> <code>common.validation_failed</code> with one <code>details</code> entry per field; nothing saved, no event."},
+      {"e": ["e1"], "t": "<strong>Errors</strong> shown next to their fields; the first one gets focus."}
+    ]},
+    "taken": {"title": "Rename to a taken name", "button": "Name taken", "color": "security", "tags": ["FR-SHOP-005, FR-SHOP-003", "AC-2"], "steps": [
+      {"e": ["e1", "e2", "e3"], "t": "<strong>Submit</strong> a name another shop holds, in any case or spacing."},
+      {"e": ["e6"], "t": "<strong>Name check</strong> finds it (or the unique index loses the race at commit)."},
+      {"e": ["e3", "e2", "e1"], "t": "<strong>409</strong> <code>identity.shop_name_taken</code> shown on the name field; nothing changed."}
+    ]}
+  },
+  "notes": [
+    {"id": "N1", "on": "key", "st": "decision", "t": "AES-256-GCM, versioned key from config", "b": "Key id stored per row for rotation; shop id as associated data so a ciphertext cannot move between shops. Rejected: Data Protection, Key Vault envelope.", "r": "D-1"},
+    {"id": "N2", "on": "sel", "st": "decision", "t": "Three PUT sub-resources", "b": "Each screen section saves on its own; a whole-shop PUT would have to resend the masked number.", "r": "D-3"},
+    {"id": "N3", "on": "sel", "st": "decision", "t": "Payout PUT needs the full number", "b": "Only the last four digits ever leave Identity, so a masked value cannot round-trip.", "r": "D-4"},
+    {"id": "N4", "on": "idb", "st": "decision", "t": "Owned types on shops", "b": "Address and payout are one-per-shop attributes; no new table or entity, no escalation.", "r": "D-5"},
+    {"id": "N5", "on": "bus", "st": "decision", "t": "ShopChanged: public fields, setupComplete, version", "b": "Private fields stay in Identity; FEAT-012 enforces FR-SHOP-011 from its own snapshot.", "r": "D-6"},
+    {"id": "N6", "on": "identity", "st": "consider", "t": "Limits without an FR", "b": "Description 1000, address 80/60/200, bank fields 2–80, account number 6–19 digits. Confirm at review.", "r": "D-7"},
+    {"id": "N7", "on": "identity", "st": "decision", "t": "Row version + bounded retry, no If-Match", "b": "Existing concurrency pattern; last-write-wins per section; protects version and readiness transition.", "r": "D-9"},
+    {"id": "N8", "on": "sel", "st": "risk", "t": "Logo and cover deferred", "b": "FR-SHOP-010 shows them; they arrive with FEAT-035/036.", "r": "D-8"},
+    {"id": "N9", "on": "catalog", "st": "risk", "t": "Late subscriptions miss events", "b": "The first consumer needs its subscription before demo shops exist, or a backfill of ShopRegistered and the latest ShopChanged.", "r": "§8"},
+    {"id": "G1", "st": "consider", "t": "District level after the 2025 reform", "b": "Kept required as FR-SHOP-006 states (D-2, user decision); an SRS note is suggested to make it optional for FR-SHOP-006 and FR-ADDR-001.", "r": "D-2, §8"}
+  ],
+  "specs": {
+    "identity": {"host": "Identity service (.NET)", "trigger": "GET /v1/shops/me, PUT /v1/shops/me/{profile|pickup-address|payout}", "ops": ["validate every field together", "rename uniqueness (normalized name)", "AES-256-GCM encrypt account number", "profile_version and setupComplete", "ShopChanged in the same commit", "policy seller"], "data": "shops, outbox", "nfr": "FR-SHOP-005..008, FR-SHOP-010, NFR-SEC-008, FR-ROLE-003"},
+    "sel": {"host": "Seller centre (Vue)", "trigger": "/settings, /settings/profile, /settings/pickup-payout", "ops": ["profile form", "pickup address form", "payout card, masked, re-enter to change", "field errors from details", "dashboard checklist links"], "data": "MyShop", "nfr": "UC-004, SCR-SEL-007, SCR-SEL-008"}
+  },
+  "sections": [
+    {"type": "table", "title": "New error codes", "lead": "All 400, used as <code>details</code> codes under <code>common.validation_failed</code>, with vi/en messages (FR-LOC-004). Reused: <code>identity.phone_invalid</code>, <code>identity.shop_name_*</code>, <code>identity.shop_name_taken</code>.", "columns": ["Code", "Field"], "rows": [
+      ["<code>identity.shop_description_too_long</code> / <code>_invalid</code>", "description"],
+      ["<code>identity.address_field_required</code> / <code>_too_long</code> / <code>_invalid</code>", "contactName, phone, province, district, ward, street"],
+      ["<code>identity.bank_name_required</code> / <code>_too_long</code> / <code>_invalid</code>", "bankName"],
+      ["<code>identity.bank_account_number_required</code> / <code>_invalid</code>", "accountNumber"],
+      ["<code>identity.bank_account_holder_required</code> / <code>_too_long</code> / <code>_invalid</code>", "accountHolder"]
+    ]},
+    {"type": "notes", "title": "Decisions, risks and open items", "lead": "Decisions D-1..D-9 and open items from the design."},
+    {"type": "catalogue", "title": "Component catalogue"}
+  ]
+}

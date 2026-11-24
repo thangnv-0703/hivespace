@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pickup address and payout, saved</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="display: flex; flex-wrap: wrap; width: 100%; min-height: 1000px; background: #f9fafb">
+  <nav aria-label="Seller centre" style="flex: 1 1 260px; max-width: 260px; box-sizing: border-box; background: #ffffff; border-right: 1px solid #e4e7ec; padding: 24px 16px; display: flex; flex-direction: column; gap: 24px">
+    <a href="#" style="text-decoration: none; color: #101828; font: 700 22px 'Outfit',sans-serif; padding: 0 8px">HiveSpace <span style="font-size: 12px; font-weight: 500; color: #667085">Seller</span></a>
+    <div style="display: flex; flex-direction: column; gap: 4px">
+      <p style="margin: 0 0 8px; padding: 0 12px; font-size: 12px; text-transform: uppercase; color: #667085">Menu</p>
+      <a href="#" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px 0 44px; border-radius: 8px; color: #344054; text-decoration: none; font-size: 14px; font-weight: 500">Dashboard</a>
+      <a href="#" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px 0 44px; border-radius: 8px; color: #344054; text-decoration: none; font-size: 14px; font-weight: 500">Products</a>
+      <a href="#" style="display: flex; align-items: center; min-height: 44px; padding: 0 12px 0 44px; border-radius: 8px; color: #344054; text-decoration: none; font-size: 14px; font-weight: 500">Orders</a>
+      <button type="button" aria-expanded="true" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px; background: #ecf3ff; color: #3641f5; font: 500 14px 'Outfit','Noto Sans',sans-serif; text-align: left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg><span style="flex: 1">Settings</span></button>
+      <a href="Main.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px 0 44px; border-radius: 8px; color: #344054; text-decoration: none; font-size: 14px; font-weight: 500">Shop profile</a>
+      <a href="#" aria-current="page" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px 0 44px; border-radius: 8px; color: #3641f5; text-decoration: none; font-size: 14px; font-weight: 500">Pickup and payout</a>
+    </div>
+  </nav>
+  <div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column">
+    <header style="height: 72px; box-sizing: border-box; display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 24px; background: #ffffff; border-bottom: 1px solid #e4e7ec">
+      <a href="#" style="padding: 0 8px; font-size: 14px; text-decoration: none">Go to storefront</a>
+      <button type="button" aria-label="Account menu" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 8px; border: 0; background: transparent; color: #101828; font: 500 14px 'Outfit','Noto Sans',sans-serif">
+        <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 9999px; background: #dde9ff; color: #2a31d8; font-size: 12px; font-weight: 600">LN</span>Linh Nguyen</button>
+    </header>
+    <main style="padding: 24px; display: flex; flex-direction: column; gap: 24px; font-size: 14px">
+      <div style="display: flex; flex-direction: column; gap: 8px">
+        <nav aria-label="Breadcrumb" style="color: #667085">Home <span aria-hidden="true">›</span> Settings <span aria-hidden="true">›</span> <span aria-current="page" style="color: #101828">Pickup and payout</span></nav>
+        <h1 style="margin: 0; font-size: 30px; line-height: 38px; font-weight: 600">Pickup address and payout</h1>
+        <p style="margin: 0; color: #667085">Both are needed before you can publish products.</p>
+      </div>
+      <form aria-labelledby="addr-title" style="max-width: 768px; background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; box-shadow: 0 1px 3px rgba(16,24,40,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <h2 id="addr-title" style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 600">Pickup address</h2>
+          <span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; background: #ecfdf3; color: #027a48; font-size: 12px; font-weight: 500">Saved</span>
+        </div>
+        <p style="margin: 0; color: #344054">Where carriers collect your orders. Only you can see it.</p>
+        <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="a-name" style="font-weight: 500; color: #344054">Contact name <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="a-name" type="text" value="Nguyễn Thị Linh" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="a-phone" style="font-weight: 500; color: #344054">Phone <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="a-phone" type="tel" value="+84912345678" aria-describedby="a-phone-help" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"><p id="a-phone-help" style="margin: 0; font-size: 12px; color: #667085">Vietnamese number, e.g. 0912 345 678</p></div>
+        </div>
+        <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px">
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="a-prov" style="font-weight: 500; color: #344054">Province or city <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="a-prov" type="text" value="TP. Hồ Chí Minh" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="a-dist" style="font-weight: 500; color: #344054">District <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="a-dist" type="text" value="Quận 3" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"></div>
+          <div style="display: flex; flex-direction: column; gap: 6px"><label for="a-ward" style="font-weight: 500; color: #344054">Ward or commune <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="a-ward" type="text" value="Phường Võ Thị Sáu" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"></div>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px"><label for="a-street" style="font-weight: 500; color: #344054">Street address <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="a-street" type="text" value="12 Võ Văn Tần" aria-describedby="a-street-help" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 14px 'Outfit','Noto Sans',sans-serif; color: #101828"><p id="a-street-help" style="margin: 0; font-size: 12px; color: #667085">House number and street.</p></div>
+        <div style="display: flex; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #e4e7ec">
+          <button type="submit" style="height: 44px; padding: 0 16px; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 14px 'Outfit','Noto Sans',sans-serif">Save address</button>
+        </div>
+      </form>
+      <section aria-labelledby="pay-title" style="max-width: 768px; box-sizing: border-box; width: 100%; background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; box-shadow: 0 1px 3px rgba(16,24,40,0.1); padding: 24px; display: flex; flex-direction: column; gap: 16px">
+        <div style="display: flex; align-items: center; gap: 8px">
+          <h2 id="pay-title" style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 600">Payout details</h2>
+          <span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; background: #ecfdf3; color: #027a48; font-size: 12px; font-weight: 500">Saved</span>
+        </div>
+        <p style="margin: 0; color: #344054">The bank account for your earnings. Nothing is paid out yet; HiveSpace is a demo.</p>
+        <dl style="margin: 0; display: grid; grid-template-columns: 160px minmax(0, 1fr); row-gap: 12px; column-gap: 16px">
+          <dt style="color: #667085">Bank</dt><dd style="margin: 0">Vietcombank</dd>
+          <dt style="color: #667085">Account number</dt><dd style="margin: 0; font-variant-numeric: tabular-nums; letter-spacing: 0.04em">•••• 4567</dd>
+          <dt style="color: #667085">Account holder</dt><dd style="margin: 0">NGUYEN THI LINH</dd>
+        </dl>
+        <div style="display: flex; justify-content: flex-end; padding-top: 16px; border-top: 1px solid #e4e7ec">
+          <a href="PickupPayoutErrors.dc.html" style="display: inline-flex; align-items: center; height: 44px; padding: 0 16px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054; text-decoration: none; font-weight: 500; box-shadow: 0 1px 2px rgba(16,24,40,0.05)">Change</a>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1000}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>
