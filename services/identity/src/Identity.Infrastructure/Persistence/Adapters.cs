@@ -1,4 +1,4 @@
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
 using Identity.Domain;
@@ -143,9 +143,10 @@ internal sealed partial class EfUserRepository(IdentityDbContext db, ILogger<EfU
             throw new EmailInUseException(ex);
         }
         catch (DbUpdateException ex) when (
-            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "ix_shops_owner_user_id" })
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "ix_shops_owner_user_id" or "PK_role_grants" })
         {
             db.ChangeTracker.Clear();
+            // A parallel registration by the same user committed first: it won the shop index or the Seller grant, whichever the batch reached first.
             throw new ShopAlreadyOwnedException(ex);
         }
         catch (DbUpdateException ex) when (

@@ -6,6 +6,7 @@ using Identity.Application.Features.Lockout;
 using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
+using Identity.Application.Features.Shops;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -60,6 +61,8 @@ public static class DependencyInjection
         services.AddScoped<GetMyProfileHandler>();
         services.AddScoped<UpdateMyProfileHandler>();
         services.AddScoped<UpdateMyLanguageHandler>();
+        services.AddScoped<RegisterShopHandler>();
+        services.AddScoped<GetMyShopHandler>();
         return builder;
     }
 }
