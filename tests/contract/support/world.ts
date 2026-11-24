@@ -13,6 +13,11 @@ export class ContractWorld extends World {
   /** The signed-in user's access token and id, set by the profile steps. */
   accessToken?: string
   userId?: string
+  /** The sign-in code challenge in play and the code emailed for it (FEAT-006), plus the one before it. */
+  challengeId?: string
+  code?: string
+  earlierChallengeId?: string
+  earlierCode?: string
 
   async send(method: string, route: string, payload?: unknown, language?: string, bearer?: string | null): Promise<void> {
     const headers: Record<string, string> = {}

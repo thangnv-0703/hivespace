@@ -55,6 +55,28 @@ public sealed class RateLimitTests : IClassFixture<GatewayTestHost>
         Assert.Equal(HttpStatusCode.OK, await StatusAsync(client, Post("/v1/users/sign-in", "203.0.113.11")));
     }
 
+    [Theory]
+    [InlineData("/v1/users/sign-in/code-challenges")]
+    [InlineData("/v1/users/sign-in/code")]
+    public async Task Feat006_ac15_the_eleventh_code_call_from_one_ip_is_rejected_with_retry_after(string path)
+    {
+        using var factory = Trusting();
+        using var client = factory.CreateClient(new WebApplicationFactoryClientOptions { AllowAutoRedirect = false });
+        // Both code endpoints share the auth window of one address.
+        var paths = new[] { "/v1/users/sign-in/code-challenges", "/v1/users/sign-in/code" };
+        for (var i = 0; i < 10; i++)
+        {
+            Assert.Equal(HttpStatusCode.OK, await StatusAsync(client, Post(paths[i % paths.Length], "203.0.113.60")));
+        }
+
+        using var rejected = await client.SendAsync(Post(path, "203.0.113.60"), Ct);
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, rejected.StatusCode);
+        Assert.True(int.Parse(rejected.Headers.GetValues("Retry-After").Single(), System.Globalization.CultureInfo.InvariantCulture) is > 0 and <= 60);
+        Assert.Equal("common.rate_limited", (await rejected.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("code").GetString());
+        Assert.Equal(HttpStatusCode.OK, await StatusAsync(client, Post(path, "203.0.113.61")));
+    }
+
     [Fact]
     public async Task Ac13_the_eleventh_password_call_from_one_user_is_rejected_and_another_user_is_not()
     {

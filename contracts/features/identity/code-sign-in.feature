@@ -62,12 +62,15 @@ Feature: Sign in with an email code
 
   @operation:signInWithCode @FR-AUTH-032 @UC-029
   Scenario: The fifth wrong code ends the code
+    Wrong codes also count on the account's lockout (FR-AUTH-031); a password sign-in in between resets that count,
+    so the fifth wrong code ends the code without locking the account.
     Given a registered user with email "an@example.com" and password "hello1234"
     And the visitor has requested a sign-in code for "an@example.com"
     When the visitor submits a wrong code 4 times
     Then the response status is 401
     And the error code is "identity.sign_in_code_invalid"
-    When the visitor submits a wrong code
+    When the visitor signs in with "an@example.com" and "hello1234"
+    And the visitor submits a wrong code
     Then the response status is 401
     And the error code is "identity.sign_in_challenge_ended"
     When the visitor submits the emailed code

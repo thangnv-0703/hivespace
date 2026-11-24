@@ -1,4 +1,4 @@
-import { RegisterPage, SignInPage, VerifyEmailPage } from '@/features/auth'
+import { CodeEntryPage, CodeRequestPage, RegisterPage, SignInPage, VerifyEmailPage } from '@/features/auth'
 import { HomePage } from '@/features/home'
 import { ChangePasswordPage, ProfilePage } from '@/features/profile'
 import NotFoundPage from '@/shared/pages/NotFoundPage.vue'
@@ -20,6 +20,8 @@ export const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomePage },
     { path: '/signin', name: 'signin', component: SignInPage, meta: { fullscreen: true } },
+    { path: '/signin/code', name: 'signin-code', component: CodeRequestPage, meta: { fullscreen: true } },
+    { path: '/signin/code/enter', name: 'signin-code-enter', component: CodeEntryPage, meta: { fullscreen: true } },
     { path: '/register', name: 'register', component: RegisterPage, meta: { fullscreen: true } },
     { path: '/verify-email', name: 'verify-email', component: VerifyEmailPage, meta: { fullscreen: true } },
     { path: '/profile', name: 'profile', component: ProfilePage, meta: { requiresAuth: true } },
