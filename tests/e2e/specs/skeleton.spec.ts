@@ -31,15 +31,13 @@ test('the shell uses the design tokens (brand colour from tokens.json)', async (
 
 const sellerUrl = process.env.SELLER_URL ?? 'http://seller.localhost:5080'
 
-test('seller centre loads on its own host with its sidebar', async ({ page, viewport }) => {
-  test.skip((viewport?.width ?? 0) < 1024, 'the sidebar is off-canvas below lg')
+test('the seller centre host serves its own app and sends a visitor to sign in', async ({ page }) => {
   await page.addInitScript(() => localStorage.setItem('hs-locale', 'en'))
-  await page.goto(`${sellerUrl}/`)
-
-  await expect(page.getByTestId('sidebar')).toContainText('Products')
-  // A deep link on the seller host is the seller app, not the storefront.
+  // Every seller-centre page needs a signed-in seller (FEAT-009 AC-12): a visitor is sent to sign in and returns to the same page.
+  // The signed-in sidebar and deep links are covered by features/register-shop.feature.
   await page.goto(`${sellerUrl}/no-such-page`)
-  await expect(page.getByTestId('sidebar')).toBeVisible()
+
+  await expect(page).toHaveURL(/\/signin\?returnUrl=.*client_id%3Dhivespace-seller/)
 })
 
 test('the storefront links to the seller centre host', async ({ page, viewport }) => {

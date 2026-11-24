@@ -79,7 +79,6 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasColumnName("correlation_id");
 
                     b.Property<string>("Method")
-                        .IsRequired()
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)")
                         .HasColumnName("method");
@@ -113,7 +112,7 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         {
                             t.HasCheckConstraint("ck_audit_entries_method", "method in ('password','google','password_change','code')");
 
-                            t.HasCheckConstraint("ck_audit_entries_type", "type in ('sign_in_succeeded','sign_in_failed','account_locked')");
+                            t.HasCheckConstraint("ck_audit_entries_type", "type in ('sign_in_succeeded','sign_in_failed','account_locked','seller_role_granted')");
                         });
                 });
 
@@ -194,6 +193,58 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.ToTable("role_grants", null, t =>
                         {
                             t.HasCheckConstraint("ck_role_grants_role", "role in ('Buyer', 'Seller')");
+                        });
+                });
+
+            modelBuilder.Entity("Identity.Domain.Shop", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("name");
+
+                    b.Property<string>("NormalizedName")
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)")
+                        .HasColumnName("normalized_name");
+
+                    b.Property<Guid>("OwnerUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("owner_user_id");
+
+                    b.Property<string>("SellerType")
+                        .IsRequired()
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)")
+                        .HasColumnName("seller_type");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("NormalizedName")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shops_normalized_name");
+
+                    b.HasIndex("OwnerUserId")
+                        .IsUnique()
+                        .HasDatabaseName("ix_shops_owner_user_id");
+
+                    b.ToTable("shops", null, t =>
+                        {
+                            t.HasCheckConstraint("ck_shops_seller_type", "seller_type in ('individual','business')");
                         });
                 });
 
@@ -645,6 +696,15 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.HasOne("Identity.Domain.User", null)
                         .WithMany("Roles")
                         .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Identity.Domain.Shop", b =>
+                {
+                    b.HasOne("Identity.Domain.User", null)
+                        .WithMany()
+                        .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });

@@ -1,0 +1,29 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-24T10:00:00Z" },
+  "title": "FEAT-009 · Register a shop",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 820, "title": "SCR-SEL-001 Register shop (default)", "expand": "fill" },
+    "Dashboard.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 820, "title": "SCR-SEL-002 Dashboard (new shop)", "expand": "fill" },
+    "RegisterMobile.dc.html": { "x": 0, "y": 940, "w": 390, "h": 844, "title": "SCR-SEL-001 Mobile, filled in", "expand": "fill" },
+    "RegisterErrors.dc.html": { "x": 470, "y": 940, "w": 560, "h": 760, "title": "SCR-SEL-001 Errors: validation, name taken" },
+    "RegisterUnverified.dc.html": { "x": 1110, "y": 940, "w": 560, "h": 800, "title": "SCR-SEL-001 Unverified email" },
+    "DashboardStates.dc.html": { "x": 1750, "y": 940, "w": 960, "h": 1120, "title": "SCR-SEL-002 States: loading, error, all done" },
+    "AccountMenus.dc.html": { "x": 2790, "y": 940, "w": 720, "h": 440, "title": "Account menus: seller centre, storefront" }
+  },
+  "order": [
+    "Main.dc.html",
+    "Dashboard.dc.html",
+    "RegisterMobile.dc.html",
+    "RegisterErrors.dc.html",
+    "RegisterUnverified.dc.html",
+    "DashboardStates.dc.html",
+    "AccountMenus.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "FEAT-009: Register a shop and become a seller", "kind": "title1", "maxW": 3510 }
+  },
+  "designSystems": []
+}

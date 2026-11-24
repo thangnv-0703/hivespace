@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Open your shop, email not verified</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="width: 560px; height: 800px; box-sizing: border-box; background: #ffffff; padding: 40px 56px">
+  <a href="#" style="display: inline-block; margin-bottom: 32px; text-decoration: none; color: #101828; font: 700 22px 'Outfit',sans-serif">HiveSpace</a>
+  <h1 style="margin: 0 0 8px; font-size: 30px; line-height: 38px; font-weight: 600">Open your shop on HiveSpace</h1>
+  <p style="margin: 0 0 24px; font-size: 14px; line-height: 20px; color: #667085">Two details and you're a seller. You keep your buyer account.</p>
+  <div role="status" style="display: flex; gap: 12px; padding: 16px; margin-bottom: 24px; border-radius: 8px; background: #fffaeb; color: #b54708">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc6803" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4M12 17h.01"/></svg>
+    <div style="display: flex; flex-direction: column; gap: 12px; font-size: 14px; line-height: 20px">
+      <div><p style="margin: 0; font-weight: 600">Verify your email first</p><p style="margin: 4px 0 0">We sent a link to <strong>linh.nguyen@example.com</strong>. Open it, then come back here.</p></div>
+      <div style="display: flex; flex-wrap: wrap; gap: 8px">
+        <button type="button" style="height: 44px; padding: 0 16px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054; font: 500 14px 'Outfit',sans-serif">Resend email</button>
+        <button type="button" style="height: 44px; padding: 0 16px; border: 0; border-radius: 8px; background: transparent; color: #344054; font: 500 14px 'Outfit',sans-serif">I've verified it</button>
+      </div>
+    </div>
+  </div>
+  <form style="display: flex; flex-direction: column; gap: 16px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <label for="u-name" style="font-size: 14px; font-weight: 500; color: #344054">Shop name <span aria-hidden="true" style="color: #d92d20">*</span></label>
+      <input id="u-name" type="text" disabled style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #667085; border-radius: 8px; background: #f2f4f7; color: #98a2b3; font: 400 14px 'Outfit',sans-serif">
+      <p style="margin: 0; font-size: 12px; line-height: 18px; color: #667085">3–60 characters. Buyers see this name, exactly as you write it.</p>
+    </div>
+    <fieldset disabled style="margin: 0; padding: 0; border: 0; display: flex; flex-direction: column; gap: 6px; opacity: 0.5">
+      <legend style="padding: 0; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #344054">Seller type</legend>
+      <label style="display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 14px"><input type="radio" name="u-type" style="width: 20px; height: 20px; margin: 0">Individual</label>
+      <label style="display: flex; align-items: center; gap: 12px; min-height: 44px; font-size: 14px"><input type="radio" name="u-type" style="width: 20px; height: 20px; margin: 0">Business</label>
+    </fieldset>
+    <button type="submit" disabled style="height: 44px; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 14px 'Outfit',sans-serif; opacity: 0.5; cursor: not-allowed">Open my shop</button>
+  </form>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":560,"height":800}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

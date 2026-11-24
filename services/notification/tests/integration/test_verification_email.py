@@ -473,3 +473,43 @@ async def test_a_code_event_upserts_the_contact_and_stores_no_code(engine: Async
         for table in ("email_records", "contacts", "inbox"):
             dump = (await conn.execute(text(f"SELECT t::text FROM {table} t"))).scalars().all()  # noqa: S608
             assert all(CODE not in row for row in dump), table
+
+
+# ---- FEAT-009: ShopRegistered has no handler here (AC-8, D-6) ----
+
+
+def _shop_registered_event() -> Envelope:
+    shop_id = str(uuid.uuid4())
+    return Envelope.model_validate(
+        {
+            "eventId": str(uuid.uuid4()),
+            "eventType": "ShopRegistered",
+            "eventVersion": 1,
+            "occurredAt": datetime.now(UTC).isoformat(),
+            "producer": "identity",
+            "correlationId": shop_id,
+            "data": {
+                "shopId": shop_id,
+                "ownerUserId": str(uuid.uuid4()),
+                "name": "Tiệm Bánh An",
+                "sellerType": "individual",
+                "registeredAt": datetime.now(UTC).isoformat(),
+            },
+        }
+    )
+
+
+async def test_a_shop_registered_event_delivered_twice_is_acknowledged_with_no_email_and_one_inbox_row(
+    engine: AsyncEngine,
+) -> None:
+    sender = FakeSender()
+    handle = make_handler(engine, sender, BASE_URL)
+    event = _shop_registered_event()
+
+    await handle(event)
+    await handle(event)
+
+    assert sender.sent == []
+    assert await _count(engine, "inbox") == 1
+    assert await _count(engine, "email_records") == 0
+    assert await _count(engine, "contacts") == 0

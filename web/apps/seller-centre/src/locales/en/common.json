@@ -6,7 +6,8 @@
     "searchPlaceholder": "Search...",
     "breadcrumb": "Breadcrumb",
     "home": "Home",
-    "skipToContent": "Skip to main content"
+    "skipToContent": "Skip to main content",
+    "close": "Close"
   },
   "nav": {
     "label": "Seller centre navigation",
@@ -22,10 +23,6 @@
     "openMenu": "Open menu",
     "account": "Account",
     "closeMenu": "Close menu"
-  },
-  "dashboard": {
-    "title": "Dashboard",
-    "subtitle": "Register a shop to start selling."
   },
   "errors": {
     "backDashboard": "Back to dashboard",

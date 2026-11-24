@@ -1,0 +1,595 @@
+{
+ "meta": {
+  "title": "FEAT-009 · Register a shop and become a seller",
+  "subtitle": "Design solution from <code>technical-design.md</code>: a verified buyer registers a shop on the seller host and gains the Seller role. Pick a flow to follow one UC-003 path; click any arrow for its data contract.",
+  "description": "A signed-in buyer follows the storefront header's \"Seller centre\" link to the seller host. The seller centre's guard probes its own session (hs.bff.sel); a visitor is sent through the seller OIDC client, and the shared Identity session (hs.idp) signs them in without a password (ADR-0027). A buyer without the Seller role lands on SCR-SEL-001 and submits a name and a seller type. Identity validates the fields, reads email verification from the database, refuses a second shop or a taken name (case-insensitive), then commits the shop, the Seller grant, a seller_role_granted audit row and the ShopRegistered outbox row in one transaction. The SPA forces a session refresh so the access token carries role Seller, and the dashboard (SCR-SEL-002) reads GET /v1/shops/me, a seller-only endpoint guarded by the role claim (FR-ROLE-003).",
+  "viewBox": [
+   1280,
+   640
+  ],
+  "links": [
+   {
+    "href": "technical-design.md",
+    "label": "technical-design.md"
+   },
+   {
+    "href": "../FEAT-006-email-code-sign-in/design-flow.html",
+    "label": "FEAT-006 flow"
+   },
+   {
+    "href": "../../architecture-flow.html",
+    "label": "Architecture"
+   }
+  ],
+  "kindLabels": {
+   "security": "Gateway / BFF",
+   "backend": "Event bus",
+   "database": "Store",
+   "external": "Person / external"
+  },
+  "edgeLabels": {
+   "dashed": "Event / navigation",
+   "security": "Auth / tokens"
+  },
+  "overview": [
+   [
+    "Implements",
+    "FR-SHOP-001..004, FR-ROLE-002, FR-ROLE-003; supports FR-SHOP-008, FR-ROLE-004, NFR-SEC-006, NFR-SEC-009"
+   ],
+   [
+    "Realizes",
+    "UC-003 (main, 1a, 2a)"
+   ],
+   [
+    "Screens",
+    "SCR-SEL-001, SCR-SEL-002 (setup checklist), seller-centre account menu"
+   ],
+   [
+    "Builds",
+    "POST /v1/shops, GET /v1/shops/me (policy seller), event ShopRegistered/v1, gateway routes, seller-centre session"
+   ],
+   [
+    "Schema",
+    "new table shops (unique owner, unique normalized name); audit type seller_role_granted, method nullable"
+   ],
+   [
+    "Depends on",
+    "FEAT-001, FEAT-002, ADR-0027 wiring (all on main)"
+   ]
+  ],
+  "footnote": "Source: <code>docs/features/FEAT-009-register-shop/technical-design.md</code> (§3 contracts, §5 components, §7 decisions, §8 open items). Generated with html-flow-diagram; edit <code>design-flow.model.json</code> and rebuild."
+ },
+ "frames": [],
+ "nodes": [
+  {
+   "id": "browser",
+   "kind": "external",
+   "x": 20,
+   "y": 290,
+   "w": 150,
+   "h": 50,
+   "label": "Browser",
+   "sub": "buyer",
+   "desc": "The buyer. Holds <code>hs.idp</code> (Identity session, storefront host) and one BFF cookie per host: <code>hs.bff.stf</code> and, after the seller-host sign-in, <code>hs.bff.sel</code>. Never holds a token."
+  },
+  {
+   "id": "stf",
+   "kind": "frontend",
+   "x": 220,
+   "y": 80,
+   "w": 190,
+   "h": 60,
+   "label": "Storefront SPA",
+   "sub": "header link",
+   "desc": "Unchanged. The existing header link <b>Seller centre</b> (design.md §3, from <code>lg</code>; mobile menu panel below <code>md</code>) opens <code>VITE_SELLER_ORIGIN</code> for everyone; the seller-centre guard decides where the user lands (D-10)."
+  },
+  {
+   "id": "sel",
+   "kind": "frontend",
+   "x": 220,
+   "y": 220,
+   "w": 190,
+   "h": 76,
+   "label": "Seller centre SPA",
+   "sub": "SCR-SEL-001, 002",
+   "sub2": "guard · session",
+   "desc": "<b>features/auth</b>: session store, account menu, guard (anonymous → <code>/bff/login</code>; no Seller → <code>/register-shop</code>; Seller on <code>/register-shop</code> → <code>/</code>), language saved to the profile. <b>SCR-SEL-001</b> <code>/register-shop</code>: name, seller type, field errors, name taken, unverified with resend. <b>SCR-SEL-002</b>: shop name and setup checklist from <code>getMyShop</code>."
+  },
+  {
+   "id": "gw",
+   "kind": "security",
+   "x": 470,
+   "y": 80,
+   "w": 190,
+   "h": 360,
+   "label": "Gateway + BFF",
+   "sub": "routes shops",
+   "sub2": "per-host session",
+   "desc": "New routes <code>shops-root</code> and <code>shops</code> to Identity, default <code>authenticated</code>; CSRF header on non-GET. The seller host already has its cookie, OIDC client <code>hivespace-seller</code>, <code>/bff/user</code>, <code>/bff/session/refresh</code> and <code>/bff/logout</code> (ADR-0027). No role check here (D-2)."
+  },
+  {
+   "id": "identity",
+   "kind": "service",
+   "x": 740,
+   "y": 80,
+   "w": 200,
+   "h": 360,
+   "label": "Identity",
+   "sub": "shops · roles",
+   "sub2": "policy seller",
+   "desc": "<b>Domain:</b> <code>ShopName</code> (3–60, NFC lower-case normalized), <code>SellerType</code>, <code>Shop.Register</code>, <code>User.GrantRole</code>, <code>AuditEntry.SellerRoleGranted</code>. <b>Application:</b> <code>RegisterShopHandler</code>, <code>GetMyShopHandler</code>, <code>IShopStore</code>. <b>Api:</b> <code>ShopEndpoints</code>; policy <code>seller</code> = bearer + <code>role: Seller</code>. Tokens re-read roles on every refresh."
+  },
+  {
+   "id": "idb",
+   "kind": "database",
+   "x": 1040,
+   "y": 80,
+   "w": 190,
+   "h": 80,
+   "label": "identitydb",
+   "sub": "shops · role_grants",
+   "sub2": "audit · outbox",
+   "desc": "New <code>shops</code>: <code>id</code>, <code>owner_user_id</code> (unique), <code>name</code>, <code>normalized_name</code> (unique), <code>seller_type</code> (individual / business), timestamps. <code>audit_entries</code>: type <code>seller_role_granted</code>, <code>method</code> nullable. <code>role_grants</code> unchanged."
+  },
+  {
+   "id": "bus",
+   "kind": "backend",
+   "x": 1040,
+   "y": 240,
+   "w": 190,
+   "h": 50,
+   "label": "Service Bus",
+   "sub": "topic hivespace-events",
+   "sigil": "service",
+   "desc": "Outbox relay, at least once. <code>ShopRegistered/v1</code> reaches only existing subscriptions (inventory, notification); Catalog and Search-AI subscribe in later slices (§8)."
+  },
+  {
+   "id": "notif",
+   "kind": "service",
+   "x": 1040,
+   "y": 350,
+   "w": 190,
+   "h": 56,
+   "label": "Notification",
+   "sub": "ignores the event",
+   "desc": "Has no handler for <code>ShopRegistered</code>: acknowledges it, records the inbox row, sends nothing (T7)."
+  }
+ ],
+ "edges": [
+  {
+   "id": "e1",
+   "from": "browser",
+   "to": "stf",
+   "s": "default",
+   "label": "link",
+   "data": {
+    "p": "Header link Seller centre, the same for visitors, buyers and sellers",
+    "f": "SPA",
+    "c": "public",
+    "s": "No role check on the storefront"
+   }
+  },
+  {
+   "id": "e2",
+   "from": "stf",
+   "to": "sel",
+   "s": "dashed",
+   "label": "open",
+   "data": {
+    "p": "Navigation to seller host /register-shop or /",
+    "f": "Top-level navigation",
+    "c": "public",
+    "s": "No cookie crosses hosts; the seller host has its own session"
+   }
+  },
+  {
+   "id": "e3",
+   "from": "browser",
+   "to": "sel",
+   "s": "emphasis",
+   "label": "form",
+   "data": {
+    "p": "Shop name and seller type on SCR-SEL-001",
+    "f": "SPA",
+    "c": "internal",
+    "s": "Client checks mirror the server rules; the server decides"
+   }
+  },
+  {
+   "id": "e4",
+   "from": "sel",
+   "to": "gw",
+   "s": "emphasis",
+   "label": "API",
+   "data": {
+    "p": "GET /bff/user · POST /v1/shops {name, sellerType} · POST /bff/session/refresh · GET /v1/shops/me · /bff/login?returnUrl=… when anonymous",
+    "f": "HTTPS JSON (X-HS-CSRF, Accept-Language), cookie hs.bff.sel",
+    "c": "internal",
+    "s": "Responses: 201 MyShop + Location; 400 validation_failed; 401; 403 email_not_verified / common.forbidden; 409 shop_already_owned / shop_name_taken",
+    "w": "Session refresh right after 201 so the token carries role Seller"
+   }
+  },
+  {
+   "id": "e5",
+   "from": "gw",
+   "to": "identity",
+   "s": "emphasis",
+   "label": "relay",
+   "fromAt": 0.3,
+   "toAt": 0.3,
+   "data": {
+    "p": "The same /v1/shops calls with Authorization: Bearer (access token of the seller client)",
+    "f": "HTTP",
+    "c": "conf",
+    "s": "Client X-User-* headers stripped; Identity validates the JWT locally (audience hivespace-api)"
+   }
+  },
+  {
+   "id": "e6",
+   "from": "gw",
+   "to": "identity",
+   "s": "security",
+   "label": "tokens",
+   "fromAt": 0.7,
+   "toAt": 0.7,
+   "data": {
+    "p": "/connect/authorize (SSO through hs.idp, client hivespace-seller) · POST /connect/token refresh_token",
+    "f": "OIDC code + PKCE, refresh",
+    "c": "restr",
+    "s": "Confidential client; roles re-read from the database on every exchange",
+    "w": "After registration the new token carries role Buyer and Seller"
+   }
+  },
+  {
+   "id": "e7",
+   "from": "identity",
+   "to": "idb",
+   "s": "default",
+   "label": "write",
+   "fromAt": 0.08,
+   "toAt": 0.3,
+   "data": {
+    "p": "Read email_verified_at, shop by owner, normalized name; insert shop + Seller role grant + audit seller_role_granted + outbox ShopRegistered",
+    "f": "EF Core · one SaveChanges",
+    "c": "internal",
+    "s": "Unique indexes ix_shops_owner_user_id and ix_shops_normalized_name map a lost race to the 409 codes",
+    "w": "All or nothing (D-1)"
+   }
+  },
+  {
+   "id": "e8",
+   "from": "identity",
+   "to": "idb",
+   "s": "default",
+   "label": "read",
+   "fromAt": 0.2,
+   "toAt": 0.8,
+   "data": {
+    "p": "Shop by owner_user_id = sub for GET /v1/shops/me",
+    "f": "EF Core",
+    "c": "internal",
+    "s": "Policy seller first: Buyer-only token → 403 common.forbidden"
+   }
+  },
+  {
+   "id": "e9",
+   "from": "identity",
+   "to": "bus",
+   "s": "dashed",
+   "label": "event",
+   "fromAt": 0.45,
+   "data": {
+    "p": "ShopRegistered/v1 {shopId, ownerUserId, name, sellerType, registeredAt}",
+    "f": "Event envelope · JSON schema v1",
+    "c": "internal",
+    "s": "Correlation id = shop id",
+    "w": "After commit, at least once"
+   }
+  },
+  {
+   "id": "e10",
+   "from": "bus",
+   "to": "notif",
+   "s": "dashed",
+   "data": {
+    "p": "ShopRegistered",
+    "f": "Service Bus subscription",
+    "c": "internal",
+    "s": "Inbox dedupe by eventId; no handler, acknowledged"
+   }
+  }
+ ],
+ "flows": {
+  "all": {
+   "title": "FEAT-009 design solution",
+   "intro": "Reach the seller centre with one sign-in, register a shop, refresh the session, open the dashboard; and the refused paths."
+  },
+  "register": {
+   "title": "Register a shop (UC-003 main)",
+   "button": "Register",
+   "color": "frontend",
+   "tags": [
+    "UC-003 1–4",
+    "FR-SHOP-001, FR-SHOP-004, FR-ROLE-002",
+    "AC-1, AC-2, AC-7, AC-8, AC-9, AC-11"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e3",
+      "e4",
+      "e5"
+     ],
+     "t": "<strong>Submit</strong> name and seller type on SCR-SEL-001; <code>POST /v1/shops</code> relayed with the bearer."
+    },
+    {
+     "e": [
+      "e7"
+     ],
+     "t": "<strong>One transaction:</strong> shop, Seller grant (Buyer kept), audit <code>seller_role_granted</code>, outbox <code>ShopRegistered</code>; <strong>201</strong> <code>MyShop</code>."
+    },
+    {
+     "e": [
+      "e9",
+      "e10"
+     ],
+     "t": "<strong>Event</strong> relayed after commit; Notification acknowledges it without sending anything."
+    },
+    {
+     "e": [
+      "e4",
+      "e6"
+     ],
+     "t": "<strong>Session refresh</strong> on the seller host: the new access token carries role Seller."
+    },
+    {
+     "e": [
+      "e4",
+      "e5",
+      "e8"
+     ],
+     "t": "<strong>Dashboard</strong> reads <code>GET /v1/shops/me</code>: shop name and the checklist (pickup address, payout not done)."
+    }
+   ]
+  },
+  "sso": {
+   "title": "Reach the seller centre (ADR-0027 SSO)",
+   "button": "Sign-in",
+   "color": "security",
+   "tags": [
+    "UC-003 entry",
+    "ADR-0027",
+    "AC-12, AC-13"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e1",
+      "e2"
+     ],
+     "t": "<strong>Seller centre</strong> in the storefront header opens the seller host."
+    },
+    {
+     "e": [
+      "e4"
+     ],
+     "t": "<strong>Guard</strong> probes <code>/bff/user</code> on the seller host; with no <code>hs.bff.sel</code> it goes to <code>/bff/login?returnUrl=…</code>."
+    },
+    {
+     "e": [
+      "e6"
+     ],
+     "t": "<strong>Authorize</strong> for <code>hivespace-seller</code> finds <code>hs.idp</code>: no password; the callback sets <code>hs.bff.sel</code>."
+    },
+    {
+     "e": [
+      "e4"
+     ],
+     "t": "<strong>Routing:</strong> no Seller role → SCR-SEL-001; Seller → dashboard."
+    }
+   ]
+  },
+  "refused": {
+   "title": "Refused registrations (UC-003 1a, 2a)",
+   "button": "Refused",
+   "color": "external",
+   "tags": [
+    "UC-003 1a, 2a",
+    "FR-SHOP-002, FR-SHOP-003, FR-SHOP-008",
+    "AC-3, AC-4, AC-5, AC-6"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e4",
+      "e5"
+     ],
+     "t": "<strong>Invalid fields:</strong> 400 <code>common.validation_failed</code>, one detail per field; nothing read or saved."
+    },
+    {
+     "e": [
+      "e7"
+     ],
+     "t": "<strong>Unverified email</strong> (read from the database): 403 <code>identity.email_not_verified</code>; the page offers resend."
+    },
+    {
+     "e": [
+      "e7"
+     ],
+     "t": "<strong>Already owns a shop:</strong> 409 <code>identity.shop_already_owned</code>; the SPA refreshes and opens the dashboard."
+    },
+    {
+     "e": [
+      "e7"
+     ],
+     "t": "<strong>Name taken</strong> (case and spacing ignored): 409 <code>identity.shop_name_taken</code> on the name field. A lost race at commit gives the same codes."
+    }
+   ]
+  },
+  "forbidden": {
+   "title": "Seller-only function (FR-ROLE-003)",
+   "button": "Forbidden",
+   "color": "security",
+   "tags": [
+    "FR-ROLE-003, FR-ROLE-004, NFR-SEC-006",
+    "AC-10"
+   ],
+   "steps": [
+    {
+     "e": [
+      "e4",
+      "e5"
+     ],
+     "t": "<strong>Buyer-only token</strong> on <code>GET /v1/shops/me</code>: policy <code>seller</code> refuses, <strong>403 <code>common.forbidden</code></strong>. No session: 401 at the gateway."
+    },
+    {
+     "e": [
+      "e8"
+     ],
+     "t": "<strong>Seller token:</strong> always the caller's own shop (<code>sub</code>); a spoofed <code>X-User-Id</code> changes nothing."
+    }
+   ]
+  }
+ },
+ "notes": [
+  {
+   "id": "N1",
+   "on": "idb",
+   "st": "decision",
+   "t": "Shop and role commit together",
+   "b": "Shop, Seller grant, audit and outbox in one SaveChanges (architecture §5.2).",
+   "r": "D-1"
+  },
+  {
+   "id": "N2",
+   "on": "identity",
+   "st": "decision",
+   "t": "Role checked from the token, in the service",
+   "b": "Policy <code>seller</code>; staleness only delays access and the SPA refreshes right after registering.",
+   "r": "D-2"
+  },
+  {
+   "id": "N3",
+   "on": "sel",
+   "st": "decision",
+   "t": "Verification read from the database",
+   "b": "The claim may predate the verification; the page refreshes the session once when it says unverified.",
+   "r": "D-3"
+  },
+  {
+   "id": "N4",
+   "on": "identity",
+   "st": "consider",
+   "t": "Shop name 3–60, NFC lower-case unique",
+   "b": "No requirement states a length; confirm the limit at review. Accent-sensitive matching.",
+   "r": "D-4, §8"
+  },
+  {
+   "id": "N5",
+   "on": "gw",
+   "st": "decision",
+   "t": "No Idempotency-Key",
+   "b": "One shop per user makes a retry return 409 already owned, handled as success.",
+   "r": "D-5"
+  },
+  {
+   "id": "N6",
+   "on": "bus",
+   "st": "risk",
+   "t": "Late subscribers miss shops",
+   "b": "Catalog and Search-AI subscribe later; shops registered before then in a shared environment need a backfill.",
+   "r": "D-6, §8"
+  },
+  {
+   "id": "N7",
+   "on": "stf",
+   "st": "decision",
+   "t": "One storefront entry",
+   "b": "The header link only, no role-aware account-menu item; the seller-centre guard routes from its own fresh session. Gap md–lg accepted.",
+   "r": "D-10, U-6"
+  },
+  {
+   "id": "G1",
+   "st": "consider",
+   "t": "Plan row consumers",
+   "b": "The plan lists Catalog, Search-AI and Notification as ShopRegistered consumers; they belong to FEAT-011/012, FEAT-018 and FEAT-032.",
+   "r": "§8"
+  }
+ ],
+ "specs": {
+  "identity": {
+   "host": "Identity service (.NET)",
+   "trigger": "POST /v1/shops, GET /v1/shops/me",
+   "ops": [
+    "validate name and seller type",
+    "email verified from the database",
+    "one shop per user, unique normalized name",
+    "shop + Seller grant + audit + outbox in one commit",
+    "policy seller on getMyShop"
+   ],
+   "data": "shops, role_grants, audit_entries, users, outbox",
+   "nfr": "FR-SHOP-001..004, FR-ROLE-002, FR-ROLE-003, NFR-SEC-009"
+  },
+  "sel": {
+   "host": "Seller centre (Vue)",
+   "trigger": "Any route on the seller host",
+   "ops": [
+    "session probe and guard",
+    "register shop form",
+    "session refresh after 201",
+    "dashboard checklist",
+    "language saved to profile"
+   ],
+   "data": "/bff/user, MyShop",
+   "nfr": "UC-003, ADR-0027"
+  }
+ },
+ "sections": [
+  {
+   "type": "table",
+   "title": "New error codes",
+   "lead": "Stable codes with vi/en messages (FR-LOC-004).",
+   "columns": [
+    "Code",
+    "http",
+    "When"
+   ],
+   "rows": [
+    [
+     "<code>identity.email_not_verified</code>",
+     "403",
+     "Registering with an unverified email"
+    ],
+    [
+     "<code>identity.shop_already_owned</code>",
+     "409",
+     "The user already owns a shop"
+    ],
+    [
+     "<code>identity.shop_name_taken</code>",
+     "409",
+     "Another shop has the same normalized name"
+    ],
+    [
+     "<code>identity.shop_name_required</code> / <code>_too_short</code> / <code>_too_long</code> / <code>_invalid</code>",
+     "400",
+     "Name details under validation_failed"
+    ],
+    [
+     "<code>identity.seller_type_invalid</code>",
+     "400",
+     "Missing or unknown seller type"
+    ]
+   ]
+  },
+  {
+   "type": "notes",
+   "title": "Decisions, risks and open items",
+   "lead": "Decisions D-1..D-10 and open items from the design."
+  },
+  {
+   "type": "catalogue",
+   "title": "Component catalogue"
+  }
+ ]
+}

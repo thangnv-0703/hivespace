@@ -5,6 +5,7 @@ using Identity.Application.Features.Lockout;
 using Identity.Application.Features.Password;
 using Identity.Application.Features.Profile;
 using Identity.Application.Features.Registration;
+using Identity.Application.Features.Shops;
 using Identity.Infrastructure.Persistence;
 using Identity.Infrastructure.Security;
 using Microsoft.EntityFrameworkCore;
@@ -23,6 +24,8 @@ public sealed class Rig : IAsyncDisposable
 
     private readonly PostgresFixture _postgres;
     private readonly IdentityDbContext _db;
+    private readonly EfUserRepository _users;
+    private readonly EfEventOutbox<IdentityDbContext> _outbox;
 
     public Rig(PostgresFixture postgres, FakeTimeProvider clock)
     {
@@ -31,6 +34,8 @@ public sealed class Rig : IAsyncDisposable
         Clock = clock;
         var users = new EfUserRepository(_db);
         var outbox = new EfEventOutbox<IdentityDbContext>(_db, new MessagingOptions("hivespace-events", "identity"));
+        _users = users;
+        _outbox = outbox;
         Register = new RegisterUserHandler(users, Hasher, Tokens, outbox, clock);
         Verify = new VerifyEmailHandler(users, Tokens, clock);
         Resend = new ResendVerificationEmailHandler(users, Tokens, outbox, clock);
@@ -44,7 +49,16 @@ public sealed class Rig : IAsyncDisposable
         ExternalSignIn = new ExternalSignInHandler(users, new OpenIddictSessionRevoker(_db), outbox, users, clock);
         RequestCode = new RequestSignInCodeHandler(users, users, Codes, outbox, clock);
         SignInWithCode = new SignInWithCodeHandler(users, users, Codes, users, users, Recorder, clock);
+        RegisterShop = new RegisterShopHandler(users, users, users, outbox, clock);
+        GetMyShop = new GetMyShopHandler(users);
     }
+
+    public RegisterShopHandler RegisterShop { get; }
+
+    /// <summary>A registration whose name check always passes, as when a parallel request commits the same name just after the check.</summary>
+    public RegisterShopHandler RegisterShopBlindToNames() => new(_users, new NameCheckBlindStore(_users), _users, _outbox, Clock);
+
+    public GetMyShopHandler GetMyShop { get; }
 
     public SignInWithCodeHandler SignInWithCode { get; }
 
@@ -124,4 +138,14 @@ public sealed class Rig : IAsyncDisposable
     }
 
     public ValueTask DisposeAsync() => _db.DisposeAsync();
+}
+
+/// <summary>Delegates to the real store but reports every name as free, so the unique index is what rejects a duplicate.</summary>
+internal sealed class NameCheckBlindStore(Identity.Application.Abstractions.IShopStore inner) : Identity.Application.Abstractions.IShopStore
+{
+    public Task<Identity.Domain.Shop?> FindByOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken) => inner.FindByOwnerAsync(ownerUserId, cancellationToken);
+
+    public Task<bool> NameExistsAsync(string normalizedName, CancellationToken cancellationToken) => Task.FromResult(false);
+
+    public void Add(Identity.Domain.Shop shop) => inner.Add(shop);
 }

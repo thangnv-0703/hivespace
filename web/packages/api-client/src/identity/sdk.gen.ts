@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, RequestSignInCodeData, RequestSignInCodeErrors, RequestSignInCodeResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SetMyPasswordData, SetMyPasswordErrors, SetMyPasswordResponses, SignInData, SignInErrors, SignInResponses, SignInWithCodeData, SignInWithCodeErrors, SignInWithCodeResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
+import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, GetMyShopData, GetMyShopErrors, GetMyShopResponses, RegisterShopData, RegisterShopErrors, RegisterShopResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, RequestSignInCodeData, RequestSignInCodeErrors, RequestSignInCodeResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SetMyPasswordData, SetMyPasswordErrors, SetMyPasswordResponses, SignInData, SignInErrors, SignInResponses, SignInWithCodeData, SignInWithCodeErrors, SignInWithCodeResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -159,4 +159,28 @@ export const setMyPassword = <ThrowOnError extends boolean = false>(options: Opt
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Register the caller's shop and grant the Seller role in one transaction (FR-SHOP-001, FR-ROLE-002).
+ *
+ * The owner is always the token's `sub`. Needs a verified email, read from the database. One shop per user (FR-SHOP-002) and one normalized name per shop (FR-SHOP-003). The access token shows `role: Seller` after the next session refresh (`POST /bff/session/refresh`).
+ */
+export const registerShop = <ThrowOnError extends boolean = false>(options: Options<RegisterShopData, ThrowOnError>): RequestResult<RegisterShopResponses, RegisterShopErrors, ThrowOnError> => (options.client ?? client).post<RegisterShopResponses, RegisterShopErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/shops',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The caller's own shop. Seller role required (FR-ROLE-003).
+ */
+export const getMyShop = <ThrowOnError extends boolean = false>(options?: Options<GetMyShopData, ThrowOnError>): RequestResult<GetMyShopResponses, GetMyShopErrors, ThrowOnError> => (options?.client ?? client).get<GetMyShopResponses, GetMyShopErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/shops/me',
+    ...options
 });

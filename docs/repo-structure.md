@@ -131,6 +131,8 @@ services/order/
 
 Dependency direction: `Api → Application → Domain`, `Infrastructure → Application`. Domain references nothing.
 
+Domain folders group by aggregate or concept (Identity: `Users/`, `Shops/`, `SignIn/`, `Verification/`, `Auditing/`); the namespace stays flat (`Identity.Domain`). Application ports live one per file under `Abstractions/` (Identity: `Security/`, `Persistence/`, `Exceptions/`), also with a flat namespace. Identity's single `EfUserRepository` (it implements five ports over one `DbContext` and one `SaveChangesAsync`) is a `partial` class spread over one file per port.
+
 ### 4.2 .NET, lean (Media shown)
 
 ```

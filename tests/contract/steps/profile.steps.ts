@@ -9,7 +9,7 @@ import type { ContractWorld } from '../support/world.ts'
 const redirectUri = 'http://localhost:5080/bff/callback'
 const b64url = (data: Buffer | string) => Buffer.from(data).toString('base64url')
 
-async function signIn(world: ContractWorld, email: string, displayName: string, password = 'hello1234'): Promise<void> {
+export async function signIn(world: ContractWorld, email: string, displayName: string, password = 'hello1234'): Promise<void> {
   world.email = email
   await world.post('/v1/users', { email, displayName, password })
   assert.equal(world.response!.status, 201)
@@ -17,6 +17,7 @@ async function signIn(world: ContractWorld, email: string, displayName: string, 
   await world.post('/v1/users/sign-in', { email, password })
   assert.equal(world.response!.status, 200)
   const cookie = world.response!.headers.getSetCookie().find((c) => c.startsWith('hs.idp='))!.split(';')[0]!
+  world.idpCookie = cookie
   await tokenForCookie(world, cookie)
 }
 
@@ -75,11 +76,11 @@ export function resign(world: ContractWorld, change: Record<string, unknown>): s
 }
 
 /** The same access token with another audience. */
-function wrongAudience(world: ContractWorld): string {
+export function wrongAudience(world: ContractWorld): string {
   return resign(world, { aud: 'other-api' })
 }
 
-function tampered(world: ContractWorld): string {
+export function tampered(world: ContractWorld): string {
   const token = world.accessToken!
   return token.slice(0, -1) + (token.endsWith('A') ? 'B' : 'A')
 }

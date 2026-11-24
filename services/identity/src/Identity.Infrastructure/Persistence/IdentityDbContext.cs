@@ -21,6 +21,8 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
 
     public DbSet<SignInCodeChallenge> SignInCodeChallenges => Set<SignInCodeChallenge>();
 
+    public DbSet<Shop> Shops => Set<Shop>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<User>(e =>
@@ -115,22 +117,40 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
         {
             e.ToTable("audit_entries", t =>
             {
-                t.HasCheckConstraint("ck_audit_entries_type", "type in ('sign_in_succeeded','sign_in_failed','account_locked')");
+                t.HasCheckConstraint("ck_audit_entries_type", "type in ('sign_in_succeeded','sign_in_failed','account_locked','seller_role_granted')");
                 t.HasCheckConstraint("ck_audit_entries_method", "method in ('password','google','password_change','code')");
             });
             e.HasKey(a => a.Id);
             e.Property(a => a.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(a => a.OccurredAt).HasColumnName("occurred_at");
             e.Property(a => a.Type).HasColumnName("type").HasMaxLength(32);
-            e.Property(a => a.Method).HasColumnName("method").HasMaxLength(16)
-                .HasConversion(m => m == AuditMethod.PasswordChange ? "password_change" : m.ToString().ToLowerInvariant(),
-                    v => v == "password_change" ? AuditMethod.PasswordChange : Enum.Parse<AuditMethod>(v, true));
+            // Null for a role grant: it has no sign-in method (FEAT-009 D-9).
+            e.Property(a => a.Method).HasColumnName("method").HasMaxLength(16).IsRequired(false)
+                .HasConversion(m => m.HasValue ? (m == AuditMethod.PasswordChange ? "password_change" : m.Value.ToString().ToLowerInvariant()) : null,
+                    v => v == null ? null : v == "password_change" ? AuditMethod.PasswordChange : Enum.Parse<AuditMethod>(v, true));
             // No foreign key: an audit row outlives nothing and blocks nothing (design §4).
             e.Property(a => a.UserId).HasColumnName("user_id");
             e.Property(a => a.Reason).HasColumnName("reason").HasMaxLength(64);
             e.Property(a => a.CorrelationId).HasColumnName("correlation_id").HasMaxLength(64);
             e.HasIndex(a => a.OccurredAt);
             e.HasIndex(a => new { a.UserId, a.OccurredAt });
+        });
+
+        modelBuilder.Entity<Shop>(e =>
+        {
+            e.ToTable("shops", t => t.HasCheckConstraint("ck_shops_seller_type", "seller_type in ('individual','business')"));
+            e.HasKey(s => s.Id);
+            e.Property(s => s.Id).HasColumnName("id").ValueGeneratedNever();
+            e.Property(s => s.OwnerUserId).HasColumnName("owner_user_id");
+            e.Property(s => s.Name).HasColumnName("name").HasMaxLength(ShopName.MaxLength);
+            e.Property(s => s.NormalizedName).HasColumnName("normalized_name").HasMaxLength(ShopName.MaxLength);
+            e.Property(s => s.SellerType).HasColumnName("seller_type").HasMaxLength(16);
+            e.Property(s => s.CreatedAt).HasColumnName("created_at");
+            e.Property(s => s.UpdatedAt).HasColumnName("updated_at");
+            // One shop per owner (FR-SHOP-002) and one normalized name per shop (FR-SHOP-003).
+            e.HasIndex(s => s.OwnerUserId).IsUnique().HasDatabaseName("ix_shops_owner_user_id");
+            e.HasIndex(s => s.NormalizedName).IsUnique().HasDatabaseName("ix_shops_normalized_name");
+            e.HasOne<User>().WithMany().HasForeignKey(s => s.OwnerUserId).OnDelete(DeleteBehavior.Cascade);
         });
 
         modelBuilder.Entity<SignInCodeChallenge>(e =>
