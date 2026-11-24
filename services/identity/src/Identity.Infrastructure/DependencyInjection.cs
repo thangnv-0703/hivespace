@@ -43,6 +43,7 @@ public static class DependencyInjection
         services.AddOutboxCleanup<IdentityDbContext>(TimeSpan.FromHours(24));
 
         services.AddHostedService<AuditRetentionSweeper>();
+        services.AddHostedService<SignInChallengeSweeper>();
 
         services.AddScoped<RegisterUserHandler>();
         services.AddScoped<VerifyEmailHandler>();
