@@ -66,6 +66,19 @@ public sealed class User
         return user;
     }
 
+    /// <summary>Adds the role when the user lacks it and returns whether it did; existing roles (Buyer) are never removed (FR-ROLE-002).</summary>
+    public bool GrantRole(Role role, DateTimeOffset now)
+    {
+        if (_roles.Any(r => r.Role == role))
+        {
+            return false;
+        }
+
+        _roles.Add(RoleGrant.Create(Id, role, now));
+        UpdatedAt = now;
+        return true;
+    }
+
     public void VerifyEmail(DateTimeOffset now)
     {
         EmailVerifiedAt ??= now;

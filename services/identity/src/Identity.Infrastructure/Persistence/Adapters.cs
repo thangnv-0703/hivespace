@@ -8,7 +8,7 @@ using Npgsql;
 
 namespace Identity.Infrastructure.Persistence;
 
-internal sealed partial class EfUserRepository(IdentityDbContext db, ILogger<EfUserRepository>? logger = null) : IUserRepository, ILockoutStore, IAuditLog, ISignInChallengeStore
+internal sealed partial class EfUserRepository(IdentityDbContext db, ILogger<EfUserRepository>? logger = null) : IUserRepository, ILockoutStore, IAuditLog, ISignInChallengeStore, IShopStore
 {
     private const string UniqueViolation = "23505";
 
@@ -80,6 +80,14 @@ internal sealed partial class EfUserRepository(IdentityDbContext db, ILogger<EfU
 
     public void Add(SignInCodeChallenge challenge) => db.SignInCodeChallenges.Add(challenge);
 
+    public Task<Shop?> FindByOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken) =>
+        db.Shops.FirstOrDefaultAsync(s => s.OwnerUserId == ownerUserId, cancellationToken);
+
+    public Task<bool> NameExistsAsync(string normalizedName, CancellationToken cancellationToken) =>
+        db.Shops.AnyAsync(s => s.NormalizedName == normalizedName, cancellationToken);
+
+    public void Add(Shop shop) => db.Shops.Add(shop);
+
     public void Add(AuditEntry entry)
     {
         // Joins the row to the trace of the request (design §5.2); never an email, address or token (D-4).
@@ -133,6 +141,18 @@ internal sealed partial class EfUserRepository(IdentityDbContext db, ILogger<EfU
         {
             db.ChangeTracker.Clear();
             throw new EmailInUseException(ex);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "ix_shops_owner_user_id" })
+        {
+            db.ChangeTracker.Clear();
+            throw new ShopAlreadyOwnedException(ex);
+        }
+        catch (DbUpdateException ex) when (
+            ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: "ix_shops_normalized_name" })
+        {
+            db.ChangeTracker.Clear();
+            throw new ShopNameTakenException(ex);
         }
         catch (DbUpdateException ex) when (
             ex.InnerException is PostgresException { SqlState: UniqueViolation, ConstraintName: string name }

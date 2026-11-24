@@ -51,6 +51,28 @@ public sealed class ConcurrencyConflictException(Exception inner) : Exception("A
 /// </summary>
 public sealed class SignInChallengeConflictException(Exception inner) : Exception("Another sign-in code was issued for the address.", inner);
 
+/// <summary>
+/// Raised by <see cref="IUserRepository.SaveChangesAsync"/> when the unique index on <c>shops.owner_user_id</c> rejects an insert:
+/// the user registered a shop in a parallel request (FR-SHOP-002).
+/// </summary>
+public sealed class ShopAlreadyOwnedException(Exception inner) : Exception("The user already owns a shop.", inner);
+
+/// <summary>
+/// Raised by <see cref="IUserRepository.SaveChangesAsync"/> when the unique index on <c>shops.normalized_name</c> rejects an insert:
+/// another shop took the name first (FR-SHOP-003).
+/// </summary>
+public sealed class ShopNameTakenException(Exception inner) : Exception("The shop name is already taken.", inner);
+
+/// <summary>Shops (FEAT-009). Changes are staged and committed by <see cref="IUserRepository.SaveChangesAsync"/>.</summary>
+public interface IShopStore
+{
+    Task<Shop?> FindByOwnerAsync(Guid ownerUserId, CancellationToken cancellationToken);
+
+    Task<bool> NameExistsAsync(string normalizedName, CancellationToken cancellationToken);
+
+    void Add(Shop shop);
+}
+
 /// <summary>Six-digit sign-in codes and the hashes stored for them (NFR-SEC-016, FEAT-006 D-7).</summary>
 public interface ISignInCodeGenerator
 {
@@ -150,5 +172,7 @@ public interface IUserRepository
     /// <exception cref="CredentialExistsException">The primary key of <c>credentials</c> rejected the insert.</exception>
     /// <exception cref="ConcurrencyConflictException">The lockout row of the account, or a sign-in code challenge, changed or appeared since it was read.</exception>
     /// <exception cref="SignInChallengeConflictException">The open-challenge index of <c>sign_in_code_challenges</c> rejected the insert.</exception>
+    /// <exception cref="ShopAlreadyOwnedException">The unique index on <c>shops.owner_user_id</c> rejected the insert.</exception>
+    /// <exception cref="ShopNameTakenException">The unique index on <c>shops.normalized_name</c> rejected the insert.</exception>
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

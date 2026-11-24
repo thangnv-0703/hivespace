@@ -158,6 +158,70 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
     }
 
     [Fact]
+    public async Task AddShops_applies_up_down_and_up_after_AddSignInCodeChallenges()
+    {
+        await using var db = postgres.CreateContext();
+        var migrator = db.GetService<IMigrator>();
+        var ct = TestContext.Current.CancellationToken;
+
+        await migrator.MigrateAsync("20261124013009_AddSignInCodeChallenges", ct);
+        var before = await ListTables(db);
+        await migrator.MigrateAsync(cancellationToken: ct);
+        var after = await ListTables(db);
+
+        Assert.DoesNotContain("shops", before);
+        Assert.Contains("shops", after);
+
+        // Seller state, then down: the shops, the Seller grants and the seller audit rows go; the Buyer grant stays.
+        var user = Guid.CreateVersion7();
+        await db.Database.ExecuteSqlAsync(
+            $"""
+            insert into users (id, email, normalized_email, display_name, language, created_at, updated_at)
+            values ({user}, {"s@x.com"}, {"s@x.com"}, {"S"}, {"vi"}, now(), now())
+            """,
+            ct);
+        await db.Database.ExecuteSqlAsync($"insert into role_grants (user_id, role, granted_at) values ({user}, {"Buyer"}, now()), ({user}, {"Seller"}, now())", ct);
+        await db.Database.ExecuteSqlAsync(
+            $"insert into shops (id, owner_user_id, name, normalized_name, seller_type, created_at, updated_at) values ({Guid.CreateVersion7()}, {user}, {"Shop"}, {"shop"}, {"individual"}, now(), now())",
+            ct);
+        await db.Database.ExecuteSqlAsync(
+            $"insert into audit_entries (id, occurred_at, type, user_id) values ({Guid.CreateVersion7()}, now(), {"seller_role_granted"}, {user})", ct);
+
+        await migrator.MigrateAsync("20261124013009_AddSignInCodeChallenges", ct);
+        var roles = await db.Database.SqlQuery<string>($"select role as \"Value\" from role_grants where user_id = {user}").ToListAsync(ct);
+        var audit = await db.Database.SqlQuery<string>($"select type as \"Value\" from audit_entries where user_id = {user}").ToListAsync(ct);
+        Assert.DoesNotContain("shops", await ListTables(db));
+        Assert.Equal(["Buyer"], roles);
+        Assert.Empty(audit);
+
+        await migrator.MigrateAsync(cancellationToken: ct);
+        Assert.Contains("shops", await ListTables(db));
+    }
+
+    [Fact]
+    public async Task Shops_check_the_seller_type_and_the_audit_method_may_be_null_for_a_role_grant()
+    {
+        await using var db = postgres.CreateContext();
+        var ct = TestContext.Current.CancellationToken;
+        var user = Guid.CreateVersion7();
+        await db.Database.ExecuteSqlAsync(
+            $"""
+            insert into users (id, email, normalized_email, display_name, language, created_at, updated_at)
+            values ({user}, {"t@x.com"}, {"t@x.com"}, {"T"}, {"vi"}, now(), now())
+            """,
+            ct);
+
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into shops (id, owner_user_id, name, normalized_name, seller_type, created_at, updated_at) values ({Guid.CreateVersion7()}, {user}, {"Shop"}, {"shop-t"}, {"other"}, now(), now())",
+            ct));
+        await db.Database.ExecuteSqlAsync(
+            $"insert into audit_entries (id, occurred_at, type, user_id) values ({Guid.CreateVersion7()}, now(), {"seller_role_granted"}, {user})", ct);
+        // Other types still need a method.
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into audit_entries (id, occurred_at, type, method) values ({Guid.CreateVersion7()}, now(), {"seller_role_granted"}, {"sms"})", ct));
+    }
+
+    [Fact]
     public async Task Sign_in_code_challenges_allow_one_open_challenge_per_address_and_check_their_values()
     {
         await using var db = postgres.CreateContext();

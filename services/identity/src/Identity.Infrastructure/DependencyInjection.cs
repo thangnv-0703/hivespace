@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<ILockoutStore>(sp => sp.GetRequiredService<EfUserRepository>());
         services.AddScoped<IAuditLog>(sp => sp.GetRequiredService<EfUserRepository>());
         services.AddScoped<ISignInChallengeStore>(sp => sp.GetRequiredService<EfUserRepository>());
+        services.AddScoped<IShopStore>(sp => sp.GetRequiredService<EfUserRepository>());
         services.AddSingleton(TimeProvider.System);
         services.AddScoped<ISessionRevoker, OpenIddictSessionRevoker>();
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
