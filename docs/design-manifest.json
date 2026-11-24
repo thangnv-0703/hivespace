@@ -27,7 +27,8 @@
           "rate limited (with countdown)",
           "google rate limited",
           "re-authentication notice",
-          "retry (error without returnUrl)"
+          "retry (error without returnUrl)",
+          "email code link"
         ],
         "gaps": [],
         "supplements": []
@@ -39,7 +40,8 @@
         "POST /v1/users/sign-in 423 identity.account_locked, 429 common.rate_limited (Retry-After)",
         "/signin?error= code common.rate_limited",
         "returnUrl with max_age (re-authentication, /connect/authorize)",
-        "GET /bff/login (retry)"
+        "GET /bff/login (retry)",
+        "link to /signin/code?returnUrl= (FEAT-006, email in router state)"
       ],
       "conformance": {
         "result": "corrected",
@@ -49,7 +51,8 @@
           "custom password icons -> lucide Eye/EyeOff",
           "text-brand-500 links -> text-text-link",
           "FEAT-004: Google G brand mark is a recorded vendor-colour exception (not a fork); secondary Button, Alert tones and divider use existing tokens",
-          "FEAT-005: new states use existing Alert tones, Button and useCooldown; no new tokens"
+          "FEAT-005: new states use existing Alert tones, Button and useCooldown; no new tokens",
+          "FEAT-006: email code link uses the Link style; no new tokens"
         ],
         "escalations": [
           "E-1 AuthLayout shell (accepted 2026-11-19; amended into design.md §4.5)",
@@ -85,6 +88,13 @@
               "docs/features/FEAT-005-account-hardening/mockups/HardeningAlerts.dc.html"
             ],
             "canvas": "https://claude.ai/artifact/SrevC22oLd23LX3H1ofje8"
+          },
+          {
+            "feature": "FEAT-006",
+            "files": [
+              "docs/features/FEAT-006-email-code-sign-in/mockups/SignInCodeLink.dc.html"
+            ],
+            "canvas": "https://claude.ai/artifact/GgmrggSSUKeMGxf1pdBzNK"
           }
         ]
       },
@@ -97,6 +107,11 @@
         {
           "feature": "FEAT-005",
           "source": "docs/features/FEAT-005-account-hardening/ui-design.md#scr-stf-012--sign-in",
+          "designed_at": "2026-11-23"
+        },
+        {
+          "feature": "FEAT-006",
+          "source": "docs/features/FEAT-006-email-code-sign-in/ui-design.md#scr-stf-012--sign-in",
           "designed_at": "2026-11-23"
         }
       ]
@@ -373,6 +388,109 @@
           "designed_at": "2026-11-23"
         }
       ]
+    },
+    "SCR-STF-021": {
+      "name": "Request sign-in code",
+      "surface": "STF",
+      "feature": "FEAT-006",
+      "strategy": "code-native",
+      "status": "designed",
+      "designed_at": "2026-11-23",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-006-email-code-sign-in/ui-design.md#scr-stf-021--request-sign-in-code"
+      },
+      "reference": "references/hivespace.web/apps/buyer/src/pages/Auth/OtpSignInPage.vue",
+      "states": {
+        "covered": [
+          "default",
+          "starting",
+          "sending",
+          "too soon (with countdown)",
+          "rate limited",
+          "error"
+        ],
+        "gaps": [],
+        "supplements": [],
+        "moved": [
+          "email unavailable -> SCR-STF-022 help line (technical-design D-6; inventory wording proposed)"
+        ]
+      },
+      "contract_bindings": [
+        "POST /v1/users/sign-in/code-challenges (201 SignInChallenge; 400; 429 identity.sign_in_code_too_soon, common.rate_limited with Retry-After)",
+        "GET /bff/login (starting, no returnUrl)"
+      ],
+      "conformance": {
+        "result": "corrected",
+        "corrections": [
+          "reference gray/brand utilities -> role tokens",
+          "reference success toast -> navigation only",
+          "text-brand-500 links -> text-text-link"
+        ],
+        "escalations": []
+      },
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-006-email-code-sign-in/mockups/CodeRequest.dc.html",
+          "docs/features/FEAT-006-email-code-sign-in/mockups/CodeStates.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/GgmrggSSUKeMGxf1pdBzNK",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
+    },
+    "SCR-STF-022": {
+      "name": "Enter sign-in code",
+      "surface": "STF",
+      "feature": "FEAT-006",
+      "strategy": "code-native",
+      "status": "escalation-pending",
+      "designed_at": "2026-11-23",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-006-email-code-sign-in/ui-design.md#scr-stf-022--enter-sign-in-code"
+      },
+      "reference": "references/hivespace.web/apps/buyer/src/pages/Auth/OtpCodeEntryPage.vue",
+      "states": {
+        "covered": [
+          "default",
+          "verifying",
+          "wrong code",
+          "expired",
+          "ended (too many attempts, used, replaced)",
+          "locked",
+          "rate limited",
+          "new code sent",
+          "error",
+          "no stored challenge (redirect)"
+        ],
+        "gaps": [],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "POST /v1/users/sign-in/code (200 {redirectUrl} + hs.idp; 400; 401 identity.sign_in_code_invalid | sign_in_code_expired | sign_in_challenge_ended; 423 identity.account_locked; 429 common.rate_limited)",
+        "POST /v1/users/sign-in/code-challenges (resend)"
+      ],
+      "conformance": {
+        "result": "escalation-pending",
+        "corrections": [
+          "reference red box -> Alert error",
+          "reference amber box -> Alert warning",
+          "raw h-12 w-12 boxes and brand focus -> CodeInput on Input tokens",
+          "text-brand-500 -> text-text-link"
+        ],
+        "escalations": [
+          "E-1 CodeInput (one-time code input) for design.md section 4.2 (proposed; provisional treatment in use)"
+        ]
+      },
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-006-email-code-sign-in/mockups/Main.dc.html",
+          "docs/features/FEAT-006-email-code-sign-in/mockups/CodeEntryMobile.dc.html",
+          "docs/features/FEAT-006-email-code-sign-in/mockups/CodeStates.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/GgmrggSSUKeMGxf1pdBzNK",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
     }
   }
 }

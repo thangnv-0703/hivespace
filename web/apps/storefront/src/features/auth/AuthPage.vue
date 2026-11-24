@@ -25,6 +25,7 @@ function changeLocale(value: string) {
       <LanguageSwitcher :model-value="i18n.locale.value" :label="$t('common.language')" @update:model-value="changeLocale" />
       <ThemeToggle :label="$t('common.toggleTheme')" />
     </template>
+    <template v-if="$slots.subtitle" #subtitle><slot name="subtitle" /></template>
     <slot />
   </AuthLayout>
 </template>

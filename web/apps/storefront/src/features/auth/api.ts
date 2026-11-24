@@ -2,7 +2,14 @@
 // that adds the CSRF header and Accept-Language to identity calls (technical-design D-2, D-5).
 import { getSession, refreshSession } from '@hivespace/api-client/gateway'
 import { client as gatewayClient } from '@hivespace/api-client/gateway/client'
-import { registerUser, resendVerificationEmail, signIn, verifyEmail } from '@hivespace/api-client/identity'
+import {
+  registerUser,
+  requestSignInCode,
+  resendVerificationEmail,
+  signIn,
+  signInWithCode,
+  verifyEmail,
+} from '@hivespace/api-client/identity'
 import { client as identityClient } from '@hivespace/api-client/identity/client'
 
 // Same origin as the page: the gateway serves the SPA and the API (ADR-0008). Every call carries the CSRF header.
@@ -88,6 +95,13 @@ export const resend = (email: string) => run(() => resendVerificationEmail({ bod
 
 export const signInWithPassword = (input: { email: string; password: string; returnUrl?: string }) =>
   run(() => signIn({ body: input, headers: headers() }))
+
+/** SCR-STF-021: emails a 6-digit code (FEAT-006). The same `201` answers any well-formed email. */
+export const requestCode = (email: string) => run(() => requestSignInCode({ body: { email }, headers: headers() }))
+
+/** SCR-STF-022: checks the code and starts the Identity session, like a password sign-in. */
+export const signInWithEmailCode = (input: { challengeId: string; code: string; returnUrl?: string }) =>
+  run(() => signInWithCode({ body: input, headers: headers() }))
 
 function toSessionUser(data: Awaited<ReturnType<typeof getSession>>['data']): SessionUser | null {
   if (!data?.isAuthenticated || !data.userId) return null

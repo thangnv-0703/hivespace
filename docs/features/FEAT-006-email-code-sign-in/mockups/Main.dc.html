@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Enter your sign-in code</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+.panel{display:none}
+@media (min-width:1024px){.panel{display:flex}}
+</style>
+</helmet>
+<div style="display: flex; width: 100%; min-height: 820px; background: #ffffff">
+  <section style="flex: 1 1 0; min-width: 0; position: relative; display: flex; align-items: center; justify-content: center; padding: 40px 24px">
+    <div style="position: absolute; top: 16px; right: 16px; display: flex; gap: 8px">
+      <button type="button" aria-label="Language: English" style="display: flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 12px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054; font: 500 14px 'Outfit','Noto Sans',sans-serif">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20"/><path d="M2 12h20"/></svg>EN
+      </button>
+      <button type="button" aria-label="Switch to dark theme" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg>
+      </button>
+    </div>
+    <main style="width: 100%; max-width: 448px">
+      <a href="#" style="display: inline-block; margin-bottom: 32px; text-decoration: none; color: #101828; font: 700 22px 'Outfit',sans-serif">HiveSpace</a>
+      <h1 style="margin: 0 0 8px; font-size: 30px; line-height: 38px; font-weight: 600; color: #101828">Enter your code</h1>
+      <p style="margin: 0 0 32px; font-size: 14px; line-height: 20px; color: #667085">We sent a 6-digit code to <strong style="color: #344054; font-weight: 600">linh.nguyen@example.com</strong>. <a href="#" style="font-weight: 500; text-decoration: underline">Change email</a></p>
+      <form style="display: flex; flex-direction: column; gap: 20px">
+        <fieldset style="margin: 0; padding: 0; border: 0">
+          <legend style="margin-bottom: 6px; padding: 0; font-size: 14px; font-weight: 500; color: #344054">6-digit code <span style="color: #b42318" aria-hidden="true">*</span></legend>
+          <div style="display: flex; gap: 12px">
+            <input aria-label="Digit 1 of 6" inputmode="numeric" autocomplete="one-time-code" maxlength="1" value="4" style="box-sizing: border-box; width: 52px; height: 60px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; text-align: center; font: 600 24px 'Outfit',sans-serif; font-variant-numeric: tabular-nums; color: #101828; box-shadow: 0 1px 2px #1018280d">
+            <input aria-label="Digit 2 of 6" inputmode="numeric" maxlength="1" value="8" style="box-sizing: border-box; width: 52px; height: 60px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; text-align: center; font: 600 24px 'Outfit',sans-serif; font-variant-numeric: tabular-nums; color: #101828; box-shadow: 0 1px 2px #1018280d">
+            <input aria-label="Digit 3 of 6" inputmode="numeric" maxlength="1" value="" style="box-sizing: border-box; width: 52px; height: 60px; border: 1px solid #465fff; border-radius: 8px; background: #ffffff; text-align: center; font: 600 24px 'Outfit',sans-serif; color: #101828; box-shadow: 0 0 0 4px #465fff33, 0 1px 2px #1018280d">
+            <input aria-label="Digit 4 of 6" inputmode="numeric" maxlength="1" value="" style="box-sizing: border-box; width: 52px; height: 60px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; text-align: center; font: 600 24px 'Outfit',sans-serif; color: #101828; box-shadow: 0 1px 2px #1018280d">
+            <input aria-label="Digit 5 of 6" inputmode="numeric" maxlength="1" value="" style="box-sizing: border-box; width: 52px; height: 60px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; text-align: center; font: 600 24px 'Outfit',sans-serif; color: #101828; box-shadow: 0 1px 2px #1018280d">
+            <input aria-label="Digit 6 of 6" inputmode="numeric" maxlength="1" value="" style="box-sizing: border-box; width: 52px; height: 60px; border: 1px solid #667085; border-radius: 8px; background: #ffffff; text-align: center; font: 600 24px 'Outfit',sans-serif; color: #101828; box-shadow: 0 1px 2px #1018280d">
+          </div>
+          <p style="margin: 6px 0 0; font-size: 12px; line-height: 18px; color: #667085">The code expires in 4:12.</p>
+        </fieldset>
+        <button type="submit" style="width: 100%; height: 48px; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 16px 'Outfit','Noto Sans',sans-serif; box-shadow: 0 1px 2px #1018280d">Sign in</button>
+      </form>
+      <p style="margin: 20px 0 0; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: 14px; line-height: 20px; color: #344054">Didn't get it?
+        <button type="button" disabled style="padding: 0; border: 0; background: transparent; font: 500 14px 'Outfit','Noto Sans',sans-serif; color: #98a2b3; cursor: not-allowed">Resend code in 0:42</button>
+      </p>
+      <p style="margin: 16px 0 0; font-size: 14px; line-height: 20px; color: #667085">Emails can take a minute. Check your spam folder, or <a href="#" style="font-weight: 500; text-decoration: underline">sign in with your password or Google</a> instead.</p>
+    </main>
+  </section>
+  <section class="panel" aria-hidden="true" style="flex: 1 1 0; min-width: 0; position: relative; overflow: hidden; align-items: center; justify-content: center; padding: 64px 48px; background: #161950">
+    <div style="position: relative; display: flex; flex-direction: column; align-items: center; max-width: 400px; text-align: center">
+      <svg width="260" height="200" viewBox="0 0 260 200" fill="none" role="img" aria-label="Illustration of linked hexagons" style="margin-bottom: 32px">
+        <path d="M130 20 168 42v44l-38 22-38-22V42z" fill="#465fff"/>
+        <path d="M60 90 98 112v44l-38 22-38-22v-44z" fill="#7592ff" fill-opacity="0.55"/>
+        <path d="M200 90 238 112v44l-38 22-38-22v-44z" fill="#9cb9ff" fill-opacity="0.35"/>
+      </svg>
+      <h2 style="margin: 0 0 12px; font-size: 30px; line-height: 38px; font-weight: 600; color: #ffffff">Shop from many sellers, in one cart</h2>
+      <p style="margin: 0; font-size: 16px; line-height: 24px; color: #ffffffb3">Find what you need, pay once, and follow every order in one place.</p>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":820}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

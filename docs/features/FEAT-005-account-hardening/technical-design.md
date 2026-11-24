@@ -72,7 +72,7 @@ New responses: `423`, and `429 common.rate_limited` from the gateway. The 401 bo
 True when the account has a credential. Additive; drives the SCR-STF-016 card label and the SCR-STF-018 mode. `PUT /v1/me/profile` returns the same schema, so it also carries it.
 
 ### 3.6 Sessions and tokens: `auth_time`, `amr`, `max_age`
-- **`hs.idp`** gains `auth_time` (Unix seconds of the interactive sign-in) and `amr` (`pwd` from `POST /v1/users/sign-in`, `google` from FEAT-004's `complete`). Reissues (change and set password) copy both unchanged.
+- **`hs.idp`** gains `auth_time` (Unix seconds of the interactive sign-in) and `amr` (`pwd` from `POST /v1/users/sign-in`, `google` from FEAT-004's `complete`, `otp` from FEAT-006's `POST /v1/users/sign-in/code`). Reissues (change and set password) copy both unchanged.
 - **Access and ID tokens** (`ConnectEndpoints.BuildPrincipal`) carry `auth_time` and `amr` copied from `hs.idp` at authorize, and from the refresh-token principal at refresh. A cookie issued before this feature has neither: treated as "not recent".
 - **`/connect/authorize` honors `max_age`** (OIDC Core §3.1.2.1): when the request has `max_age` and `now − auth_time > max_age` (or no `auth_time`), Identity clears `hs.idp` and redirects to `/signin?returnUrl=…` exactly like a missing session. After the user signs in again, `auth_time` is fresh and the same request passes.
 - **Gateway `GET /bff/login`** gains `reauth` (boolean, default false). When true, the challenge adds `max_age=60` to the authorize request; 60 s covers the round trip so a fresh sign-in is never asked twice. `contracts/openapi/gateway.yaml` documents the parameter.

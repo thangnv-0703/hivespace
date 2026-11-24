@@ -46,3 +46,6 @@ docs/.scaffold-progress.md
 
 # ESLint cache
 .eslintcache
+
+# JetBrains IDE settings
+.idea/

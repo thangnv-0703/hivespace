@@ -1,0 +1,9 @@
+Xin chào {{ display_name }},
+
+Mã đăng nhập HiveSpace của bạn là:
+
+    {{ code }}
+
+Mã có hiệu lực trong {{ minutes }} phút (đến {{ expires_at }}, giờ Việt Nam).
+
+Nếu bạn không yêu cầu mã này, hãy bỏ qua email. Không ai có thể đăng nhập nếu không có mã.

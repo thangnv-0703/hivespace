@@ -159,6 +159,104 @@ paths:
             application/json:
               schema:
                 $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/users/sign-in/code-challenges:
+    post:
+      operationId: requestSignInCode
+      summary: Email a 6-digit sign-in code. Same 201 for any well-formed email (no enumeration, FR-AUTH-029).
+      description: >-
+        Ends every open code of the address and issues a new one valid for 5 minutes (FR-AUTH-028, FR-AUTH-034).
+        The code is emailed only when an account exists. One request per address per 60 seconds (FR-AUTH-033).
+      tags: [identity]
+      security: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInCodeRequest'
+      responses:
+        '201':
+          description: A challenge was issued.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInChallenge'
+        '400':
+          description: "`common.validation_failed` for a malformed email."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '429':
+          description: >-
+            `identity.sign_in_code_too_soon`: a code was requested for this address less than 60 seconds ago;
+            or `common.rate_limited` from the gateway (NFR-SEC-005). Both carry `Retry-After`.
+          headers:
+            Retry-After: { description: Seconds until a new request is accepted, schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/users/sign-in/code:
+    post:
+      operationId: signInWithCode
+      summary: Check an emailed code and start the Identity session (cookie `hs.idp`, `amr` `otp`).
+      description: >-
+        The code is compared only for an open, unexpired challenge of an account that is not locked (FR-AUTH-035).
+        A wrong code counts on the challenge (five end it, FR-AUTH-032) and on the account's lockout (FR-AUTH-031).
+        A correct code is accepted once and verifies the email (FR-AUTH-030, FR-AUTH-036).
+      tags: [identity]
+      security: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignInWithCodeRequest'
+      responses:
+        '200':
+          description: Signed in; `Set-Cookie` carries `hs.idp`.
+          headers:
+            Set-Cookie: { description: The Identity session cookie `hs.idp`, schema: { type: string } }
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [redirectUrl]
+                properties:
+                  redirectUrl: { type: string }
+        '400':
+          description: "`common.validation_failed` when the code is not six digits (detail on `code`). Not counted."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: >-
+            `identity.sign_in_code_invalid` (wrong code), `identity.sign_in_code_expired` (past its 5 minutes) or
+            `identity.sign_in_challenge_ended` (used, replaced, five wrong codes, or unknown challenge). Same bodies whether or not the email has an account.
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '423':
+          description: "`identity.account_locked`: the account is locked (FR-AUTH-035); the code is not checked. Also the wrong code that causes the lock."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '429':
+          description: "`common.rate_limited` from the gateway (NFR-SEC-005), with `Retry-After`."
+          headers:
+            Retry-After: { description: Seconds until the limit window resets, schema: { type: integer } }
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
   /v1/me/profile:
     get:
       operationId: getMyProfile
@@ -435,3 +533,35 @@ components:
         dateOfBirth:
           type: [string, 'null']
           format: date
+    SignInCodeRequest:
+      type: object
+      required: [email]
+      additionalProperties: false
+      properties:
+        email: { type: string, maxLength: 254 }
+    SignInChallenge:
+      type: object
+      required: [challengeId, expiresAt, resendAvailableAt]
+      properties:
+        challengeId:
+          $ref: './shared/components.yaml#/components/schemas/Id'
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the code stops working (5 minutes after issue).
+        resendAvailableAt:
+          type: string
+          format: date-time
+          description: When a new code can be requested (60 seconds after issue).
+    SignInWithCodeRequest:
+      type: object
+      required: [challengeId, code]
+      additionalProperties: false
+      properties:
+        challengeId: { type: string }
+        code:
+          type: string
+          description: The six digits from the email.
+        returnUrl:
+          type: string
+          description: Honored only when it is a local path starting with `/connect/authorize`.

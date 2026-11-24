@@ -9,7 +9,7 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
 {
     private static readonly string[] ExpectedTables =
     [
-        "users", "credentials", "role_grants", "verification_tokens", "external_logins", "sign_in_lockouts", "audit_entries", "outbox", "inbox",
+        "users", "credentials", "role_grants", "verification_tokens", "external_logins", "sign_in_lockouts", "audit_entries", "sign_in_code_challenges", "outbox", "inbox",
         "OpenIddictApplications", "OpenIddictAuthorizations", "OpenIddictScopes", "OpenIddictTokens",
     ];
 
@@ -132,7 +132,60 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
         await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
             $"insert into audit_entries (id, occurred_at, type, method) values ({Guid.CreateVersion7()}, now(), {"other"}, {"password"})", ct));
         await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into audit_entries (id, occurred_at, type, method) values ({Guid.CreateVersion7()}, now(), {"sign_in_failed"}, {"sms"})", ct));
+    }
+
+    [Fact]
+    public async Task AddSignInCodeChallenges_applies_down_and_up_after_AddLockoutAndAudit()
+    {
+        await using var db = postgres.CreateContext();
+        var migrator = db.GetService<IMigrator>();
+        var ct = TestContext.Current.CancellationToken;
+
+        await migrator.MigrateAsync("20261123075254_AddLockoutAndAudit", ct);
+        var before = await ListTables(db);
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
             $"insert into audit_entries (id, occurred_at, type, method) values ({Guid.CreateVersion7()}, now(), {"sign_in_failed"}, {"code"})", ct));
+        await migrator.MigrateAsync(cancellationToken: ct);
+        var after = await ListTables(db);
+
+        Assert.DoesNotContain("sign_in_code_challenges", before);
+        Assert.Contains("sign_in_code_challenges", after);
+        // FEAT-006: method 'code' is now accepted.
+        await db.Database.ExecuteSqlAsync(
+            $"insert into audit_entries (id, occurred_at, type, method) values ({Guid.CreateVersion7()}, now(), {"sign_in_failed"}, {"code"})", ct);
+        await db.Database.ExecuteSqlAsync($"delete from audit_entries where method = 'code'", ct);
+    }
+
+    [Fact]
+    public async Task Sign_in_code_challenges_allow_one_open_challenge_per_address_and_check_their_values()
+    {
+        await using var db = postgres.CreateContext();
+        var ct = TestContext.Current.CancellationToken;
+        var emailHash = Guid.CreateVersion7().ToByteArray();
+        byte[] codeHash = [1, 2, 3];
+
+        await db.Database.ExecuteSqlAsync(
+            $"insert into sign_in_code_challenges (id, email_hash, code_hash, created_at, expires_at) values ({Guid.CreateVersion7()}, {emailHash}, {codeHash}, now(), now())",
+            ct);
+        // A second open challenge for the same address.
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into sign_in_code_challenges (id, email_hash, code_hash, created_at, expires_at) values ({Guid.CreateVersion7()}, {emailHash}, {codeHash}, now(), now())",
+            ct));
+        // An ended one is fine.
+        await db.Database.ExecuteSqlAsync(
+            $"insert into sign_in_code_challenges (id, email_hash, code_hash, created_at, expires_at, ended_at, end_reason) values ({Guid.CreateVersion7()}, {emailHash}, {codeHash}, now(), now(), now(), {"used"})",
+            ct);
+        // Values outside the design.
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into sign_in_code_challenges (id, email_hash, code_hash, failed_count, created_at, expires_at, ended_at, end_reason) values ({Guid.CreateVersion7()}, {emailHash}, {codeHash}, {6}, now(), now(), now(), {"attempts"})",
+            ct));
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into sign_in_code_challenges (id, email_hash, code_hash, created_at, expires_at, ended_at, end_reason) values ({Guid.CreateVersion7()}, {emailHash}, {codeHash}, now(), now(), now(), {"other"})",
+            ct));
+        await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"insert into sign_in_code_challenges (id, email_hash, code_hash, created_at, expires_at, ended_at) values ({Guid.CreateVersion7()}, {emailHash}, {codeHash}, now(), now(), now())",
+            ct));
     }
 
     [Fact]

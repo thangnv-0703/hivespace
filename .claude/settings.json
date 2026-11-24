@@ -7,6 +7,23 @@
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/cloud-setup.sh\"",
             "timeout": 600
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/cloud-use-feature-branch.sh\"",
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/scripts/guard-no-claude-push.sh\"",
+            "timeout": 10
           }
         ]
       }

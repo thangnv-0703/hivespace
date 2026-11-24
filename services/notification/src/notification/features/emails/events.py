@@ -34,3 +34,16 @@ class ExternalLoginLinked(BaseModel):
     account_created: bool
     password_removed: bool
     linked_at: AwareDatetime
+
+
+class SignInCodeRequested(BaseModel):
+    """SignInCodeRequested/v1 (FEAT-006): a 6-digit sign-in code to email. The code is never logged (R-6)."""
+
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=False, extra="forbid")
+
+    user_id: UUID
+    email: str = Field(max_length=254)
+    display_name: str = Field(max_length=80)
+    language: Literal["vi", "en"]
+    code: str = Field(pattern=r"^[0-9]{6}$")
+    expires_at: AwareDatetime

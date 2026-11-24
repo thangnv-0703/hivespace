@@ -17,7 +17,8 @@ const { t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
-const email = ref('')
+// The email typed on the code pages comes back in router state, never in the URL (FEAT-006 ui-design D-A).
+const email = ref(typeof router.options.history.state?.email === 'string' ? router.options.history.state.email : '')
 const password = ref('')
 const errors = reactive({ email: '', password: '' })
 const formError = ref<{ message: string; code?: string; variant: 'error' | 'warning'; title: string } | null>(null)
@@ -66,6 +67,12 @@ onMounted(() => {
     void router.replace({ query })
   }
 })
+// FEAT-006 (ui-design "email code link"): the typed email goes along in router state.
+const codeTarget = computed(() => ({
+  path: '/signin/code',
+  query: returnUrl.value ? { returnUrl: returnUrl.value } : {},
+  state: { email: email.value.trim() },
+}))
 const registerTarget = computed(() => ({ path: '/register', query: returnUrl.value ? { returnUrl: returnUrl.value } : {} }))
 
 function checkEmail(): boolean {
@@ -191,6 +198,12 @@ async function submit() {
       />
       <Button type="submit" size="lg" class="w-full" :loading="busy" :disabled="googleBusy || cooldown.remaining.value > 0">{{ submitLabel }}</Button>
       <p class="sr-only" aria-live="polite">{{ announcement }}</p>
+      <p class="text-center text-sm text-text-muted">
+        {{ $t('auth.signIn.codePrompt') }}
+        <RouterLink :to="codeTarget" class="font-semibold text-text-link underline underline-offset-2 hover:text-text-link-hover" data-testid="code-link">
+          {{ $t('auth.signIn.codeLink') }}
+        </RouterLink>
+      </p>
     </form>
     <p v-if="!retrying" class="mt-6 text-sm text-text-muted">
       {{ $t('auth.signIn.noAccount') }}

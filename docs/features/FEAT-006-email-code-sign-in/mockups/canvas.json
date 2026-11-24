@@ -1,0 +1,25 @@
+{
+  "v": 3,
+  "createdOnFiles": { "v": 1, "at": "2026-11-23T16:00:00Z" },
+  "title": "FEAT-006 · Sign in with an email code",
+  "launch": { "view": "canvas" },
+  "pages": [],
+  "boards": {
+    "Main.dc.html": { "x": 0, "y": 0, "w": 1280, "h": 820, "title": "SCR-STF-022 Enter sign-in code (default)", "expand": "fill" },
+    "CodeRequest.dc.html": { "x": 1360, "y": 0, "w": 1280, "h": 820, "title": "SCR-STF-021 Request sign-in code (default)", "expand": "fill" },
+    "CodeEntryMobile.dc.html": { "x": 0, "y": 940, "w": 390, "h": 844, "title": "SCR-STF-022 Mobile, wrong code", "expand": "fill" },
+    "SignInCodeLink.dc.html": { "x": 470, "y": 940, "w": 560, "h": 640, "title": "SCR-STF-012 Email code link" },
+    "CodeStates.dc.html": { "x": 1110, "y": 940, "w": 560, "h": 1180, "title": "States: too soon, expired, ended, locked, new code sent" }
+  },
+  "order": [
+    "Main.dc.html",
+    "CodeRequest.dc.html",
+    "CodeEntryMobile.dc.html",
+    "SignInCodeLink.dc.html",
+    "CodeStates.dc.html"
+  ],
+  "notes": {
+    "t1": { "x": 0, "y": -260, "text": "FEAT-006: Sign in with an email code", "kind": "title1", "maxW": 2640 }
+  },
+  "designSystems": []
+}

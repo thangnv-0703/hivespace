@@ -58,7 +58,7 @@ Other outcomes:
 
 ### 3.2 Changes to the Identity session cookie and the authorize endpoint (no new endpoint)
 - `hs.idp` gains claim `pwd_at`: the credential's `updated_at` as Unix milliseconds, set at sign-in (`POST /v1/users/sign-in`) and when it is reissued by §3.1.
-  - FEAT-005 adds `auth_time` (Unix seconds of the interactive sign-in) and `amr` (`pwd` or `google`) to `hs.idp`; every reissue copies both unchanged (FEAT-005 §3.6).
+  - FEAT-005 adds `auth_time` (Unix seconds of the interactive sign-in) and `amr` (`pwd` or `google`; FEAT-006 adds `otp` for an emailed code) to `hs.idp`; every reissue copies both unchanged (FEAT-005 §3.6).
 - `/connect/authorize` treats an `hs.idp` cookie as **no session** (and clears it) when the user has a credential and the cookie's `pwd_at` is missing or differs. The browser then goes to the sign-in screen as it does today (D-4). The redirect and error behaviour are otherwise unchanged.
   - **Amended by FEAT-004 (D-5):** the rule is now an exact match. `pwd_at` must equal the credential's stamp, and a cookie that carries `pwd_at` for a user with **no** credential (its password was removed when an unverified account was linked to Google) is also treated as no session. A cookie without `pwd_at` signs in only for an account without a password.
 

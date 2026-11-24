@@ -5,7 +5,7 @@ import gridShape from './assets/shape/grid-01.svg'
 
 /**
  * Full-screen frame for sign-in, register and verify pages (technical-design D-1, ui-design "Shared frame").
- * Presentational only: text arrives as props, the form comes in the default slot, and the corner controls
+ * Presentational only: text arrives as props (or the `subtitle` slot, for a subtitle with a link), the form comes in the default slot, and the corner controls
  * (language, theme) come in the `corner` slot, so this component needs no i18n, router or store.
  */
 withDefaults(
@@ -53,7 +53,7 @@ withDefaults(
             <h1 id="auth-title" tabindex="-1" class="mb-2 text-xl font-semibold text-text-primary focus:outline-none sm:text-title-sm">
               {{ title }}
             </h1>
-            <p v-if="subtitle" class="text-sm text-text-muted">{{ subtitle }}</p>
+            <p v-if="subtitle || $slots.subtitle" class="text-sm text-text-muted"><slot name="subtitle">{{ subtitle }}</slot></p>
           </div>
           <slot />
         </div>

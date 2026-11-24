@@ -1,4 +1,5 @@
 using HiveSpace.BuildingBlocks.Messaging;
+using Identity.Application.Features.CodeSignIn;
 using Identity.Application.Features.ExternalLogin;
 using Identity.Application.Features.Lockout;
 using Identity.Application.Features.Password;
@@ -17,6 +18,8 @@ public sealed class Rig : IAsyncDisposable
 {
     private static readonly Argon2idPasswordHasher Hasher = new();
     private static readonly Sha256TokenGenerator Tokens = new();
+
+    public static readonly SignInCodeGenerator Codes = new();
 
     private readonly PostgresFixture _postgres;
     private readonly IdentityDbContext _db;
@@ -39,7 +42,13 @@ public sealed class Rig : IAsyncDisposable
         ChangePassword = new ChangeMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, users, Recorder, clock);
         SetPassword = new SetMyPasswordHandler(users, Hasher, new OpenIddictSessionRevoker(_db), outbox, clock);
         ExternalSignIn = new ExternalSignInHandler(users, new OpenIddictSessionRevoker(_db), outbox, users, clock);
+        RequestCode = new RequestSignInCodeHandler(users, users, Codes, outbox, clock);
+        SignInWithCode = new SignInWithCodeHandler(users, users, Codes, users, users, Recorder, clock);
     }
+
+    public SignInWithCodeHandler SignInWithCode { get; }
+
+    public RequestSignInCodeHandler RequestCode { get; }
 
     public LockoutRecorder Recorder { get; }
 
@@ -92,6 +101,26 @@ public sealed class Rig : IAsyncDisposable
         }
 
         throw new InvalidOperationException("No outbox event for the user.");
+    }
+
+    /// <summary>The code carried by the newest <c>SignInCodeRequested</c> outbox event for the user, or null when there is none.</summary>
+    public async Task<string?> CodeFromOutboxAsync(Guid userId)
+    {
+        await using var read = _postgres.CreateContext();
+        var rows = await read.Set<OutboxMessage>().Where(m => m.EventType == "SignInCodeRequested").OrderByDescending(m => m.OccurredAt).ToListAsync();
+        return rows
+            .Select(r => EventEnvelope.FromJson(r.Envelope).Data)
+            .Where(d => d.GetProperty("userId").GetGuid() == userId)
+            .Select(d => d.GetProperty("code").GetString())
+            .FirstOrDefault();
+    }
+
+    /// <summary>Requests a code and returns the issued challenge; fails the test when it was not issued.</summary>
+    public async Task<SignInCodeRequestOutcome.Issued> IssueCodeAsync(string email)
+    {
+        var result = await RequestCode.HandleAsync(new RequestSignInCodeCommand(email), CancellationToken.None);
+        Assert.True(result.IsSuccess, result.Failure?.Code);
+        return Assert.IsType<SignInCodeRequestOutcome.Issued>(result.Value);
     }
 
     public ValueTask DisposeAsync() => _db.DisposeAsync();

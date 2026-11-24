@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using HiveSpace.BuildingBlocks.Errors;
+using Identity.Application.Features.CodeSignIn;
 using Identity.Application.Features.Registration;
 using Identity.Domain;
 using Microsoft.AspNetCore.Authentication;
@@ -14,8 +15,12 @@ public sealed record ResendVerificationEmailRequest(string? Email);
 
 public sealed record SignInRequest(string? Email, string? Password, string? ReturnUrl);
 
+public sealed record SignInCodeRequest(string? Email);
+
+public sealed record SignInWithCodeRequest(string? ChallengeId, string? Code, string? ReturnUrl);
+
 /// <summary>REST endpoints for <c>contracts/openapi/identity.yaml</c> (design §3.1). Thin: they call Application handlers.</summary>
-public static class UsersEndpoints
+public static partial class UsersEndpoints
 {
     public const string CookieScheme = "hs.idp";
 
@@ -25,7 +30,7 @@ public static class UsersEndpoints
     /// <summary>Unix seconds of the interactive sign-in behind the session (OIDC <c>auth_time</c>, FEAT-005 §3.6).</summary>
     public const string AuthTimeClaim = "auth_time";
 
-    /// <summary>How the user signed in (OIDC <c>amr</c>): <c>pwd</c> or <c>google</c>.</summary>
+    /// <summary>How the user signed in (OIDC <c>amr</c>, RFC 8176): <c>pwd</c>, <c>google</c> or <c>otp</c> (an emailed code, FEAT-006).</summary>
     public const string AmrClaim = "amr";
 
     public static IEndpointRouteBuilder MapUsersEndpoints(this IEndpointRouteBuilder app)
@@ -61,8 +66,45 @@ public static class UsersEndpoints
             })
             .WithName("signIn");
 
+        app.MapPost("/v1/users/sign-in/code-challenges", async (SignInCodeRequest body, RequestSignInCodeHandler handler, ILoggerFactory loggers, CancellationToken ct) =>
+            {
+                switch ((await handler.HandleAsync(new RequestSignInCodeCommand(body.Email), ct)).OrThrow())
+                {
+                    case SignInCodeRequestOutcome.TooSoon tooSoon:
+                        throw new ApiException(SignInCodeTooSoon) { RetryAfterSeconds = tooSoon.RetryAfterSeconds };
+                    case SignInCodeRequestOutcome.Issued issued:
+                        // The challenge id only: never the email, the code, or whether an account exists (NFR-SEC-016, design §5.2).
+                        LogCodeIssued(loggers.CreateLogger(typeof(UsersEndpoints)), issued.ChallengeId);
+                        return Results.Json(
+                            new { challengeId = issued.ChallengeId, expiresAt = issued.ExpiresAt, resendAvailableAt = issued.ResendAvailableAt },
+                            statusCode: StatusCodes.Status201Created);
+                    default:
+                        throw new InvalidOperationException("Unknown outcome.");
+                }
+            })
+            .WithName("requestSignInCode");
+
+        app.MapPost("/v1/users/sign-in/code", async (HttpContext http, SignInWithCodeRequest body, SignInWithCodeHandler handler, ILoggerFactory loggers, CancellationToken ct) =>
+            {
+                var result = await handler.HandleAsync(new SignInWithCodeCommand(body.ChallengeId, body.Code, body.ReturnUrl), ct);
+                var outcome = result.OrThrow();
+                // The account with a password keeps its exact pwd_at, so authorize accepts the cookie (D-8, FEAT-004 D-5).
+                await http.SignInAsync(CookieScheme, ToPrincipal(outcome.User, outcome.PasswordStamp, outcome.AuthTime.ToUnixTimeSeconds(), "otp"));
+                LogCodeSignIn(loggers.CreateLogger(typeof(UsersEndpoints)), outcome.User.Id);
+                return Results.Ok(new { redirectUrl = outcome.RedirectUrl });
+            })
+            .WithName("signInWithCode");
+
         return app;
     }
+
+    private const string SignInCodeTooSoon = "identity.sign_in_code_too_soon";
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Sign-in code issued: challenge {ChallengeId}")]
+    private static partial void LogCodeIssued(ILogger logger, Guid challengeId);
+
+    [LoggerMessage(Level = LogLevel.Information, Message = "Signed in with a code: user {UserId}")]
+    private static partial void LogCodeSignIn(ILogger logger, Guid userId);
 
     /// <summary>The <c>auth_time</c> of a cookie or token principal, or null when it has none or it is not a number.</summary>
     public static long? AuthTimeOf(ClaimsPrincipal? principal) =>

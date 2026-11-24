@@ -387,3 +387,89 @@ async def test_an_invalid_link_event_writes_nothing_and_sends_nothing(engine: As
     assert await _count(engine, "email_records") == 0
     assert await _count(engine, "contacts") == 0
     assert await _count(engine, "inbox") == 0
+
+
+# ---- FEAT-006: SignInCodeRequested (AC-13) ----
+
+CODE = "042917"
+
+
+def _code_event(user_id: str | None = None, *, language: str = "vi") -> Envelope:
+    return Envelope.model_validate(
+        {
+            "eventId": str(uuid.uuid4()),
+            "eventType": "SignInCodeRequested",
+            "eventVersion": 1,
+            "occurredAt": datetime.now(UTC).isoformat(),
+            "producer": "identity",
+            "correlationId": "corr-1",
+            "data": {
+                "userId": user_id or str(uuid.uuid4()),
+                "email": "an@example.com",
+                "displayName": "An",
+                "language": language,
+                "code": CODE,
+                "expiresAt": (datetime.now(UTC) + timedelta(minutes=5)).isoformat(),
+            },
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("language", "subject", "validity"),
+    [("vi", "Mã đăng nhập HiveSpace của bạn", "5 phút"), ("en", "Your HiveSpace sign-in code", "5 minutes")],
+)
+async def test_a_code_event_sends_one_sign_in_code_email_in_its_language(
+    engine: AsyncEngine, language: str, subject: str, validity: str
+) -> None:
+    sender = FakeSender()
+
+    await make_handler(engine, sender, BASE_URL)(_code_event(language=language))
+
+    assert [(m.to, m.subject) for m in sender.sent] == [("an@example.com", subject)]
+    assert CODE in sender.sent[0].text
+    assert validity in sender.sent[0].text
+    async with engine.connect() as conn:
+        row = (await conn.execute(text("SELECT template, status, language FROM email_records"))).one()
+    assert (row.template, row.status, row.language) == ("sign_in_code", "sent", language)
+
+
+async def test_a_code_event_delivered_twice_sends_once(engine: AsyncEngine) -> None:
+    sender = FakeSender()
+    handle = make_handler(engine, sender, BASE_URL)
+    event = _code_event()
+
+    await handle(event)
+    await handle(event)
+
+    assert len(sender.sent) == 1
+    assert await _count(engine, "email_records") == 1
+
+
+@pytest.mark.parametrize(("key", "value"), [("token", "extra"), ("code", "12345"), ("code", "abcdef")])
+async def test_an_invalid_code_event_writes_nothing_and_sends_nothing(
+    engine: AsyncEngine, key: str, value: str
+) -> None:
+    sender = FakeSender()
+    bad = _code_event()
+    bad.data[key] = value
+
+    with pytest.raises(ValueError, match=key):
+        await make_handler(engine, sender, BASE_URL)(bad)
+
+    assert sender.sent == []
+    assert await _count(engine, "email_records") == 0
+    assert await _count(engine, "contacts") == 0
+    assert await _count(engine, "inbox") == 0
+
+
+async def test_a_code_event_upserts_the_contact_and_stores_no_code(engine: AsyncEngine) -> None:
+    user_id = str(uuid.uuid4())
+
+    await make_handler(engine, FakeSender(), BASE_URL)(_code_event(user_id, language="en"))
+
+    assert await _contact(engine, user_id) == ("an@example.com", "An", "en")
+    async with engine.connect() as conn:
+        for table in ("email_records", "contacts", "inbox"):
+            dump = (await conn.execute(text(f"SELECT t::text FROM {table} t"))).scalars().all()  # noqa: S608
+            assert all(CODE not in row for row in dump), table
