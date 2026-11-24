@@ -31,6 +31,8 @@ public sealed class ShopFlowTests(PostgresFixture postgres) : IClassFixture<Post
         await using var _ = rig;
 
         var unique = Guid.NewGuid().ToString("N");
+        // The audit row joins the request's trace (AC-9); no Activity under test would leave it null.
+        using var trace = new System.Diagnostics.Activity("ac9-registration").Start();
         var result = await rig.RegisterShop.HandleAsync(Form(userId, $"Tiệm  Bánh {unique} ", "business"), Ct);
 
         Assert.True(result.IsSuccess, result.Failure?.Code);
@@ -47,6 +49,8 @@ public sealed class ShopFlowTests(PostgresFixture postgres) : IClassFixture<Post
         var audit = await read.AuditEntries.SingleAsync(a => a.UserId == userId && a.Type == "seller_role_granted", Ct);
         Assert.Null(audit.Method);
         Assert.Null(audit.Reason);
+        Assert.Equal(trace.TraceId.ToString(), audit.CorrelationId);
+        Assert.Equal(1, await read.AuditEntries.CountAsync(a => a.UserId == userId && a.Type == "seller_role_granted", Ct));
     }
 
     [Fact]
