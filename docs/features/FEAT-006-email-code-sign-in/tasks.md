@@ -43,7 +43,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
 - [x] T11 — Web wiring: `api.ts` calls, `codeChallenge.ts`, `CodeRequestPage.vue` (SCR-STF-021, `/signin/code`), `CodeEntryPage.vue` (SCR-STF-022, `/signin/code/enter`), the SCR-STF-012 link, routes, exports, vi/en keys — realizing ui-design's specs for these screens.
       (design §5.5; FR-AUTH-028..033, FR-AUTH-035; UC-029; screens per [ui-design.md](ui-design.md), visual reference in [mockups/](mockups/))
       Done when: Vitest component tests pass for AC-17, the screens render and match their ui-design specs, and `pnpm turbo run lint typecheck test build` passes (Sheriff, key parity).
-- [ ] T12 — Contract steps: step definitions for `code-sign-in.feature` (read the code from the outbox row, fake clock or direct `expires_at` update for expiry, lock via the FEAT-005 steps).
+- [x] T12 — Contract steps: step definitions for `code-sign-in.feature` (read the code from the outbox row, fake clock or direct `expires_at` update for expiry, lock via the FEAT-005 steps).
       (design §3.6; AC-18)
       Done when: `cd tests/contract && pnpm test` passes for every scenario, old and new.
 - [ ] T13 — Verify: every acceptance criterion AC-1..AC-19 demonstrably passes; boundary rules green (Identity architecture tests, Spectral, depguard not affected, import-linter, Sheriff); the full .NET, Python and web suites green; no code, code hash or email in the log output of the T7 and T10 runs; record results in this file.
