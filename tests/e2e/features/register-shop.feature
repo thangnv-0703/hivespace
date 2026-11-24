@@ -17,5 +17,8 @@ Feature: Register a shop and become a seller
     Then the seller centre asks for a shop name and no password
     When the user registers a shop with a unique name as "Individual"
     Then the dashboard shows the new shop and the checklist "0 of 2 done"
+    And the seller centre sidebar lists "Orders"
     When the user opens the registration page again
     Then the dashboard is shown instead
+    When the user opens an unknown seller centre page
+    Then the seller centre sidebar lists "Orders"

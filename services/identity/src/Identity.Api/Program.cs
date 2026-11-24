@@ -1,4 +1,4 @@
-﻿using HiveSpace.BuildingBlocks.Errors;
+using HiveSpace.BuildingBlocks.Errors;
 using Identity.Api.Endpoints;
 using Identity.Api.External;
 using Identity.Api.Oidc;

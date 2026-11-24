@@ -1,4 +1,4 @@
-﻿using HiveSpace.BuildingBlocks.Messaging;
+using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Features.CodeSignIn;
 using Identity.Application.Features.ExternalLogin;
 using Identity.Application.Features.Lockout;

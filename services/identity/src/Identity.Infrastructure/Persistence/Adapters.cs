@@ -1,4 +1,4 @@
-﻿using System.Diagnostics;
+using System.Diagnostics;
 using HiveSpace.BuildingBlocks.Messaging;
 using Identity.Application.Abstractions;
 using Identity.Domain;

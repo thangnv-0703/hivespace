@@ -48,3 +48,12 @@ Then('the dashboard is shown instead', async ({ page }) => {
   await expect(page).toHaveURL(seller('/'))
   await expect(page.getByRole('heading', { level: 1 })).toHaveText('Dashboard')
 })
+
+// The sidebar is off-canvas below lg, so it is checked in the DOM, not for visibility.
+Then('the seller centre sidebar lists {string}', async ({ page }, section: string) => {
+  await expect(page.getByTestId('sidebar')).toContainText(section)
+})
+
+When('the user opens an unknown seller centre page', async ({ page }) => {
+  await page.goto(seller('/no-such-page'))
+})
