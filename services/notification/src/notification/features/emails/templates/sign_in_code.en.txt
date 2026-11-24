@@ -1,0 +1,9 @@
+Hello {{ display_name }},
+
+Your HiveSpace sign-in code is:
+
+    {{ code }}
+
+It is valid for {{ minutes }} minutes (until {{ expires_at }}, Vietnam time).
+
+If you did not ask for this code, ignore this email. Nobody can sign in without the code.

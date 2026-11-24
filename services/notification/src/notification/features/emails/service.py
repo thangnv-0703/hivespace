@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import uuid
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -17,7 +18,7 @@ from sqlalchemy import Column, DateTime, Integer, MetaData, String, Table, Text,
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine
 
-from notification.features.emails.events import ExternalLoginLinked, PasswordChanged
+from notification.features.emails.events import ExternalLoginLinked, PasswordChanged, SignInCodeRequested
 from notification.providers.email import EmailMessage, EmailSender
 
 log = logging.getLogger(__name__)
@@ -44,6 +45,7 @@ LANGUAGES = ("vi", "en")
 VERIFICATION = "verification"
 PASSWORD_CHANGED = "password_changed"  # noqa: S105 - a template name, not a credential
 EXTERNAL_LOGIN_LINKED = "external_login_linked"
+SIGN_IN_CODE = "sign_in_code"
 VIETNAM = ZoneInfo("Asia/Ho_Chi_Minh")  # NFR-L10N-002: times are shown in Vietnam time
 
 
@@ -84,6 +86,18 @@ def _external_login_linked_context(data: dict[str, Any], public_base_url: str) -
     }
 
 
+def _sign_in_code_context(data: dict[str, Any], _public_base_url: str) -> dict[str, Any]:
+    # Validated before any write (dispatch). No link: the code is the only way in (FEAT-006 design 5.4).
+    event = SignInCodeRequested.model_validate(data)
+    seconds_left = (event.expires_at - datetime.now(UTC)).total_seconds()
+    return {
+        "display_name": event.display_name,
+        "code": event.code,
+        "minutes": max(1, math.ceil(seconds_left / 60)),
+        "expires_at": event.expires_at.astimezone(VIETNAM).strftime("%H:%M %d/%m/%Y"),
+    }
+
+
 # The template table, keyed by event type.
 KINDS: dict[str, EmailKind] = {
     "UserRegistered": EmailKind(
@@ -108,6 +122,11 @@ KINDS: dict[str, EmailKind] = {
         {"vi": "Tài khoản Google đã được liên kết với HiveSpace", "en": "Google account linked to HiveSpace"},
         _external_login_linked_context,
         applies=lambda data: data.get("accountCreated") is False,
+    ),
+    "SignInCodeRequested": EmailKind(
+        SIGN_IN_CODE,
+        {"vi": "Mã đăng nhập HiveSpace của bạn", "en": "Your HiveSpace sign-in code"},
+        _sign_in_code_context,
     ),
 }
 EMAIL_EVENTS = frozenset(KINDS)

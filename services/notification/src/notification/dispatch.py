@@ -12,7 +12,7 @@ from hivespace_common.eventbus import Envelope
 from notification.features.contacts import repository as contacts
 from notification.features.contacts.events import UserProfileChanged
 from notification.features.emails import service as emails
-from notification.features.emails.events import ExternalLoginLinked, PasswordChanged
+from notification.features.emails.events import ExternalLoginLinked, PasswordChanged, SignInCodeRequested
 from notification.providers.email import EmailSender
 
 log = logging.getLogger(__name__)
@@ -36,6 +36,8 @@ def make_handler(
                 PasswordChanged.model_validate(envelope.data)
             if envelope.event_type == "ExternalLoginLinked":
                 ExternalLoginLinked.model_validate(envelope.data)
+            if envelope.event_type == "SignInCodeRequested":
+                SignInCodeRequested.model_validate(envelope.data)
             if envelope.event_type in contacts.CONTACT_EVENTS:
                 await contacts.upsert(conn, envelope.data)
             if envelope.event_type in emails.EMAIL_EVENTS:

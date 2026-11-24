@@ -34,7 +34,7 @@ The screen states of SCR-STF-021, SCR-STF-022 and the SCR-STF-012 link are owned
 - [x] T8 — Challenge purge: `SignInChallengeSweeper` (start and hourly, 1 day after expiry) registered in Identity.
       (design §5.2 Infrastructure; D-3)
       Done when: an integration test of `RunOnceAsync` passes for AC-12.
-- [ ] T9 — Notification: pydantic `SignInCodeRequested`, validation in `dispatch.py`, `CONTACT_EVENTS`, `KINDS["SignInCodeRequested"]`, templates `sign_in_code.{vi,en}.{txt,html}`.
+- [x] T9 — Notification: pydantic `SignInCodeRequested`, validation in `dispatch.py`, `CONTACT_EVENTS`, `KINDS["SignInCodeRequested"]`, templates `sign_in_code.{vi,en}.{txt,html}`.
       (design §5.4; FR-NOTIF-016, FR-LOC-005)
       Done when: `uv run pytest && uv run mypy && uv run lint-imports` pass, with tests for AC-13 (vi and en content, dedupe on redelivery, rejected payloads write nothing, contact upsert) and a test that keeps the pydantic model and the JSON schema in step.
 - [ ] T10 — Wire the real path: gateway test for the code endpoints under `auth`; system test in `tests/system` for request → Mailpit email → submit.
