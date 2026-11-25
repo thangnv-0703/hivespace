@@ -2,6 +2,7 @@
 import { setLocale, type Locale } from '@hivespace/core'
 import { useSessionStore } from '@/features/auth'
 import { dashboardSessionKey } from '@/features/dashboard'
+import { settingsSessionKey } from '@/features/settings'
 import { shopSessionKey } from '@/features/shop'
 import OnboardingLayout from '@/shared/layouts/OnboardingLayout.vue'
 import SellerLayout from '@/shared/layouts/SellerLayout.vue'
@@ -19,6 +20,11 @@ const i18n = useI18n()
 provide(shopSessionKey, {
   email: () => session.user?.email ?? '',
   emailVerified: () => session.user?.emailVerified ?? false,
+  refresh: () => session.refresh(),
+  markSignedOut: () => session.markSignedOut(),
+  notify,
+})
+provide(settingsSessionKey, {
   refresh: () => session.refresh(),
   markSignedOut: () => session.markSignedOut(),
   notify,

@@ -39,7 +39,7 @@ describe('DashboardPage (SCR-SEL-002)', () => {
 
     expect(wrapper.get('[data-testid=shop-subtitle]').text()).toBe('Tiệm Bánh An · Business')
     expect(wrapper.get('[data-testid=setup-progress]').text()).toBe('0 of 2 done')
-    const actions = wrapper.findAll('a[href="/settings"]').map((link) => link.text())
+    const actions = wrapper.findAll('a[href="/settings/pickup-payout"]').map((link) => link.text())
     expect(actions).toEqual(['Add address', 'Add bank details'])
   })
 
@@ -50,7 +50,7 @@ describe('DashboardPage (SCR-SEL-002)', () => {
 
     expect(wrapper.get('[data-testid=setup-progress]').text()).toBe('2 of 2 done')
     expect(wrapper.text()).toContain('Your shop is ready to publish products.')
-    expect(wrapper.find('a[href="/settings"]').exists()).toBe(false)
+    expect(wrapper.find('a[href="/settings/pickup-payout"]').exists()).toBe(false)
   })
 
   it('shows an error with a Retry that asks again', async () => {

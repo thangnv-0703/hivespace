@@ -1,0 +1,86 @@
+{
+  "settings": {
+    "title": "Settings",
+    "retry": "Retry",
+    "saved": "Saved",
+    "missing": "Missing",
+    "supportHint": "If this keeps happening, contact support.",
+    "ready": "Your shop is ready to publish products.",
+    "sellerType": {
+      "individual": "Individual",
+      "business": "Business"
+    },
+    "errors": {
+      "load": "We couldn't load your shop. Try again.",
+      "nameRequired": "Enter a shop name.",
+      "nameTooShort": "Use at least 3 characters.",
+      "nameInvalid": "This shop name isn't valid. Try another.",
+      "nameTaken": "This shop name is already taken. Try another.",
+      "descriptionInvalid": "The description isn't valid.",
+      "required": "Enter {field}.",
+      "phone": "Enter a Vietnamese phone number, e.g. 0912 345 678.",
+      "accountNumber": "Enter 6 to 19 digits.",
+      "invalid": "This value isn't valid.",
+      "summary": "Some fields need your attention."
+    },
+    "profile": {
+      "title": "Shop profile",
+      "card": "Shop details",
+      "name": "Shop name",
+      "nameHint": "3–60 characters. Buyers see this name, exactly as you write it.",
+      "description": "Description",
+      "descriptionHint": "Shown on your shop page. Up to 1,000 characters.",
+      "count": "{count} / {max}",
+      "sellerType": "Seller type",
+      "sellerTypeHint": "Set when you opened the shop.",
+      "save": "Save changes",
+      "saved": "Shop profile saved",
+      "failed": "We couldn't save your shop profile. Try again."
+    },
+    "pickupPayout": {
+      "title": "Pickup address and payout",
+      "crumb": "Pickup and payout",
+      "subtitle": "Both are needed before you can publish products."
+    },
+    "pickup": {
+      "title": "Pickup address",
+      "intro": "Where carriers collect your orders. Only you can see it.",
+      "fields": {
+        "contactName": "Contact name",
+        "phone": "Phone",
+        "province": "Province or city",
+        "district": "District",
+        "ward": "Ward or commune",
+        "street": "Street address"
+      },
+      "phoneHint": "Vietnamese number, e.g. 0912 345 678",
+      "streetHint": "House number and street.",
+      "save": "Save address",
+      "saved": "Pickup address saved",
+      "failed": "We couldn't save your pickup address. Try again."
+    },
+    "payout": {
+      "title": "Payout details",
+      "intro": "The bank account for your earnings. Nothing is paid out yet; HiveSpace is a demo.",
+      "fields": {
+        "bankName": "Bank name",
+        "accountNumber": "Account number",
+        "accountHolder": "Account holder"
+      },
+      "bankPlaceholder": "e.g. Vietcombank",
+      "accountNumberHint": "6–19 digits. Spaces and dashes are fine.",
+      "accountHolderHint": "As shown by your bank, usually in capitals without accents.",
+      "save": "Save payout details",
+      "cancel": "Cancel",
+      "change": "Change",
+      "saved": "Payout details saved",
+      "failed": "We couldn't save your payout details. Try again.",
+      "summary": {
+        "bank": "Bank",
+        "accountNumber": "Account number",
+        "holder": "Account holder",
+        "ending": "ending in {digits}"
+      }
+    }
+  }
+}
