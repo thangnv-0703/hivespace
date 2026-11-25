@@ -151,6 +151,73 @@ public sealed class ShopApiTests : IAsyncLifetime
         Assert.Equal(alice.UserId, (await db.Shops.SingleAsync(s => s.Id == body.GetProperty("shopId").GetGuid(), Ct)).OwnerUserId);
     }
 
+    private static readonly object ProfileBody = new { name = "Tiệm Bánh An", description = (string?)null };
+    private static readonly object AddressBody = new { contactName = "An", phone = "0912345678", province = "Hà Nội", district = "Ba Đình", ward = "Phúc Xá", street = "12 Lê Lợi" };
+    private static readonly object PayoutBody = new { bankName = "Vietcombank", accountNumber = "0071001234567", accountHolder = "NGUYEN VAN AN" };
+
+    [Theory]
+    [InlineData("/v1/shops/me/profile")]
+    [InlineData("/v1/shops/me/pickup-address")]
+    [InlineData("/v1/shops/me/payout")]
+    public async Task Ac8_a_buyer_only_token_is_403_forbidden_on_each_put_and_nothing_is_written(string path)
+    {
+        var user = await SignedInAsync(verified: true);
+        var body = path.EndsWith("profile", StringComparison.Ordinal) ? ProfileBody : path.EndsWith("address", StringComparison.Ordinal) ? AddressBody : PayoutBody;
+
+        using var response = await user.PutAsync(path, body);
+
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.Equal("common.forbidden", (await response.Content.ReadFromJsonAsync<JsonElement>(Ct)).GetProperty("code").GetString());
+    }
+
+    [Theory]
+    [InlineData("/v1/shops/me/profile")]
+    [InlineData("/v1/shops/me/pickup-address")]
+    [InlineData("/v1/shops/me/payout")]
+    public async Task Ac8_a_spoofed_user_id_header_and_a_body_shop_id_never_change_the_shop_written(string path)
+    {
+        var alice = await SignedInAsync(verified: true);
+        var bob = await SignedInAsync(verified: true);
+        (await bob.PostShopAsync(new { name = $"Bob {Guid.NewGuid():N}", sellerType = "individual" })).Dispose();
+        (await alice.PostShopAsync(new { name = $"Alice {Guid.NewGuid():N}", sellerType = "individual" })).Dispose();
+        var aliceSeller = await alice.WithFreshTokenAsync(this);
+        var body = path.EndsWith("profile", StringComparison.Ordinal)
+            ? new Dictionary<string, object?> { ["name"] = $"Renamed {Guid.NewGuid():N}", ["description"] = "mine" }
+            : path.EndsWith("address", StringComparison.Ordinal)
+                ? new Dictionary<string, object?> { ["contactName"] = "An", ["phone"] = "0912345678", ["province"] = "p", ["district"] = "d", ["ward"] = "w", ["street"] = "s" }
+                : new Dictionary<string, object?> { ["bankName"] = "Vietcombank", ["accountNumber"] = "0071001234567", ["accountHolder"] = "AN" };
+
+        using var withShopId = await aliceSeller.PutAsync(path, new Dictionary<string, object?>(body) { ["shopId"] = Guid.NewGuid() });
+        Assert.Equal(HttpStatusCode.BadRequest, withShopId.StatusCode);
+        using var spoofed = await aliceSeller.PutAsync(path, body, spoofedUserId: bob.UserId);
+
+        Assert.Equal(HttpStatusCode.OK, spoofed.StatusCode);
+        using var scope = _factory!.Services.CreateScope();
+        var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
+        var aliceShop = await db.Shops.SingleAsync(s => s.OwnerUserId == alice.UserId, Ct);
+        var bobShop = await db.Shops.SingleAsync(s => s.OwnerUserId == bob.UserId, Ct);
+        Assert.True(aliceShop.Description == "mine" || aliceShop.PickupAddress is not null || aliceShop.Payout is not null);
+        Assert.Equal((null, null, null), (bobShop.Description, bobShop.PickupAddress, bobShop.Payout));
+    }
+
+    [Fact]
+    public async Task Ac11_the_payout_response_and_the_logs_never_carry_the_account_digits()
+    {
+        var user = await SignedInAsync(verified: true);
+        (await user.PostShopAsync(new { name = $"Shop {Guid.NewGuid():N}", sellerType = "individual" })).Dispose();
+        var seller = await user.WithFreshTokenAsync(this);
+
+        using var response = await seller.PutAsync("/v1/shops/me/payout", PayoutBody);
+        var text = await response.Content.ReadAsStringAsync(Ct);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.DoesNotContain("0071001234567", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("accountNumber\"", text, StringComparison.Ordinal);
+        Assert.Contains("\"accountNumberLast4\":\"4567\"", text, StringComparison.Ordinal);
+        Assert.DoesNotContain("0071001234567", _factory!.Logs.Text, StringComparison.Ordinal);
+        Assert.Contains("section payout", _factory.Logs.Text, StringComparison.Ordinal);
+    }
+
     [Theory]
     [InlineData("none")]
     [InlineData("tampered")]
@@ -270,6 +337,9 @@ public sealed class ShopApiTests : IAsyncLifetime
 
         public Task<HttpResponseMessage> PostShopAsync(object body, string? language = null, Guid? spoofedUserId = null) =>
             Send(HttpMethod.Post, "/v1/shops", JsonContent.Create(body), language, spoofedUserId);
+
+        public Task<HttpResponseMessage> PutAsync(string path, object body, Guid? spoofedUserId = null) =>
+            Send(HttpMethod.Put, path, JsonContent.Create(body), null, spoofedUserId);
 
         public Task<HttpResponseMessage> GetShopAsync(Guid? spoofedUserId = null) =>
             Send(HttpMethod.Get, "/v1/shops/me", null, null, spoofedUserId);
