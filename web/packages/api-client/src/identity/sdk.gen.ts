@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, GetMyShopData, GetMyShopErrors, GetMyShopResponses, RegisterShopData, RegisterShopErrors, RegisterShopResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, RequestSignInCodeData, RequestSignInCodeErrors, RequestSignInCodeResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SetMyPasswordData, SetMyPasswordErrors, SetMyPasswordResponses, SignInData, SignInErrors, SignInResponses, SignInWithCodeData, SignInWithCodeErrors, SignInWithCodeResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
+import type { ChangeMyPasswordData, ChangeMyPasswordErrors, ChangeMyPasswordResponses, GetMyProfileData, GetMyProfileErrors, GetMyProfileResponses, GetMyShopData, GetMyShopErrors, GetMyShopResponses, RegisterShopData, RegisterShopErrors, RegisterShopResponses, RegisterUserData, RegisterUserErrors, RegisterUserResponses, RequestSignInCodeData, RequestSignInCodeErrors, RequestSignInCodeResponses, ResendVerificationEmailData, ResendVerificationEmailErrors, ResendVerificationEmailResponses, SetMyPasswordData, SetMyPasswordErrors, SetMyPasswordResponses, SetMyShopPayoutData, SetMyShopPayoutErrors, SetMyShopPayoutResponses, SetMyShopPickupAddressData, SetMyShopPickupAddressErrors, SetMyShopPickupAddressResponses, SignInData, SignInErrors, SignInResponses, SignInWithCodeData, SignInWithCodeErrors, SignInWithCodeResponses, UpdateMyLanguageData, UpdateMyLanguageErrors, UpdateMyLanguageResponses, UpdateMyProfileData, UpdateMyProfileErrors, UpdateMyProfileResponses, UpdateMyShopProfileData, UpdateMyShopProfileErrors, UpdateMyShopProfileResponses, VerifyEmailData, VerifyEmailErrors, VerifyEmailResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -183,4 +183,49 @@ export const getMyShop = <ThrowOnError extends boolean = false>(options?: Option
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/v1/shops/me',
     ...options
+});
+
+/**
+ * Update the shop's name and description (FR-SHOP-005).
+ *
+ * The shop is always the caller's (token `sub`). Every key must be present; `description: null` clears it. Renaming keeps FR-SHOP-003: a name used by another shop is `identity.shop_name_taken`; the shop's own name in another case is accepted.
+ */
+export const updateMyShopProfile = <ThrowOnError extends boolean = false>(options: Options<UpdateMyShopProfileData, ThrowOnError>): RequestResult<UpdateMyShopProfileResponses, UpdateMyShopProfileErrors, ThrowOnError> => (options.client ?? client).put<UpdateMyShopProfileResponses, UpdateMyShopProfileErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/shops/me/profile',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set the shop's pickup address (FR-SHOP-006).
+ *
+ * The shop is always the caller's. All six keys are required. The phone is stored as E.164.
+ */
+export const setMyShopPickupAddress = <ThrowOnError extends boolean = false>(options: Options<SetMyShopPickupAddressData, ThrowOnError>): RequestResult<SetMyShopPickupAddressResponses, SetMyShopPickupAddressErrors, ThrowOnError> => (options.client ?? client).put<SetMyShopPickupAddressResponses, SetMyShopPickupAddressErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/shops/me/pickup-address',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Set the shop's payout bank details (FR-SHOP-007).
+ *
+ * The shop is always the caller's. The full account number is always sent (a masked value cannot be sent back). It is encrypted at rest and never returned: responses carry only the last four digits (NFR-SEC-008). No payout or transfer is started.
+ */
+export const setMyShopPayout = <ThrowOnError extends boolean = false>(options: Options<SetMyShopPayoutData, ThrowOnError>): RequestResult<SetMyShopPayoutResponses, SetMyShopPayoutErrors, ThrowOnError> => (options.client ?? client).put<SetMyShopPayoutResponses, SetMyShopPayoutErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/v1/shops/me/payout',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });

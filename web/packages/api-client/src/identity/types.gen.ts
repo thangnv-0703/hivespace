@@ -76,13 +76,84 @@ export type MyShop = {
     name: string;
     sellerType: SellerType;
     createdAt: string;
+    updatedAt: string;
+    description: string | null;
+    pickupAddress: PickupAddress | null;
+    payout: Payout | null;
     /**
-     * Feeds the seller-centre setup checklist; both stay false until FEAT-010.
+     * Feeds the seller-centre setup checklist; each flag is true once that section is saved.
      */
     setup: {
         pickupAddress: boolean;
         payout: boolean;
     };
+};
+
+export type ShopProfileUpdate = {
+    /**
+     * Trimmed, inner whitespace collapsed, 3 to 60 characters, no control characters.
+     */
+    name: string;
+    /**
+     * At most 1000 characters after trimming; empty or whitespace-only stores null; `\n` allowed, other control characters not.
+     */
+    description: string | null;
+};
+
+export type PickupAddressUpdate = {
+    /**
+     * 1 to 80 characters.
+     */
+    contactName: string;
+    /**
+     * A Vietnamese phone number (FEAT-002 rule); stored as E.164.
+     */
+    phone: string;
+    /**
+     * 1 to 60 characters.
+     */
+    province: string;
+    /**
+     * 1 to 60 characters.
+     */
+    district: string;
+    /**
+     * 1 to 60 characters.
+     */
+    ward: string;
+    /**
+     * 1 to 200 characters.
+     */
+    street: string;
+};
+
+export type PickupAddress = {
+    contactName: string;
+    /**
+     * E.164.
+     */
+    phone: string;
+    province: string;
+    district: string;
+    ward: string;
+    street: string;
+};
+
+export type PayoutUpdate = {
+    /**
+     * 2 to 80 characters.
+     */
+    bankName: string;
+    /**
+     * 2 to 80 characters.
+     */
+    accountHolder: string;
+};
+
+export type Payout = {
+    bankName: string;
+    accountNumberLast4: string;
+    accountHolder: string;
 };
 
 export type SignInCodeRequest = {
@@ -145,6 +216,21 @@ export type ProfileWritable = {
      */
     avatarUrl: string | null;
     language: Language;
+};
+
+export type PayoutUpdateWritable = {
+    /**
+     * 2 to 80 characters.
+     */
+    bankName: string;
+    /**
+     * 6 to 19 digits after removing spaces and hyphens. Never returned.
+     */
+    accountNumber: string;
+    /**
+     * 2 to 80 characters.
+     */
+    accountHolder: string;
 };
 
 /**
@@ -665,3 +751,136 @@ export type GetMyShopResponses = {
 };
 
 export type GetMyShopResponse = GetMyShopResponses[keyof GetMyShopResponses];
+
+export type UpdateMyShopProfileData = {
+    body: ShopProfileUpdate;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/shops/me/profile';
+};
+
+export type UpdateMyShopProfileErrors = {
+    /**
+     * `common.validation_failed` with one details entry per invalid field (`name`, `description`); an unknown key or a value of the wrong type is a field error too.
+     */
+    400: Error;
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+    /**
+     * `common.forbidden`: the token has no Seller role.
+     */
+    403: Error;
+    /**
+     * `common.not_found`: a Seller role without a shop (not reachable through the API).
+     */
+    404: Error;
+    /**
+     * `identity.shop_name_taken`: another shop already has this name (any case or spacing).
+     */
+    409: Error;
+};
+
+export type UpdateMyShopProfileError = UpdateMyShopProfileErrors[keyof UpdateMyShopProfileErrors];
+
+export type UpdateMyShopProfileResponses = {
+    /**
+     * Saved; the whole shop as the seller centre shows it.
+     */
+    200: MyShop;
+};
+
+export type UpdateMyShopProfileResponse = UpdateMyShopProfileResponses[keyof UpdateMyShopProfileResponses];
+
+export type SetMyShopPickupAddressData = {
+    body: PickupAddressUpdate;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/shops/me/pickup-address';
+};
+
+export type SetMyShopPickupAddressErrors = {
+    /**
+     * `common.validation_failed` with one details entry per invalid field (`contactName`, `phone`, `province`, `district`, `ward`, `street`).
+     */
+    400: Error;
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+    /**
+     * `common.forbidden`: the token has no Seller role.
+     */
+    403: Error;
+    /**
+     * `common.not_found`: a Seller role without a shop (not reachable through the API).
+     */
+    404: Error;
+};
+
+export type SetMyShopPickupAddressError = SetMyShopPickupAddressErrors[keyof SetMyShopPickupAddressErrors];
+
+export type SetMyShopPickupAddressResponses = {
+    /**
+     * Saved; the whole shop as the seller centre shows it.
+     */
+    200: MyShop;
+};
+
+export type SetMyShopPickupAddressResponse = SetMyShopPickupAddressResponses[keyof SetMyShopPickupAddressResponses];
+
+export type SetMyShopPayoutData = {
+    body: PayoutUpdateWritable;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path?: never;
+    query?: never;
+    url: '/v1/shops/me/payout';
+};
+
+export type SetMyShopPayoutErrors = {
+    /**
+     * `common.validation_failed` with one details entry per invalid field (`bankName`, `accountNumber`, `accountHolder`).
+     */
+    400: Error;
+    /**
+     * `common.unauthenticated`.
+     */
+    401: Error;
+    /**
+     * `common.forbidden`: the token has no Seller role.
+     */
+    403: Error;
+    /**
+     * `common.not_found`: a Seller role without a shop (not reachable through the API).
+     */
+    404: Error;
+};
+
+export type SetMyShopPayoutError = SetMyShopPayoutErrors[keyof SetMyShopPayoutErrors];
+
+export type SetMyShopPayoutResponses = {
+    /**
+     * Saved; the whole shop as the seller centre shows it.
+     */
+    200: MyShop;
+};
+
+export type SetMyShopPayoutResponse = SetMyShopPayoutResponses[keyof SetMyShopPayoutResponses];

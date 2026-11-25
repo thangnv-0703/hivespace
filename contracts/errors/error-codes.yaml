@@ -54,3 +54,17 @@ codes:
   identity.shop_name_too_long: { http: 400 }
   identity.shop_name_invalid: { http: 400 }
   identity.seller_type_invalid: { http: 400 }
+  # Shop settings (FEAT-010).
+  identity.shop_description_too_long: { http: 400 }
+  identity.shop_description_invalid: { http: 400 }
+  identity.address_field_required: { http: 400 }
+  identity.address_field_too_long: { http: 400 }
+  identity.address_field_invalid: { http: 400 }
+  identity.bank_name_required: { http: 400 }
+  identity.bank_name_too_long: { http: 400 }
+  identity.bank_name_invalid: { http: 400 }
+  identity.bank_account_number_required: { http: 400 }
+  identity.bank_account_number_invalid: { http: 400 }
+  identity.bank_account_holder_required: { http: 400 }
+  identity.bank_account_holder_too_long: { http: 400 }
+  identity.bank_account_holder_invalid: { http: 400 }
