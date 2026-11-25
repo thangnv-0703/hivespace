@@ -1,27 +1,32 @@
 ---
 name: detailed-design
 description: >-
-  Produces the per-feature technical design — the first skill in the
-  construction loop, run once for each vertical slice as it reaches the front
-  of the implementation plan. Reads the feature's spec from the plan, the FR/UC
+  Produces the per-feature technical design — the second skill in the
+  construction loop, run once for each vertical slice after clarify-feature has
+  produced a signed-off feature-spec.md (Status: Agreed); it refuses to start
+  without one. Reads the agreed feature-spec.md (user stories, business rules,
+  business acceptance criteria), the feature's plan entry, the FR/UC
   IDs it implements, the architecture's conceptual domain model and ADRs, and
   the live codebase (contracts and schema earlier features already established),
   then designs the feature concretely: API contracts (endpoints,
   request/response shapes, error codes), the physical schema changes
   (migrations — architecture owns the conceptual model; new entities escalate
   to an architecture amendment, never local invention), component-level
-  design, acceptance criteria, an ordered tasks.md breaking the feature
+  design, a mapping of each business acceptance criterion to its technical
+  checks, an ordered tasks.md breaking the feature
   into implementable tasks, and an interactive HTML flow diagram of the
-  feature's design solution (via the html-flow-diagram skill). Use after project-scaffolding, per feature, before
-  ui-design and implementation. Trigger on "design this feature", "detailed
+  feature's design solution (via the html-flow-diagram skill). Use per
+  feature after clarify-feature's sign-off, before ui-design and
+  implementation. Trigger on "design this feature", "detailed
   design for", "design the API for this feature", "create the technical
   design", or "design the next feature". Hands contracts to ui-design.
 ---
 
 # Detailed Design (per feature)
 
-The first **loop skill**: it runs once per vertical slice, for the life of the
-project, turning a feature's planned intent into a buildable technical design —
+The second **loop skill**: it runs once per vertical slice, for the life of the
+project, after `clarify-feature` has produced a signed-off `feature-spec.md`,
+turning the feature's agreed business spec into a buildable technical design —
 the backend/system half of the feature's low-level design (`ui-design` is the
 presentation half, and consumes this skill's contracts).
 
@@ -29,9 +34,12 @@ Three principles govern it:
 
 1. **The feature's *what* is fixed upstream; this skill designs the *how*.** The
    FR/UC IDs the feature implements were assigned and verified in requirements;
-   the plan chose and scoped the feature. This skill never invents or reinterprets
-   requirements — that inheritance-by-ID is exactly what keeps per-feature design
-   consistent at scale.
+   the plan chose and scoped the feature; `clarify-feature` settled its user
+   stories, business rules and business acceptance criteria with the user. This
+   skill never invents or reinterprets requirements — that inheritance-by-ID is
+   exactly what keeps per-feature design consistent at scale. A business
+   question found while designing goes back to `clarify-feature`; it is not
+   answered here.
 2. **The live codebase is an input, not an obstacle.** Feature N is designed
    months after feature 1, in a fresh session, against code that has evolved past
    the skeleton. Design against *reality*: the contracts, schema migrations,
@@ -47,6 +55,11 @@ Three principles govern it:
 Defaults below; user-provided paths win; source-gated citation throughout
 (cite FR/UC/SCR/ADR IDs only when their documents exist; never fabricate).
 
+- **Feature spec** — `docs/features/FEAT-NNN-<slug>/feature-spec.md`, required
+  and signed off (`Status: Agreed`). The primary source for scope, user
+  stories (`US-*`), business rules (`BR-*`), business acceptance criteria
+  (`AC-*`), out of scope, and the "For detailed design" questions this skill
+  must decide.
 - **Implementation plan** — `docs/implementation-plan.md`. Which feature is next
   (or the user names one), its traced touchpoints: FRs implemented, UCs
   realized, SCR screens, building blocks/endpoints, data.
@@ -108,25 +121,38 @@ Plus two write-backs:
 
 Identify the feature: the user names it (by FEAT ID or name — explicit naming
 is the only legitimate off-sequence path), or default to
-**the next undesigned feature — computed, not stored**: plan build-sequence
-order minus the `FEAT-*` folders already in `docs/features/`. Multiple
+**the next undesigned feature — computed, not stored**: the earliest feature
+in plan build-sequence order whose `docs/features/FEAT-*` folder has no
+`technical-design.md` (a folder may exist holding only `feature-spec.md`). Multiple
 candidates is not ambiguity — the sequence resolves it (earliest in build
 order wins); never present a menu. **Announce the resolution** ("FEAT-004 is
 next per the plan's build sequence") so the user can redirect before work
-starts. Execution status
+starts.
+
+**Gate — signed-off spec required.** Read the feature's `feature-spec.md`. If
+it is missing, or its header is not `Status: Agreed` with a `Signed off` date,
+stop: tell the user the feature has no signed-off business spec and to run
+`/clarify-feature FEAT-NNN` first. Do not draft a design, do not clarify
+business questions here. (Features designed before clarify-feature existed
+already have their `technical-design.md` and are not re-gated.)
+
+Execution status
 lives in the artifacts (a folder with a verified technical-design.md =
 designed; its tasks.md checkboxes = build progress) — the plan itself is never
 written with status; it stays the structural source owned by
-implementation-planning. Read the feature's plan entry and pull its full
-trace: FR IDs (fetch their verbatim statements and priorities from the SRS),
-UC IDs (fetch their flows), SCR IDs, blocks/endpoints, data. Read the
+implementation-planning. Take the feature's trace from `feature-spec.md`'s
+header (FR, UC, SCR — clarify-feature already confirmed it with the user and
+amended the SRS where needed), read the plan entry for blocks/endpoints and
+data, fetch the verbatim FR statements and UC flows, and read the
+spec's stories, business rules and acceptance criteria. Read the
 architecture's domain model, the ADRs that touch this feature, and the
 cross-cutting concepts.
 
-If the feature's plan entry is missing touchpoints (a coarse far-future feature
-that just reached the front), tighten it first: derive the missing FR/UC/SCR
-trace from the documents and confirm with the user — this is the plan's
-just-in-time elaboration happening on schedule.
+If design work turns up a **business** question the spec does not answer (a
+rule, a limit, what the user sees), do not decide it here: stop and send it
+back to `/clarify-feature`, which records the answer and resets the spec to
+Draft until the user signs off again. **Technical** forks stay here as §7
+Decisions.
 
 ### Phase 2 — Read the code
 
@@ -151,9 +177,12 @@ Read `references/design-guide.md`. Produce, concretely:
 - **Component design** — the modules/services/functions inside the feature's
   building block: responsibilities, interactions, where the stubbed skeleton
   code gets replaced.
-- **Acceptance criteria** — testable, derived from the FR statements and UC
-  flows, each citing its FR/UC ID. These are what acceptance verification will
-  later check.
+- **Acceptance criteria mapping** — every business `AC-*` from
+  `feature-spec.md`, quoted by ID (never reworded), mapped to the technical
+  checks that prove it (endpoint + status, error code, event, stored state),
+  plus technical-only criteria the business spec doesn't state (binding NFRs,
+  idempotency) with their own `TAC-*` IDs citing their NFR/ADR. These are what
+  acceptance verification will later check.
 - **Design decisions** — any real fork gets a short decision note with its
   driver (mini-ADR discipline; feature-local decisions stay here, architectural
   ones escalate).
@@ -169,7 +198,8 @@ by ui-design's output.
 
 ### Phase 5 — Verify
 
-Read `references/verification.md` and self-check: every feature FR is covered by
+Read `references/verification.md` and self-check: every `AC-*` in
+feature-spec.md appears in the §6 mapping; every feature FR is covered by
 acceptance criteria and by tasks; every cited ID resolves; the schema stays
 inside the conceptual model (or an escalation is filed); contracts don't
 collide with existing code; tasks are complete, ordered, and traceable. Fix
@@ -201,7 +231,10 @@ implementation follows tasks.md. Offer to proceed to either.
 
 ## Scope boundaries
 
-Does **not**: design screens (ui-design's half — it consumes these contracts);
+Does **not**: start without a signed-off `feature-spec.md`; write user stories,
+business rules or business acceptance criteria, or answer business questions
+(clarify-feature's job); amend the SRS or use cases;
+design screens (ui-design's half — it consumes these contracts);
 implement anything (tasks.md is the handoff to implementation); change
 requirements or the plan (amendments belong to their owning skills); invent
 entities or alter consistency boundaries (architecture amendment); write to
@@ -209,7 +242,8 @@ any RTM column except appending Design ref.
 
 ## What good looks like
 
-- Every acceptance criterion cites the FR/UC it verifies; every task points at
+- Every business `AC-*` from feature-spec.md is mapped to technical checks,
+  word for word; every technical criterion cites its NFR/ADR; every task points at
   design sections; nothing in the design lacks a requirement behind it.
 - The schema diff is migrations against the *actual current* schema, not the
   skeleton's — and it stays inside the conceptual model's entities.

@@ -5,7 +5,7 @@ description: >-
   events — deliberately thin: zero design or build logic; it computes
   position, invokes the right stage skill, and routes outcomes. Loop driving:
   walks the plan's build sequence, determines each feature's stage from
-  artifacts (designed / ui-designed / developer-done / verified), invokes the
+  artifacts (clarified / designed / ui-designed / developer-done / verified), invokes the
   next stage, and continues — one feature cycle by default, run-until-blocked
   on request. Routes verdicts and blocks: rework back to implementation,
   design defects to the amendment path, blocked tasks and escalations
@@ -30,7 +30,8 @@ Three principles govern it:
 
 1. **Compute, never store.** The global position is derived fresh every time
    from the artifacts — the plan's sequence joined to each feature's folder
-   state (technical-design.md → designed; ui-design.md → ui-designed;
+   state (Agreed feature-spec.md → clarified; technical-design.md → designed;
+   ui-design.md → ui-designed;
    tasks.md fully checked → developer-done; accepted acceptance-report.md →
    verified). No orchestrator state file, no stored pointers; a brand-new
    session computes the same position the last one saw.
@@ -49,8 +50,12 @@ Three principles govern it:
 
 The per-feature cycle, driven in plan-sequence order:
 
-**detailed-design → ui-design → feature-implementation →
+**clarify-feature → detailed-design → ui-design → feature-implementation →
 acceptance-verification** → next feature.
+
+clarify-feature is interactive by design: the loop runs it, but it pauses
+there until the user answers its questions and signs off the spec
+(`Status: Agreed`); the orchestrator never signs off on the user's behalf.
 
 Run scopes, chosen by the user's ask: **one stage** ("run the next step"),
 **one feature cycle** (the default for "run the next feature" — carry the

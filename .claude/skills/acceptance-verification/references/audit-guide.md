@@ -7,8 +7,11 @@ this run derives from documents and observes by execution counts.
 
 ## Re-deriving the standard (Phase 2)
 
-Build the audit table fresh: one row per acceptance criterion in
-technical-design §6, joined to the FR statement(s) it encodes (verbatim from
+Build the audit table fresh: one row per business criterion `AC-*` in
+feature-spec.md (its signed-off wording, with the technical checks
+technical-design §6 maps to it) and one per technical criterion `TAC-*` in
+§6 — or, for features with no feature-spec.md, one row per criterion in §6 —
+joined to the FR statement(s) it encodes (verbatim from
 the SRS), the UC path(s) it represents, and any binding NFR. Then audit the
 *standard itself* before auditing against it:
 
