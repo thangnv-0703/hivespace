@@ -513,3 +513,46 @@ async def test_a_shop_registered_event_delivered_twice_is_acknowledged_with_no_e
     assert await _count(engine, "inbox") == 1
     assert await _count(engine, "email_records") == 0
     assert await _count(engine, "contacts") == 0
+
+
+# ---- FEAT-010: ShopChanged has no handler here either (design §5.4) ----
+
+
+def _shop_changed_event() -> Envelope:
+    shop_id = str(uuid.uuid4())
+    return Envelope.model_validate(
+        {
+            "eventId": str(uuid.uuid4()),
+            "eventType": "ShopChanged",
+            "eventVersion": 1,
+            "occurredAt": datetime.now(UTC).isoformat(),
+            "producer": "identity",
+            "correlationId": shop_id,
+            "data": {
+                "shopId": shop_id,
+                "ownerUserId": str(uuid.uuid4()),
+                "name": "Tiệm Bánh An",
+                "description": None,
+                "sellerType": "individual",
+                "setupComplete": True,
+                "version": 2,
+                "changedAt": datetime.now(UTC).isoformat(),
+            },
+        }
+    )
+
+
+async def test_a_shop_changed_event_delivered_twice_is_acknowledged_with_no_email_and_one_inbox_row(
+    engine: AsyncEngine,
+) -> None:
+    sender = FakeSender()
+    handle = make_handler(engine, sender, BASE_URL)
+    event = _shop_changed_event()
+
+    await handle(event)
+    await handle(event)
+
+    assert sender.sent == []
+    assert await _count(engine, "inbox") == 1
+    assert await _count(engine, "email_records") == 0
+    assert await _count(engine, "contacts") == 0

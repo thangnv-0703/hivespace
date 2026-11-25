@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Settings states: loading, ready toast, sidebar group</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="width: 960px; box-sizing: border-box; padding: 24px; background: #f9fafb; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 24px; font-size: 14px">
+  <section aria-label="Loading" style="display: flex; flex-direction: column; gap: 12px">
+    <p style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #667085">Loading (either page)</p>
+    <div role="status" style="background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 16px">
+      <span style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">Loading</span>
+      <div style="width: 180px; height: 24px; border-radius: 6px; background: #f2f4f7"></div>
+      <div style="height: 44px; border-radius: 8px; background: #f2f4f7"></div>
+      <div style="height: 44px; border-radius: 8px; background: #f2f4f7"></div>
+      <div style="height: 44px; border-radius: 8px; background: #f2f4f7"></div>
+    </div>
+    <p style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #667085">Load error</p>
+    <div role="alert" style="display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; padding: 16px; border-radius: 8px; background: #fef3f2; color: #b42318">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d92d20" stroke-width="1.5" stroke-linecap="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <div style="flex: 1 1 200px; line-height: 20px"><p style="margin: 0">We couldn't load your shop settings.</p><p style="margin: 4px 0 0; font-size: 12px; color: #667085">Error code: common.dependency_unavailable</p></div>
+      <button type="button" style="height: 36px; padding: 0 12px; border: 1px solid #d0d5dd; border-radius: 8px; background: #ffffff; color: #344054; font: 500 14px 'Outfit','Noto Sans',sans-serif">Retry</button>
+    </div>
+  </section>
+  <section aria-label="Toast and sidebar" style="display: flex; flex-direction: column; gap: 12px">
+    <p style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #667085">Toast when setup becomes complete</p>
+    <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 12px; background: #ffffff; box-shadow: 0 12px 16px -4px rgba(16,24,40,0.08), 0 4px 6px -2px rgba(16,24,40,0.03); border-left: 4px solid #12b76a">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#12b76a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      <div style="flex: 1; line-height: 20px"><p style="margin: 0; font-weight: 600">Your shop is ready to publish products.</p><a href="#" style="font-weight: 500">Go to dashboard</a></div>
+    </div>
+    <p style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #667085">Toast after a section save</p>
+    <div role="status" style="display: flex; gap: 12px; padding: 16px; border-radius: 12px; background: #ffffff; box-shadow: 0 12px 16px -4px rgba(16,24,40,0.08), 0 4px 6px -2px rgba(16,24,40,0.03); border-left: 4px solid #12b76a">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#12b76a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="flex: none"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+      <p style="margin: 0; line-height: 20px; font-weight: 600">Pickup address saved</p>
+    </div>
+    <p style="margin: 0; font-size: 12px; font-weight: 600; text-transform: uppercase; color: #667085">Sidebar: Settings group (U-11)</p>
+    <nav aria-label="Settings menu example" style="width: 260px; box-sizing: border-box; background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; gap: 4px">
+      <button type="button" aria-expanded="true" style="display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 12px; border: 0; border-radius: 8px; background: #ecf3ff; color: #3641f5; font: 500 14px 'Outfit','Noto Sans',sans-serif; text-align: left">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="8"/></svg><span style="flex: 1">Settings</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m18 15-6-6-6 6"/></svg></button>
+      <a href="Main.dc.html" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px 0 44px; border-radius: 8px; color: #344054; text-decoration: none; font-weight: 500">Shop profile</a>
+      <a href="PickupPayout.dc.html" aria-current="page" style="display: flex; align-items: center; min-height: 40px; padding: 0 12px 0 44px; border-radius: 8px; color: #3641f5; text-decoration: none; font-weight: 500">Pickup and payout</a>
+    </nav>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":960,"height":760}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

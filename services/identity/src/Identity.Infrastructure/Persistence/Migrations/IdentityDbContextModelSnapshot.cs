@@ -206,6 +206,11 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)")
+                        .HasColumnName("description");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(60)
@@ -222,6 +227,12 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("owner_user_id");
 
+                    b.Property<int>("ProfileVersion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(1)
+                        .HasColumnName("profile_version");
+
                     b.Property<string>("SellerType")
                         .IsRequired()
                         .HasMaxLength(16)
@@ -231,6 +242,12 @@ namespace Identity.Infrastructure.Persistence.Migrations
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("updated_at");
+
+                    b.Property<uint>("Version")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
 
                     b.HasKey("Id");
 
@@ -244,6 +261,10 @@ namespace Identity.Infrastructure.Persistence.Migrations
 
                     b.ToTable("shops", null, t =>
                         {
+                            t.HasCheckConstraint("ck_shops_payout_all_or_none", "(payout_bank_name is null) = (payout_account_holder is null) and (payout_bank_name is null) = (payout_account_ciphertext is null) and (payout_bank_name is null) = (payout_account_last4 is null) and (payout_bank_name is null) = (payout_key_id is null)");
+
+                            t.HasCheckConstraint("ck_shops_pickup_all_or_none", "(pickup_contact_name is null) = (pickup_phone is null) and (pickup_contact_name is null) = (pickup_province is null) and (pickup_contact_name is null) = (pickup_district is null) and (pickup_contact_name is null) = (pickup_ward is null) and (pickup_contact_name is null) = (pickup_street is null)");
+
                             t.HasCheckConstraint("ck_shops_seller_type", "seller_type in ('individual','business')");
                         });
                 });
@@ -707,6 +728,116 @@ namespace Identity.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OwnerUserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.OwnsOne("Identity.Domain.PayoutDetails", "Payout", b1 =>
+                        {
+                            b1.Property<Guid>("ShopId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("AccountHolder")
+                                .IsRequired()
+                                .HasMaxLength(80)
+                                .HasColumnType("character varying(80)")
+                                .HasColumnName("payout_account_holder");
+
+                            b1.Property<string>("BankName")
+                                .IsRequired()
+                                .HasMaxLength(80)
+                                .HasColumnType("character varying(80)")
+                                .HasColumnName("payout_bank_name");
+
+                            b1.Property<string>("Last4")
+                                .IsRequired()
+                                .HasColumnType("char(4)")
+                                .HasColumnName("payout_account_last4");
+
+                            b1.HasKey("ShopId");
+
+                            b1.ToTable("shops");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ShopId");
+
+                            b1.OwnsOne("Identity.Domain.EncryptedValue", "AccountNumber", b2 =>
+                                {
+                                    b2.Property<Guid>("PayoutDetailsShopId")
+                                        .HasColumnType("uuid");
+
+                                    b2.Property<byte[]>("Bytes")
+                                        .IsRequired()
+                                        .HasColumnType("bytea")
+                                        .HasColumnName("payout_account_ciphertext");
+
+                                    b2.Property<string>("KeyId")
+                                        .IsRequired()
+                                        .HasMaxLength(32)
+                                        .HasColumnType("character varying(32)")
+                                        .HasColumnName("payout_key_id");
+
+                                    b2.HasKey("PayoutDetailsShopId");
+
+                                    b2.ToTable("shops");
+
+                                    b2.WithOwner()
+                                        .HasForeignKey("PayoutDetailsShopId");
+                                });
+
+                            b1.Navigation("AccountNumber")
+                                .IsRequired();
+                        });
+
+                    b.OwnsOne("Identity.Domain.PickupAddress", "PickupAddress", b1 =>
+                        {
+                            b1.Property<Guid>("ShopId")
+                                .HasColumnType("uuid");
+
+                            b1.Property<string>("ContactName")
+                                .IsRequired()
+                                .HasMaxLength(80)
+                                .HasColumnType("character varying(80)")
+                                .HasColumnName("pickup_contact_name");
+
+                            b1.Property<string>("District")
+                                .IsRequired()
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)")
+                                .HasColumnName("pickup_district");
+
+                            b1.Property<string>("Phone")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("character varying(16)")
+                                .HasColumnName("pickup_phone");
+
+                            b1.Property<string>("Province")
+                                .IsRequired()
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)")
+                                .HasColumnName("pickup_province");
+
+                            b1.Property<string>("Street")
+                                .IsRequired()
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)")
+                                .HasColumnName("pickup_street");
+
+                            b1.Property<string>("Ward")
+                                .IsRequired()
+                                .HasMaxLength(60)
+                                .HasColumnType("character varying(60)")
+                                .HasColumnName("pickup_ward");
+
+                            b1.HasKey("ShopId");
+
+                            b1.ToTable("shops");
+
+                            b1.WithOwner()
+                                .HasForeignKey("ShopId");
+                        });
+
+                    b.Navigation("Payout");
+
+                    b.Navigation("PickupAddress");
                 });
 
             modelBuilder.Entity("Identity.Domain.SignInCodeChallenge", b =>

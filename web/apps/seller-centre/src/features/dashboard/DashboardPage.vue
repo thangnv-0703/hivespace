@@ -100,7 +100,7 @@ onMounted(load)
               <p class="text-sm text-text-muted">{{ $t(`dashboard.setup.${row.key}.description`) }}</p>
             </div>
           </div>
-          <Button v-if="!row.done" variant="secondary" size="sm" class="w-full sm:w-auto" href="/settings">
+          <Button v-if="!row.done" variant="secondary" size="sm" class="w-full sm:w-auto" href="/settings/pickup-payout">
             {{ $t(`dashboard.setup.${row.key}.action`) }}
           </Button>
         </li>

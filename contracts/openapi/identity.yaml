@@ -539,6 +539,156 @@ paths:
             application/json:
               schema:
                 $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/shops/me/profile:
+    put:
+      operationId: updateMyShopProfile
+      summary: Update the shop's name and description (FR-SHOP-005).
+      description: >-
+        The shop is always the caller's (token `sub`). Every key must be present; `description: null` clears it. Renaming keeps FR-SHOP-003: a name used by another shop is `identity.shop_name_taken`; the shop's own name in another case is accepted.
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShopProfileUpdate'
+      responses:
+        '200':
+          description: Saved; the whole shop as the seller centre shows it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyShop'
+        '400':
+          description: "`common.validation_failed` with one details entry per invalid field (`name`, `description`); an unknown key or a value of the wrong type is a field error too."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '403':
+          description: "`common.forbidden`: the token has no Seller role."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '404':
+          description: "`common.not_found`: a Seller role without a shop (not reachable through the API)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '409':
+          description: "`identity.shop_name_taken`: another shop already has this name (any case or spacing)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/shops/me/pickup-address:
+    put:
+      operationId: setMyShopPickupAddress
+      summary: Set the shop's pickup address (FR-SHOP-006).
+      description: >-
+        The shop is always the caller's. All six keys are required. The phone is stored as E.164.
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PickupAddressUpdate'
+      responses:
+        '200':
+          description: Saved; the whole shop as the seller centre shows it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyShop'
+        '400':
+          description: "`common.validation_failed` with one details entry per invalid field (`contactName`, `phone`, `province`, `district`, `ward`, `street`)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '403':
+          description: "`common.forbidden`: the token has no Seller role."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '404':
+          description: "`common.not_found`: a Seller role without a shop (not reachable through the API)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/shops/me/payout:
+    put:
+      operationId: setMyShopPayout
+      summary: Set the shop's payout bank details (FR-SHOP-007).
+      description: >-
+        The shop is always the caller's. The full account number is always sent (a masked value cannot be sent back). It is encrypted at rest and never returned: responses carry only the last four digits (NFR-SEC-008). No payout or transfer is started.
+      tags: [identity]
+      security:
+        - bearer: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayoutUpdate'
+      responses:
+        '200':
+          description: Saved; the whole shop as the seller centre shows it.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MyShop'
+        '400':
+          description: "`common.validation_failed` with one details entry per invalid field (`bankName`, `accountNumber`, `accountHolder`)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '401':
+          description: "`common.unauthenticated`."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '403':
+          description: "`common.forbidden`: the token has no Seller role."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        '404':
+          description: "`common.not_found`: a Seller role without a shop (not reachable through the API)."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
 components:
   securitySchemes:
     bearer:
@@ -635,7 +785,7 @@ components:
           $ref: '#/components/schemas/SellerType'
     MyShop:
       type: object
-      required: [shopId, name, sellerType, createdAt, setup]
+      required: [shopId, name, sellerType, createdAt, updatedAt, description, pickupAddress, payout, setup]
       properties:
         shopId:
           $ref: './shared/components.yaml#/components/schemas/Id'
@@ -643,13 +793,73 @@ components:
         sellerType:
           $ref: '#/components/schemas/SellerType'
         createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+        description: { type: [string, 'null'] }
+        pickupAddress:
+          oneOf:
+            - $ref: '#/components/schemas/PickupAddress'
+            - type: 'null'
+        payout:
+          oneOf:
+            - $ref: '#/components/schemas/Payout'
+            - type: 'null'
         setup:
           type: object
-          description: Feeds the seller-centre setup checklist; both stay false until FEAT-010.
+          description: Feeds the seller-centre setup checklist; each flag is true once that section is saved.
           required: [pickupAddress, payout]
           properties:
             pickupAddress: { type: boolean }
             payout: { type: boolean }
+    ShopProfileUpdate:
+      type: object
+      required: [name, description]
+      additionalProperties: false
+      properties:
+        name:
+          type: string
+          description: Trimmed, inner whitespace collapsed, 3 to 60 characters, no control characters.
+        description:
+          type: [string, 'null']
+          description: At most 1000 characters after trimming; empty or whitespace-only stores null; `\n` allowed, other control characters not.
+    PickupAddressUpdate:
+      type: object
+      required: [contactName, phone, province, district, ward, street]
+      additionalProperties: false
+      properties:
+        contactName: { type: string, description: 1 to 80 characters. }
+        phone: { type: string, description: A Vietnamese phone number (FEAT-002 rule); stored as E.164. }
+        province: { type: string, description: 1 to 60 characters. }
+        district: { type: string, description: 1 to 60 characters. }
+        ward: { type: string, description: 1 to 60 characters. }
+        street: { type: string, description: 1 to 200 characters. }
+    PickupAddress:
+      type: object
+      required: [contactName, phone, province, district, ward, street]
+      properties:
+        contactName: { type: string }
+        phone: { type: string, description: E.164. }
+        province: { type: string }
+        district: { type: string }
+        ward: { type: string }
+        street: { type: string }
+    PayoutUpdate:
+      type: object
+      required: [bankName, accountNumber, accountHolder]
+      additionalProperties: false
+      properties:
+        bankName: { type: string, description: 2 to 80 characters. }
+        accountNumber:
+          type: string
+          writeOnly: true
+          description: 6 to 19 digits after removing spaces and hyphens. Never returned.
+        accountHolder: { type: string, description: 2 to 80 characters. }
+    Payout:
+      type: object
+      required: [bankName, accountNumberLast4, accountHolder]
+      properties:
+        bankName: { type: string }
+        accountNumberLast4: { type: string, pattern: '^[0-9]{4}$' }
+        accountHolder: { type: string }
     SignInCodeRequest:
       type: object
       required: [email]

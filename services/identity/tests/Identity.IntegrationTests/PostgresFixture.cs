@@ -13,8 +13,12 @@ public sealed class PostgresFixture : IAsyncLifetime
 
     public string ConnectionString => _container.GetConnectionString();
 
-    public IdentityDbContext CreateContext() =>
-        new(new DbContextOptionsBuilder<IdentityDbContext>().UseNpgsql(ConnectionString).UseOpenIddict().Options);
+    public IdentityDbContext CreateContext(Microsoft.Extensions.Logging.ILoggerProvider? logs = null) =>
+        new(new DbContextOptionsBuilder<IdentityDbContext>()
+            .UseNpgsql(ConnectionString)
+            .UseOpenIddict()
+            .UseLoggerFactory(logs is null ? null : new Microsoft.Extensions.Logging.LoggerFactory([logs]))
+            .Options);
 
     public async ValueTask InitializeAsync()
     {

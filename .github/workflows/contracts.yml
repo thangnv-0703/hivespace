@@ -32,3 +32,5 @@ jobs:
         run: npx -y @bufbuild/buf@1.75.0 generate && git diff --exit-code -- ../libs/go/gen ../libs/python/hivespace_contracts
       - name: Spectral (OpenAPI)
         run: npx -y @stoplight/spectral-cli@6.17.1 lint "openapi/*.yaml" --ruleset .spectral.yaml --fail-severity error
+      - name: Spectral rejects the bank-number fixture (NFR-SEC-008)
+        run: "! npx -y @stoplight/spectral-cli@6.17.1 lint spectral-fixtures/bank-number-in-response.yaml --ruleset .spectral.yaml --fail-severity error"

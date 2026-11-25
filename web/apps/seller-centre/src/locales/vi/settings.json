@@ -1,0 +1,86 @@
+{
+  "settings": {
+    "title": "Cài đặt",
+    "retry": "Thử lại",
+    "saved": "Đã lưu",
+    "missing": "Còn thiếu",
+    "supportHint": "Nếu lỗi tiếp tục xảy ra, hãy liên hệ hỗ trợ.",
+    "ready": "Cửa hàng của bạn đã sẵn sàng đăng sản phẩm.",
+    "sellerType": {
+      "individual": "Cá nhân",
+      "business": "Doanh nghiệp"
+    },
+    "errors": {
+      "load": "Chúng tôi chưa tải được cửa hàng của bạn. Hãy thử lại.",
+      "nameRequired": "Nhập tên cửa hàng.",
+      "nameTooShort": "Dùng ít nhất 3 ký tự.",
+      "nameInvalid": "Tên cửa hàng này không hợp lệ. Hãy thử tên khác.",
+      "nameTaken": "Tên cửa hàng này đã được sử dụng. Hãy thử tên khác.",
+      "descriptionInvalid": "Mô tả không hợp lệ.",
+      "required": "Nhập {field}.",
+      "phone": "Nhập số điện thoại Việt Nam, ví dụ 0912 345 678.",
+      "accountNumber": "Nhập từ 6 đến 19 chữ số.",
+      "invalid": "Giá trị này không hợp lệ.",
+      "summary": "Một số trường cần bạn kiểm tra."
+    },
+    "profile": {
+      "title": "Hồ sơ cửa hàng",
+      "card": "Thông tin cửa hàng",
+      "name": "Tên cửa hàng",
+      "nameHint": "Từ 3–60 ký tự. Người mua thấy đúng tên bạn nhập.",
+      "description": "Mô tả",
+      "descriptionHint": "Hiển thị trên trang cửa hàng của bạn. Tối đa 1.000 ký tự.",
+      "count": "{count} / {max}",
+      "sellerType": "Loại người bán",
+      "sellerTypeHint": "Được chọn khi bạn mở cửa hàng.",
+      "save": "Lưu thay đổi",
+      "saved": "Đã lưu hồ sơ cửa hàng",
+      "failed": "Chúng tôi chưa lưu được hồ sơ cửa hàng. Hãy thử lại."
+    },
+    "pickupPayout": {
+      "title": "Địa chỉ lấy hàng và nhận tiền",
+      "crumb": "Lấy hàng và nhận tiền",
+      "subtitle": "Cần cả hai trước khi bạn có thể đăng sản phẩm."
+    },
+    "pickup": {
+      "title": "Địa chỉ lấy hàng",
+      "intro": "Nơi đơn vị vận chuyển đến lấy đơn hàng. Chỉ bạn nhìn thấy thông tin này.",
+      "fields": {
+        "contactName": "Tên người liên hệ",
+        "phone": "Số điện thoại",
+        "province": "Tỉnh hoặc thành phố",
+        "district": "Quận hoặc huyện",
+        "ward": "Phường hoặc xã",
+        "street": "Địa chỉ cụ thể"
+      },
+      "phoneHint": "Số Việt Nam, ví dụ 0912 345 678",
+      "streetHint": "Số nhà và tên đường.",
+      "save": "Lưu địa chỉ",
+      "saved": "Đã lưu địa chỉ lấy hàng",
+      "failed": "Chúng tôi chưa lưu được địa chỉ lấy hàng. Hãy thử lại."
+    },
+    "payout": {
+      "title": "Thông tin nhận tiền",
+      "intro": "Tài khoản ngân hàng nhận tiền bán hàng. Hiện chưa có khoản nào được chi trả; HiveSpace là bản demo.",
+      "fields": {
+        "bankName": "Tên ngân hàng",
+        "accountNumber": "Số tài khoản",
+        "accountHolder": "Chủ tài khoản"
+      },
+      "bankPlaceholder": "Ví dụ: Vietcombank",
+      "accountNumberHint": "6–19 chữ số. Có thể có dấu cách hoặc gạch ngang.",
+      "accountHolderHint": "Như ngân hàng hiển thị, thường viết hoa không dấu.",
+      "save": "Lưu thông tin nhận tiền",
+      "cancel": "Hủy",
+      "change": "Thay đổi",
+      "saved": "Đã lưu thông tin nhận tiền",
+      "failed": "Chúng tôi chưa lưu được thông tin nhận tiền. Hãy thử lại.",
+      "summary": {
+        "bank": "Ngân hàng",
+        "accountNumber": "Số tài khoản",
+        "holder": "Chủ tài khoản",
+        "ending": "kết thúc bằng {digits}"
+      }
+    }
+  }
+}

@@ -74,7 +74,7 @@
           "new shop",
           "loading",
           "error",
-          "all done (spec, reachable from FEAT-010)"
+          "all done (reachable since FEAT-010)"
         ],
         "gaps": [
           "order counts by status (FEAT-025)",
@@ -90,7 +90,8 @@
         "corrections": [],
         "escalations": [],
         "notes": [
-          "setup checklist composed from Card, Button, Badge and lucide icons; design.md section 4.8 has no entry for it yet (open item toward ux-foundations, non-blocking)"
+          "setup checklist composed from Card, Button, Badge and lucide icons; design.md section 4.8 has no entry for it yet (open item toward ux-foundations, non-blocking)",
+          "FEAT-010: checklist buttons link to /settings/pickup-payout; setup flags now from the server (FEAT-010 ui-design.md#scr-sel-002--dashboard-reused)"
         ]
       },
       "status": "designed",
@@ -101,6 +102,96 @@
           "docs/features/FEAT-009-register-shop/mockups/DashboardStates.dc.html"
         ],
         "canvas": "https://claude.ai/artifact/6wUtB4tPe162T63YL5GLsR",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
+    },
+    "SCR-SEL-007": {
+      "name": "Shop profile",
+      "surface": "SEL",
+      "feature": "FEAT-010",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-010-shop-settings/ui-design.md#scr-sel-007--shop-profile"
+      },
+      "reference": null,
+      "states": {
+        "covered": [
+          "default",
+          "loading",
+          "error (load, client, server fields, name taken, network)",
+          "saving"
+        ],
+        "gaps": [
+          "logo and cover image (FEAT-035/036)"
+        ],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "GET /v1/shops/me",
+        "PUT /v1/shops/me/profile"
+      ],
+      "conformance": {
+        "result": "pass",
+        "corrections": [],
+        "escalations": [],
+        "notes": [
+          "TextArea gains a hint prop for help text (design.md section 4.2 field anatomy); component change, no system amendment"
+        ]
+      },
+      "status": "designed",
+      "designed_at": "2026-11-24",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-010-shop-settings/mockups/Main.dc.html",
+          "docs/features/FEAT-010-shop-settings/mockups/States.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/9W61KRjkR4T5a3BjXGP9RN",
+        "note": "visual reference; ui-design.md is authoritative"
+      }
+    },
+    "SCR-SEL-008": {
+      "name": "Pickup address and payout",
+      "surface": "SEL",
+      "feature": "FEAT-010",
+      "strategy": "code-native",
+      "source": {
+        "tool": null,
+        "locator": "docs/features/FEAT-010-shop-settings/ui-design.md#scr-sel-008--pickup-address-and-payout"
+      },
+      "reference": null,
+      "states": {
+        "covered": [
+          "first visit",
+          "saved",
+          "loading",
+          "error (load, client, server fields with summary, network)",
+          "saving"
+        ],
+        "gaps": [],
+        "supplements": []
+      },
+      "contract_bindings": [
+        "GET /v1/shops/me",
+        "PUT /v1/shops/me/pickup-address",
+        "PUT /v1/shops/me/payout"
+      ],
+      "conformance": {
+        "result": "pass",
+        "corrections": [],
+        "escalations": []
+      },
+      "status": "designed",
+      "designed_at": "2026-11-24",
+      "mockups": {
+        "files": [
+          "docs/features/FEAT-010-shop-settings/mockups/PickupPayout.dc.html",
+          "docs/features/FEAT-010-shop-settings/mockups/PickupPayoutFirst.dc.html",
+          "docs/features/FEAT-010-shop-settings/mockups/PickupPayoutErrors.dc.html",
+          "docs/features/FEAT-010-shop-settings/mockups/PickupPayoutMobile.dc.html",
+          "docs/features/FEAT-010-shop-settings/mockups/States.dc.html"
+        ],
+        "canvas": "https://claude.ai/artifact/9W61KRjkR4T5a3BjXGP9RN",
         "note": "visual reference; ui-design.md is authoritative"
       }
     },

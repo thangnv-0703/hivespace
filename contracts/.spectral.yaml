@@ -9,3 +9,13 @@ rules:
     then:
       field: patch
       function: falsy
+  # NFR-SEC-008 (dev-standards §11): the bank account number is write-only; no response schema may carry it.
+  hs-no-bank-number-in-responses:
+    description: No schema reachable from a response may declare a property named accountNumber.
+    severity: error
+    given: "$.paths[*][*].responses[*].content[*].schema"
+    then:
+      function: hsNoAccountNumber
+functions:
+  - hsNoAccountNumber
+functionsDir: ./spectral-functions

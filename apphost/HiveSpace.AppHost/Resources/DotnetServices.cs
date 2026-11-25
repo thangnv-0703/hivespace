@@ -69,6 +69,8 @@ internal static class DotnetServicesExtensions
             .WithEnvironment("Identity__Issuer", PublicOrigin)
             .WithEnvironment("Identity__SigningKeyPem", identitySecrets.SigningKeyPem)
             .WithEnvironment("Identity__EncryptionKeyPem", identitySecrets.EncryptionKeyPem)
+            .WithEnvironment("Identity__BankEncryption__ActiveKeyId", "v1")
+            .WithEnvironment("Identity__BankEncryption__Keys__v1", identitySecrets.BankEncryptionKeyV1)
             .WithOidcClients(identitySecrets)
             .WithReference(identityDb)
             .WithReference(infra.Messaging)

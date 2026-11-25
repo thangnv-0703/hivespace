@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Pickup and payout, mobile</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600&display=swap">
+<style>
+body{margin:0;font-family:'Outfit','Noto Sans','Segoe UI',system-ui,sans-serif;color:#101828}
+a{color:#3641f5}a:hover{color:#2a31d8}
+</style>
+</helmet>
+<div style="width: 100%; min-height: 1700px; background: #f9fafb; display: flex; flex-direction: column">
+  <header style="height: 64px; box-sizing: border-box; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; background: #ffffff; border-bottom: 1px solid #e4e7ec">
+    <button type="button" aria-label="Open menu" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; border-radius: 8px; background: transparent; color: #344054">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+    <span style="font: 700 18px 'Outfit',sans-serif">HiveSpace <span style="font-size: 12px; font-weight: 500; color: #667085">Seller</span></span>
+    <button type="button" aria-label="Account menu" style="display: flex; align-items: center; justify-content: center; width: 44px; height: 44px; border: 0; background: transparent">
+      <span style="display: flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 9999px; background: #dde9ff; color: #2a31d8; font-size: 12px; font-weight: 600">LN</span></button>
+  </header>
+  <main style="padding: 16px; display: flex; flex-direction: column; gap: 16px; font-size: 14px">
+    <div style="display: flex; flex-direction: column; gap: 6px">
+      <nav aria-label="Breadcrumb" style="color: #667085">Settings <span aria-hidden="true">›</span> <span aria-current="page" style="color: #101828">Pickup and payout</span></nav>
+      <h1 style="margin: 0; font-size: 24px; line-height: 32px; font-weight: 600">Pickup address and payout</h1>
+      <p style="margin: 0; color: #667085">Both are needed before you can publish products.</p>
+    </div>
+    <form aria-labelledby="m-addr" style="background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; box-shadow: 0 1px 3px rgba(16,24,40,0.1); padding: 16px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: center; gap: 8px"><h2 id="m-addr" style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 600">Pickup address</h2><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; background: #fffaeb; color: #b54708; font-size: 12px; font-weight: 500">Missing</span></div>
+      <p style="margin: 0; color: #344054">Where carriers collect your orders. Only you can see it.</p>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m1" style="font-weight: 500; color: #344054">Contact name <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m1" type="text" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m2" style="font-weight: 500; color: #344054">Phone <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m2" type="tel" aria-describedby="m2h" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"><p id="m2h" style="margin: 0; font-size: 12px; color: #667085">Vietnamese number, e.g. 0912 345 678</p></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m3" style="font-weight: 500; color: #344054">Province or city <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m3" type="text" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m4" style="font-weight: 500; color: #344054">District <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m4" type="text" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m5" style="font-weight: 500; color: #344054">Ward or commune <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m5" type="text" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m6" style="font-weight: 500; color: #344054">Street address <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m6" type="text" aria-describedby="m6h" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"><p id="m6h" style="margin: 0; font-size: 12px; color: #667085">House number and street.</p></div>
+      <button type="submit" style="height: 44px; width: 100%; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 14px 'Outfit','Noto Sans',sans-serif">Save address</button>
+    </form>
+    <form aria-labelledby="m-pay" style="background: #ffffff; border: 1px solid #e4e7ec; border-radius: 12px; box-shadow: 0 1px 3px rgba(16,24,40,0.1); padding: 16px; display: flex; flex-direction: column; gap: 16px">
+      <div style="display: flex; align-items: center; gap: 8px"><h2 id="m-pay" style="margin: 0; font-size: 18px; line-height: 28px; font-weight: 600">Payout details</h2><span style="display: inline-flex; align-items: center; height: 22px; padding: 0 8px; border-radius: 4px; background: #fffaeb; color: #b54708; font-size: 12px; font-weight: 500">Missing</span></div>
+      <p style="margin: 0; color: #344054">The bank account for your earnings. Nothing is paid out yet; HiveSpace is a demo.</p>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m7" style="font-weight: 500; color: #344054">Bank name <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m7" type="text" placeholder="e.g. Vietcombank" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m8" style="font-weight: 500; color: #344054">Account number <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m8" type="text" inputmode="numeric" autocomplete="off" aria-describedby="m8h" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"><p id="m8h" style="margin: 0; font-size: 12px; color: #667085">6–19 digits. Spaces and dashes are fine.</p></div>
+      <div style="display: flex; flex-direction: column; gap: 6px"><label for="m9" style="font-weight: 500; color: #344054">Account holder <span aria-hidden="true" style="color: #d92d20">*</span></label><input id="m9" type="text" autocomplete="off" aria-describedby="m9h" style="height: 44px; box-sizing: border-box; padding: 0 14px; border: 1px solid #d0d5dd; border-radius: 8px; font: 400 16px 'Outfit','Noto Sans',sans-serif"><p id="m9h" style="margin: 0; font-size: 12px; color: #667085">As shown by your bank, usually in capitals without accents.</p></div>
+      <button type="submit" style="height: 44px; width: 100%; border: 0; border-radius: 8px; background: #465fff; color: #ffffff; font: 500 14px 'Outfit','Noto Sans',sans-serif">Save payout details</button>
+    </form>
+  </main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":390,"height":1700}}'>
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+</script>
+</body>
+</html>

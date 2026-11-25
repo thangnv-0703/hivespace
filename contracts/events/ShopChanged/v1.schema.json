@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivespace.dev/events/ShopChanged/v1.schema.json",
+  "title": "ShopChanged v1 (producer: identity). The public profile changed or the shop's readiness to sell flipped (FEAT-010). Correlation id is the shop id. Never carries the pickup address, phone or bank details.",
+  "type": "object",
+  "required": ["shopId", "ownerUserId", "name", "description", "sellerType", "setupComplete", "version", "changedAt"],
+  "properties": {
+    "shopId": { "type": "string", "format": "uuid" },
+    "ownerUserId": { "type": "string", "format": "uuid" },
+    "name": { "type": "string", "minLength": 3, "maxLength": 60 },
+    "description": { "type": ["string", "null"], "maxLength": 1000 },
+    "sellerType": { "type": "string", "enum": ["individual", "business"] },
+    "setupComplete": { "type": "boolean" },
+    "version": { "type": "integer", "minimum": 2 },
+    "changedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

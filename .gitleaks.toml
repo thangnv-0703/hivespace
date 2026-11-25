@@ -19,4 +19,6 @@ regexes = [
   '''tok-SECRET-9f8e7d''',
   # Throwaway password the FEAT-005 log-leak test used before it was generated at runtime (history only).
   '''logSecret5678''',
+  # FEAT-010 test-only bank encryption key: bytes 0x00..0x1F in base64, used by the integration and contract tests.
+  '''AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=''',
 ]

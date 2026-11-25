@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FEAT-010 — Shop settings: profile, pickup address, payout</title>
+<script>
+// Resolve the theme before first paint so light-preference users don't see a dark flash.
+(function () {
+  var theme = null;
+  try { var p = new URLSearchParams(location.search).get('theme'); if (p === 'light' || p === 'dark') theme = p; } catch (_) {}
+  if (!theme) { try { theme = localStorage.getItem('flow-diagram-theme'); } catch (_) {} }
+  if (theme !== 'light' && theme !== 'dark') theme = matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root, [data-theme="dark"] {
+  --bg: #020617; --grid: #1e293b;
+  --text: #ffffff; --text-muted: #94a3b8; --text-dim: #475569; --text-faint: #7d8da1;
+  --panel: rgba(15, 23, 42, 0.5); --panel-border: #1e293b;
+  --lane-fill: rgba(15, 23, 42, 0.22); --lane-stroke: #334155;
+  --arrow: #94a3b8; --arrow-emphasis: #34d399; --mask: #0f172a;
+  --frontend-stroke: #22d3ee; --backend-stroke: #34d399; --database-stroke: #a78bfa;
+  --cloud-stroke: #fbbf24; --security-stroke: #fb7185; --external-stroke: #94a3b8;
+  --service-stroke: #fb923c; --ghost-stroke: #7d8da1;
+  --toolbar-bg: rgba(15, 23, 42, 0.8); --toolbar-border: #334155; --toolbar-text: #e2e8f0; --toolbar-hover: rgba(30, 41, 59, 0.95);
+}
+[data-theme="light"] {
+  --bg: #f4f5f7; --grid: #e9edf2;
+  --text: #111827; --text-muted: #5b6474; --text-dim: #9aa3b2; --text-faint: #6b7280;
+  --panel: #ffffff; --panel-border: #e5e7eb;
+  --lane-fill: rgba(248, 250, 252, 0.65); --lane-stroke: #cbd5e1;
+  --arrow: #64748b; --arrow-emphasis: #059669; --mask: #ffffff;
+  --frontend-stroke: #0891b2; --backend-stroke: #059669; --database-stroke: #7c3aed;
+  --cloud-stroke: #d97706; --security-stroke: #e11d48; --external-stroke: #64748b;
+  --service-stroke: #ea580c; --ghost-stroke: #6b7280;
+  --toolbar-bg: rgba(255, 255, 255, 0.92); --toolbar-border: #cbd5e1; --toolbar-text: #334155; --toolbar-hover: #ffffff;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem 16px; transition: background .2s, color .2s; }
+.container { max-width: 1360px; margin: 0 auto; }
+body.wide .container { max-width: 2200px; }
+body.wide .stage { grid-template-columns: minmax(0, 1fr) 300px; }
+a { color: var(--frontend-stroke); }
+code { color: var(--frontend-stroke); font-family: inherit; }
+
+.header { display: flex; flex-wrap: wrap; align-items: flex-start; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.header-row { display: flex; align-items: center; gap: .75rem; }
+.pulse-dot { width: 12px; height: 12px; border-radius: 50%; background: var(--backend-stroke); box-shadow: 0 0 0 4px color-mix(in srgb, var(--backend-stroke) 20%, transparent); animation: pulse 2s ease-in-out infinite; flex: none; }
+@keyframes pulse { 50% { box-shadow: 0 0 0 8px color-mix(in srgb, var(--backend-stroke) 0%, transparent); } }
+h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; }
+.subtitle { color: var(--text-muted); font-size: .8125rem; margin-top: .4rem; padding-left: 1.6rem; line-height: 1.55; max-width: 1000px; }
+.subtitle b { color: var(--text); }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.toolbar button, .toolbar a { font: inherit; font-size: .75rem; color: var(--toolbar-text); background: var(--toolbar-bg); border: 1px solid var(--toolbar-border); border-radius: 8px; padding: .45rem .75rem; cursor: pointer; display: inline-flex; align-items: center; gap: .4rem; text-decoration: none; }
+.toolbar button:hover, .toolbar a:hover { background: var(--toolbar-hover); }
+.toolbar button:focus-visible, .toolbar a:focus-visible { outline: 2px solid var(--frontend-stroke); outline-offset: 2px; }
+.toolbar button[aria-pressed="true"] { border-color: var(--arrow-emphasis); color: var(--text); box-shadow: inset 0 0 0 1px var(--arrow-emphasis); }
+.toolbar .sep { width: 1px; height: 22px; background: var(--toolbar-border); margin: 0 .15rem; }
+.chip-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+.stage { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 1rem; }
+@media (max-width: 1150px) { .stage { grid-template-columns: 1fr; } }
+.diagram-container { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 1.25rem; overflow-x: auto; scroll-margin-top: 1rem; }
+.diagram-container svg { display: block; width: 100%; height: auto; }
+
+/* SVG */
+.c-grid { stroke: var(--grid); fill: none; }
+.c-region { fill: color-mix(in srgb, var(--cloud-stroke) 3%, transparent); stroke: color-mix(in srgb, var(--cloud-stroke) 42%, var(--lane-stroke)); }
+.c-frame { fill: var(--lane-fill); stroke: var(--lane-stroke); }
+.c-frame.dashed { fill: none; stroke-dasharray: 4 3; }
+.c-mask { fill: var(--mask); }
+.t-primary { fill: var(--text); } .t-muted { fill: var(--text-muted); } .t-cloud { fill: var(--cloud-stroke); } .t-lane { fill: var(--text-muted); }
+.node { cursor: pointer; outline: none; }
+.node rect.body, .lg rect.body { stroke-width: 1.25; transition: stroke-width .15s; }
+.sigil { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.node:hover rect.body, .node:focus-visible rect.body, .node.selected rect.body { stroke-width: 2.5; }
+.k-ghost rect.body { stroke-dasharray: 5 3; }
+.k-ghost text.t-primary { fill: var(--text-muted); }
+.edge path.line, .lg path.line { fill: none; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.edge path.halo { fill: none; stroke: var(--mask); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.edge path.hit { fill: none; stroke: transparent; stroke-width: 12; pointer-events: stroke; cursor: pointer; }
+.edge.has-data:hover path.line { stroke-width: 2.6; }
+.s-default path.line { stroke: var(--arrow); }
+.s-emphasis path.line { stroke: var(--arrow-emphasis); stroke-width: 1.8; }
+.s-security path.line { stroke: var(--security-stroke); }
+.s-dashed path.line { stroke: var(--arrow); stroke-dasharray: 5 4; }
+.s-ghost path.line { stroke: var(--ghost-stroke); stroke-dasharray: 3 4; }
+.m-default { fill: var(--arrow); } .m-emphasis { fill: var(--arrow-emphasis); } .m-security { fill: var(--security-stroke); } .m-ghost { fill: var(--ghost-stroke); }
+.edge .lbl-bg { fill: var(--mask); stroke: var(--lane-stroke); stroke-width: .75; }
+.edge .lbl { font-size: 8px; pointer-events: none; }
+.s-default .lbl, .s-dashed .lbl { fill: var(--text-muted); } .s-emphasis .lbl { fill: var(--arrow-emphasis); } .s-security .lbl { fill: var(--security-stroke); } .s-ghost .lbl { fill: var(--ghost-stroke); }
+svg:not(.show-ghost) .ghost { display: none; }
+.pin { cursor: pointer; }
+.pin circle { stroke: var(--mask); stroke-width: 1.5; }
+.pin text { fill: var(--mask); font-size: 8px; font-weight: 700; pointer-events: none; }
+.pin.confirmed circle, .pin.aligned circle { fill: var(--backend-stroke); } .pin.consider circle { fill: var(--cloud-stroke); } .pin.decision circle { fill: var(--security-stroke); } .pin.risk circle { fill: var(--service-stroke); }
+.pin:hover circle, .pin:focus-visible circle { stroke: var(--text); }
+svg.hide-pins #pins { display: none; }
+.step-badge circle { fill: var(--arrow-emphasis); }
+.step-badge text { fill: var(--mask); font-size: 9px; font-weight: 700; }
+svg.dim .node:not(.on), svg.dim #pins .pin { opacity: .22; }
+svg.dim .edge:not(.on) { opacity: .1; }
+svg.dim .edge.on path.line { stroke-width: 2.4; stroke-dasharray: 7 5; animation: flow 1s linear infinite; }
+@keyframes flow { to { stroke-dashoffset: -24; } }
+@media (prefers-reduced-motion: reduce) { svg.dim .edge.on path.line { animation: none; } .pulse-dot { animation: none; } }
+
+/* Side panel */
+.side { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 14px; padding: 1.1rem; font-size: .78rem; line-height: 1.55; align-self: start; max-height: 1000px; overflow-y: auto; }
+.side .eyebrow { font-size: .65rem; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+.side h2 { font-size: .95rem; margin: .2rem 0 .5rem; }
+.side p { color: var(--text-muted); margin-bottom: .6rem; }
+.side ol { list-style: none; counter-reset: s; }
+.side ol li { counter-increment: s; position: relative; padding-left: 1.75rem; margin-bottom: .55rem; color: var(--text-muted); }
+.side ol li::before { content: counter(s); position: absolute; left: 0; top: .05rem; width: 1.2rem; height: 1.2rem; border-radius: 50%; background: var(--arrow-emphasis); color: var(--mask); font-weight: 700; font-size: .68rem; display: grid; place-items: center; }
+.side strong, .side b, .side .tag { color: var(--text); }
+.side .links { margin-top: .6rem; padding-top: .6rem; border-top: 1px solid var(--panel-border); color: var(--text-muted); }
+.side .links button { all: unset; cursor: pointer; display: block; padding: .1rem 0; }
+.side .links button:hover { color: var(--text); text-decoration: underline; }
+.side .kv { display: grid; grid-template-columns: auto 1fr; gap: .3rem .7rem; margin-top: .4rem; color: var(--text-muted); }
+.side .kv > span:nth-child(odd) { color: var(--text-faint); }
+.side .note-box { border: 1px solid var(--panel-border); border-radius: 10px; padding: .6rem .7rem; margin-top: .6rem; color: var(--text-muted); }
+.hint { color: var(--text-faint); font-size: .7rem; margin-top: .75rem; }
+.linkish { color: var(--frontend-stroke); background: none; border: 0; font: inherit; font-size: .72rem; cursor: pointer; text-decoration: underline; padding: 0; }
+.refs { color: var(--text-faint); font-size: .68rem; margin-top: .35rem; }
+.chip, .note-chip, .cls { display: inline-flex; align-items: center; font-size: .63rem; padding: .12rem .5rem; border-radius: 999px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; white-space: nowrap; }
+.note-chip.confirmed, .note-chip.aligned { color: var(--backend-stroke); background: color-mix(in srgb, var(--backend-stroke) 15%, transparent); }
+.note-chip.consider { color: var(--cloud-stroke); background: color-mix(in srgb, var(--cloud-stroke) 15%, transparent); }
+.note-chip.decision { color: var(--security-stroke); background: color-mix(in srgb, var(--security-stroke) 15%, transparent); }
+.note-chip.risk { color: var(--service-stroke); background: color-mix(in srgb, var(--service-stroke) 15%, transparent); }
+.tagp { font-size: .65rem; padding: .12rem .5rem; border-radius: 999px; border: 1px solid var(--toolbar-border); color: var(--text-muted); white-space: nowrap; display: inline-block; margin: 0 .2rem .2rem 0; }
+
+/* Sections */
+.section-title { font-size: 1.05rem; font-weight: 650; margin: 1.9rem 0 .35rem; }
+.section-lead { color: var(--text-muted); font-size: .78rem; margin-bottom: .9rem; line-height: 1.55; max-width: 1080px; }
+.grid-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(390px, 1fr)); gap: .9rem; }
+.grid-cards.narrow { grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); }
+@media (max-width: 520px) { .grid-cards { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: 1rem 1.1rem; scroll-margin-top: 1rem; }
+.card.toned { border-top: 3px solid var(--tone); }
+.card.lefty { border-left: 3px solid var(--tone); }
+.card.flash { box-shadow: 0 0 0 2px var(--cloud-stroke); }
+.card header { display: flex; justify-content: space-between; align-items: baseline; gap: .5rem; margin-bottom: .55rem; flex-wrap: wrap; }
+.card h3 { font-size: .9rem; display: flex; align-items: center; gap: .55rem; }
+.card .kind { font-size: .65rem; color: var(--tone); text-transform: uppercase; letter-spacing: .06em; white-space: nowrap; }
+.card ul.b { list-style: none; }
+.card ul.b li { font-size: .77rem; color: var(--text-muted); line-height: 1.55; padding-left: 1rem; position: relative; margin-bottom: .42rem; }
+.card ul.b li::before { content: ''; position: absolute; left: 0; top: .55em; width: 5px; height: 5px; border-radius: 50%; background: var(--text-dim); }
+.card b { color: var(--text); font-weight: 600; }
+.card-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; background: var(--tone); }
+.spec { display: grid; grid-template-columns: 6.2rem 1fr; gap: .38rem .75rem; font-size: .74rem; line-height: 1.5; }
+.side .spec { grid-template-columns: 5.6rem 1fr; font-size: .72rem; margin-top: .5rem; }
+.spec dt { color: var(--text-faint); }
+.spec dd { color: var(--text-muted); }
+.spec dd ul { list-style: none; }
+.spec dd li { position: relative; padding-left: .8rem; }
+.spec dd li::before { content: '·'; position: absolute; left: 0; color: var(--text-dim); }
+.card-notes { margin-top: .6rem; display: flex; flex-wrap: wrap; gap: .35rem; }
+.note-body { font-size: .75rem; line-height: 1.55; color: var(--text-muted); }
+.tbl { background: var(--panel); border: 1px solid var(--panel-border); border-radius: 12px; padding: .5rem .75rem; overflow-x: auto; }
+table.grid { width: 100%; border-collapse: collapse; font-size: .73rem; }
+table.grid th { text-align: left; color: var(--text-faint); font-weight: 500; padding: .45rem .5rem; border-bottom: 1px solid var(--panel-border); white-space: nowrap; }
+table.grid td { padding: .5rem; border-bottom: 1px solid var(--panel-border); color: var(--text-muted); vertical-align: top; line-height: 1.5; }
+table.grid td:first-child { color: var(--text); font-weight: 600; }
+table.grid tr:last-child td { border-bottom: 0; }
+table.matrix td:not(:first-child), table.matrix th:not(:first-child) { text-align: center; }
+.y { color: var(--backend-stroke); font-weight: 700; } .n { color: var(--text-dim); } .p { color: var(--cloud-stroke); }
+.footnote { color: var(--text-faint); font-size: .7rem; margin-top: 1.25rem; line-height: 1.6; }
+@media print { body { background: #fff; padding: 0; } .toolbar, .hint { display: none; } .stage { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <div>
+      <div class="header-row"><div class="pulse-dot"></div><h1 id="title"></h1></div>
+      <p class="subtitle" id="subtitle"></p>
+    </div>
+    <div class="toolbar" role="toolbar" aria-label="Diagram actions" id="toolbar"></div>
+  </div>
+  <div class="stage">
+    <div class="diagram-container" id="diagram">
+      <svg id="dia" role="img" aria-labelledby="dia-title dia-desc">
+        <title id="dia-title"></title>
+        <desc id="dia-desc"></desc>
+        <defs>
+          <marker id="ah-default" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-default"/></marker>
+          <marker id="ah-emphasis" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-emphasis"/></marker>
+          <marker id="ah-security" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-security"/></marker>
+          <marker id="ah-ghost" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" class="m-ghost"/></marker>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M 40 0 L 0 0 0 40" class="c-grid" stroke-width="0.5"/></pattern>
+        </defs>
+        <rect width="100%" height="100%" fill="url(#grid)"/>
+        <g id="frames"></g><g id="edges"></g><g id="nodes"></g><g id="pins"></g><g id="badges"></g><g id="legend"></g>
+      </svg>
+    </div>
+    <aside class="side" id="side" aria-live="polite"></aside>
+  </div>
+  <div id="sections"></div>
+  <p class="footnote" id="footnote"></p>
+</div>
+
+<script>
+/* The model is injected by scripts/build_diagram.py (edges already carry routed `d`, `lx`, `ly`). */
+var MODEL = {"meta": {"title": "FEAT-010 — Shop settings: profile, pickup address, payout", "subtitle": "Design solution from <code>technical-design.md<\/code>: a seller saves the shop profile, the pickup address and the payout bank details; the account number is encrypted and only its last four digits are shown. Pick a flow to follow one UC-004 path; click any arrow for its data contract.", "description": "A seller opens Settings in the seller centre (or a checklist button on the dashboard). The pages read GET /v1/shops/me, which now returns the description, the pickup address and the payout with only the last four digits, and computes the setup checklist. Each section saves on its own PUT sub-resource under policy seller: profile (name, description), pickup-address (six free-text fields, Vietnamese phone in E.164) and payout (bank name, account number, holder). Identity validates every field together (FR-SHOP-008), encrypts the account number with AES-256-GCM using the active key from configuration and the shop id as associated data, and stores ciphertext, key id and last four digits on the shops row. A profile change, or the moment the shop's setup becomes complete, writes a ShopChanged/v1 outbox row carrying only public fields, setupComplete and a monotonic version. Nothing consumes it yet; Notification acknowledges it.", "viewBox": [1280, 640], "links": [{"href": "technical-design.md", "label": "technical-design.md"}, {"href": "../FEAT-009-register-shop/design-flow.html", "label": "FEAT-009 flow"}, {"href": "../../architecture-flow.html", "label": "Architecture"}], "kindLabels": {"security": "Gateway / secrets", "backend": "Event bus", "database": "Store", "external": "Person / external"}, "edgeLabels": {"dashed": "Event", "security": "Key / auth"}, "overview": [["Implements", "FR-SHOP-005..008, FR-SHOP-010 (logo and cover deferred), NFR-SEC-008; supports FR-ROLE-003, FR-ROLE-004, FR-SHOP-009, FR-SHOP-011"], ["Realizes", "UC-004 (main 1–3, exception 3a)"], ["Screens", "SCR-SEL-007, SCR-SEL-008; SCR-SEL-002 checklist becomes live"], ["Builds", "PUT /v1/shops/me/profile, /pickup-address, /payout; extended GET /v1/shops/me; event ShopChanged/v1; Spectral rule hs-no-bank-number-in-responses"], ["Schema", "shops: description, profile_version, pickup_* and payout_* columns (owned types, all-or-none checks), xmin row version"], ["Depends on", "FEAT-009 (shop, policy seller, seller-centre session), FEAT-002 (PUT pattern, PhoneNumber)"]], "footnote": "Source: <code>docs/features/FEAT-010-shop-settings/technical-design.md<\/code> (§3 contracts, §4 schema, §5 components, §7 decisions, §8 open items). Generated with html-flow-diagram; edit <code>design-flow.model.json<\/code> and rebuild."}, "frames": [], "nodes": [{"id": "browser", "kind": "external", "x": 20, "y": 290, "w": 150, "h": 50, "label": "Browser", "sub": "seller", "desc": "The seller, signed in on the seller host (<code>hs.bff.sel<\/code>, FEAT-009). Never holds a token."}, {"id": "sel", "kind": "frontend", "x": 220, "y": 270, "w": 190, "h": 76, "label": "Seller centre SPA", "sub": "SCR-SEL-007, 008", "sub2": "dashboard checklist", "desc": "<code>features/settings<\/code>: <code>ShopProfilePage<\/code> at <code>/settings/profile<\/code> and <code>PickupPayoutPage<\/code> at <code>/settings/pickup-payout<\/code> (<code>/settings<\/code> redirects to the profile). Each section saves on its own and renders the returned <code>MyShop<\/code>. Payout shows <code>•••• 1234<\/code>; changing it asks for the full number again (D-4). Dashboard checklist buttons now go to <code>/settings/pickup-payout<\/code>."}, {"id": "gw", "kind": "security", "x": 470, "y": 80, "w": 190, "h": 440, "label": "Gateway + BFF", "sub": "routes unchanged", "sub2": "CSRF on PUT", "desc": "No change: <code>/v1/shops/{**rest}<\/code> already routes to Identity with policy <code>authenticated<\/code>; non-GET calls need <code>X-HS-CSRF: 1<\/code>; the access token is relayed as a bearer."}, {"id": "identity", "kind": "service", "x": 740, "y": 80, "w": 200, "h": 440, "label": "Identity", "sub": "shop settings", "sub2": "policy seller", "desc": "Three PUT handlers plus the extended <code>GET /v1/shops/me<\/code>. Validates every field together, checks rename uniqueness, encrypts the account number through <code>IBankAccountProtector<\/code> (AES-256-GCM), retries up to 3 times on a row-version conflict, and queues <code>ShopChanged<\/code> when the public profile or readiness changes."}, {"id": "idb", "kind": "database", "x": 1040, "y": 80, "w": 190, "h": 80, "label": "identitydb", "sub": "shops (+ settings)", "sub2": "outbox", "desc": "<code>shops<\/code> gains <code>description<\/code>, <code>profile_version<\/code>, six <code>pickup_*<\/code> columns and five <code>payout_*<\/code> columns (ciphertext <code>bytea<\/code>, <code>last4<\/code>, <code>key_id<\/code>), both groups all-or-none by check; <code>xmin<\/code> row version. Migration <code>AddShopSettings<\/code>."}, {"id": "key", "kind": "security", "x": 1040, "y": 200, "w": 190, "h": 56, "label": "Bank key", "sub": "config · key id v1", "desc": "<code>Identity:BankEncryption<\/code>: <code>ActiveKeyId<\/code> and <code>Keys:{id}<\/code> (32 bytes, base64). Locally generated by the AppHost's <code>DevSecrets<\/code> into <code>.local/dev-secrets<\/code>; deployed from the vault (FEAT-037). Validated at start-up."}, {"id": "bus", "kind": "backend", "x": 1040, "y": 300, "w": 190, "h": 50, "label": "Service Bus", "sub": "topic hivespace-events", "sigil": "service", "desc": "One topic; subscriptions exist for inventory and notification only."}, {"id": "notif", "kind": "service", "x": 1040, "y": 390, "w": 190, "h": 56, "label": "Notification", "sub": "ignores the event", "desc": "No handler for <code>ShopChanged<\/code>: inbox row, acknowledged, no email."}, {"id": "catalog", "kind": "service", "x": 1040, "y": 480, "w": 190, "h": 56, "label": "Catalog / Search-AI", "sub": "later consumers", "ghost": true, "desc": "Not in this slice. Catalog (FEAT-011/012) keeps a shop snapshot and enforces FR-SHOP-011 from <code>setupComplete<\/code>; Search-AI (FEAT-018) shows the shop name."}], "edges": [{"id": "e1", "from": "browser", "to": "sel", "s": "emphasis", "label": "form", "data": {"p": "Profile (name, description) · pickup address (contactName, phone, province, district, ward, street) · payout (bankName, accountNumber, accountHolder)", "f": "SPA forms", "c": "conf", "s": "Client checks mirror the server rules; the server decides. The account number field is never pre-filled."}, "d": "M170 315 L220 315", "lx": 195.0, "ly": 315.0}, {"id": "e2", "from": "sel", "to": "gw", "s": "emphasis", "label": "API", "data": {"p": "GET /v1/shops/me · PUT /v1/shops/me/profile · PUT /v1/shops/me/pickup-address · PUT /v1/shops/me/payout", "f": "HTTPS JSON (X-HS-CSRF, Accept-Language), cookie hs.bff.sel", "c": "conf", "s": "Responses: 200 MyShop (payout.accountNumberLast4 only); 400 validation_failed with details; 401; 403 common.forbidden; 404; 409 shop_name_taken", "w": "Each PUT returns the whole MyShop"}, "d": "M410 308 L470 308", "lx": 440.0, "ly": 308.0}, {"id": "e3", "from": "gw", "to": "identity", "s": "emphasis", "label": "relay", "data": {"p": "The same calls with Authorization: Bearer (role Seller)", "f": "HTTP", "c": "conf", "s": "Policy seller in Identity; the shop is always the one owned by sub; X-User-* headers stripped"}, "d": "M660 300 L740 300", "lx": 700.0, "ly": 300.0}, {"id": "e4", "from": "identity", "to": "key", "s": "security", "label": "key", "fromAt": 0.42, "data": {"p": "Active key id and 32-byte AES keys by id", "f": "Options bound at start-up", "c": "restr", "s": "Never logged; start-up fails when the active key is missing or the wrong size"}, "d": "M940 264.8 L982 264.8 Q990 264.8 990 256.8 L990 236 Q990 228 998 228 L1040 228", "lx": 965.0, "ly": 264.8}, {"id": "e5", "from": "identity", "to": "idb", "s": "default", "label": "write", "fromAt": 0.06, "toAt": 0.3, "data": {"p": "Update shops: description, profile_version, pickup_*, payout_bank_name, payout_account_holder, payout_account_ciphertext (0x01|nonce|tag|ct, AAD = shop id), payout_account_last4, payout_key_id; outbox ShopChanged when due", "f": "EF Core · one SaveChanges · xmin row version", "c": "conf", "s": "The digits are never stored in clear; ix_shops_normalized_name maps a rename race to 409", "w": "Bounded retry (3) on concurrency conflict (D-9)"}, "d": "M940 106.4 L988.8 106.4 Q990 106.4 990 105.2 L990 105.2 Q990 104 991.2 104 L1040 104", "lx": 965.0, "ly": 106.4}, {"id": "e6", "from": "identity", "to": "idb", "s": "default", "label": "read", "fromAt": 0.18, "toAt": 0.8, "data": {"p": "Shop by owner_user_id = sub; normalized name taken by another shop?", "f": "EF Core", "c": "internal", "s": "Payout read as last4 only; ciphertext is never decrypted to render"}, "d": "M940 159.2 L982.4 159.2 Q990 159.2 990 151.6 L990 151.6 Q990 144 997.6 144 L1040 144", "lx": 965.0, "ly": 159.2}, {"id": "e7", "from": "identity", "to": "bus", "s": "dashed", "label": "event", "fromAt": 0.6, "data": {"p": "ShopChanged/v1 {shopId, ownerUserId, name, description, sellerType, setupComplete, version, changedAt}", "f": "Event envelope · JSON schema v1", "c": "internal", "s": "No address, phone or bank field (FR-SHOP-009); correlation id = shop id", "w": "Profile change or setupComplete flip only; after commit, at least once"}, "d": "M940 344 L982 344 Q990 344 990 336 L990 333 Q990 325 998 325 L1040 325", "lx": 965.0, "ly": 344.0}, {"id": "e8", "from": "bus", "to": "notif", "s": "dashed", "data": {"p": "ShopChanged", "f": "Service Bus subscription", "c": "internal", "s": "Inbox dedupe by eventId; no handler, acknowledged"}, "d": "M1135 350 L1135 390"}, {"id": "g1", "from": "bus", "to": "catalog", "s": "ghost", "ghost": true, "fromSide": "right", "toSide": "right", "via": [[1258, 325], [1258, 508]], "label": "later", "lx": 1262, "ly": 420, "data": {"p": "ShopRegistered + ShopChanged → shop snapshot (FEAT-011/012, FEAT-018)", "f": "Service Bus subscription", "c": "internal", "s": "Drop events whose version is not higher (ADR-0003)", "w": "Subscription must exist before demo shops, or backfill"}, "d": "M1230 325 L1250 325 Q1258 325 1258 333 L1258 500 Q1258 508 1250 508 L1230 508"}], "flows": {"all": {"title": "FEAT-010 design solution", "intro": "Open settings, save profile, pickup address and payout, and the refused paths."}, "view": {"title": "Open shop settings (UC-004 1)", "button": "View", "color": "frontend", "tags": ["UC-004 1", "FR-SHOP-010", "AC-7"], "steps": [{"e": ["e1", "e2", "e3"], "t": "<strong>Open settings<\/strong> from the sidebar or a dashboard checklist button; <code>GET /v1/shops/me<\/code> relayed with the bearer."}, {"e": ["e6"], "t": "<strong>Read<\/strong> the caller's shop; the payout is mapped to <code>accountNumberLast4<\/code>; <code>setup<\/code> is computed from what exists."}, {"e": ["e2", "e1"], "t": "<strong>200 MyShop<\/strong>: profile, pickup address, bank name, holder and <code>•••• 4567<\/code>."}]}, "profile": {"title": "Save the shop profile (UC-004 2–3)", "button": "Profile", "color": "frontend", "tags": ["FR-SHOP-005", "AC-1, AC-9, AC-10"], "steps": [{"e": ["e1", "e2", "e3"], "t": "<strong>Submit<\/strong> name and description; <code>PUT /v1/shops/me/profile<\/code>."}, {"e": ["e6"], "t": "<strong>Validate<\/strong> both fields; if the normalized name changed, check no other shop holds it."}, {"e": ["e5"], "t": "<strong>Update<\/strong> the profile, <code>profile_version + 1<\/code>, outbox <code>ShopChanged<\/code>, one commit."}, {"e": ["e7", "e8"], "t": "<strong>Event<\/strong> relayed after commit; Notification acknowledges it; <strong>200 MyShop<\/strong>."}]}, "address": {"title": "Save the pickup address (UC-004 2–3)", "button": "Address", "color": "frontend", "tags": ["FR-SHOP-006", "AC-3"], "steps": [{"e": ["e1", "e2", "e3"], "t": "<strong>Submit<\/strong> six fields; <code>PUT /v1/shops/me/pickup-address<\/code>."}, {"e": ["e5"], "t": "<strong>Store<\/strong> trimmed text and the phone in E.164; <code>ShopChanged<\/code> only if this completes setup."}, {"e": ["e2", "e1"], "t": "<strong>200 MyShop<\/strong> with <code>setup.pickupAddress: true<\/code>."}]}, "payout": {"title": "Save payout details, encrypted (UC-004 2–3)", "button": "Payout", "color": "security", "tags": ["FR-SHOP-007", "NFR-SEC-008", "AC-4, AC-5, AC-11"], "steps": [{"e": ["e1", "e2", "e3"], "t": "<strong>Submit<\/strong> bank name, full account number and holder; <code>PUT /v1/shops/me/payout<\/code>."}, {"e": ["e4"], "t": "<strong>Encrypt<\/strong> the digits with AES-256-GCM under the active key; associated data = shop id."}, {"e": ["e5"], "t": "<strong>Store<\/strong> ciphertext, key id and last four digits; no payout is started; <code>ShopChanged<\/code> if setup is now complete."}, {"e": ["e7", "e8"], "t": "<strong>Readiness event<\/strong> (<code>setupComplete: true<\/code>) when this save completes setup."}, {"e": ["e2", "e1"], "t": "<strong>200 MyShop<\/strong> with <code>accountNumberLast4<\/code> only; the checklist shows complete."}]}, "invalid": {"title": "Invalid or missing fields (UC-004 3a)", "button": "Invalid", "color": "security", "tags": ["FR-SHOP-008", "AC-6"], "steps": [{"e": ["e1", "e2", "e3"], "t": "<strong>Submit<\/strong> a section with several bad fields."}, {"e": ["e3", "e2"], "t": "<strong>400<\/strong> <code>common.validation_failed<\/code> with one <code>details<\/code> entry per field; nothing saved, no event."}, {"e": ["e1"], "t": "<strong>Errors<\/strong> shown next to their fields; the first one gets focus."}]}, "taken": {"title": "Rename to a taken name", "button": "Name taken", "color": "security", "tags": ["FR-SHOP-005, FR-SHOP-003", "AC-2"], "steps": [{"e": ["e1", "e2", "e3"], "t": "<strong>Submit<\/strong> a name another shop holds, in any case or spacing."}, {"e": ["e6"], "t": "<strong>Name check<\/strong> finds it (or the unique index loses the race at commit)."}, {"e": ["e3", "e2", "e1"], "t": "<strong>409<\/strong> <code>identity.shop_name_taken<\/code> shown on the name field; nothing changed."}]}}, "notes": [{"id": "N1", "on": "key", "st": "decision", "t": "AES-256-GCM, versioned key from config", "b": "Key id stored per row for rotation; shop id as associated data so a ciphertext cannot move between shops. Rejected: Data Protection, Key Vault envelope.", "r": "D-1"}, {"id": "N2", "on": "sel", "st": "decision", "t": "Three PUT sub-resources", "b": "Each screen section saves on its own; a whole-shop PUT would have to resend the masked number.", "r": "D-3"}, {"id": "N3", "on": "sel", "st": "decision", "t": "Payout PUT needs the full number", "b": "Only the last four digits ever leave Identity, so a masked value cannot round-trip.", "r": "D-4"}, {"id": "N4", "on": "idb", "st": "decision", "t": "Owned types on shops", "b": "Address and payout are one-per-shop attributes; no new table or entity, no escalation.", "r": "D-5"}, {"id": "N5", "on": "bus", "st": "decision", "t": "ShopChanged: public fields, setupComplete, version", "b": "Private fields stay in Identity; FEAT-012 enforces FR-SHOP-011 from its own snapshot.", "r": "D-6"}, {"id": "N6", "on": "identity", "st": "consider", "t": "Limits without an FR", "b": "Description 1000, address 80/60/200, bank fields 2–80, account number 6–19 digits. Confirm at review.", "r": "D-7"}, {"id": "N7", "on": "identity", "st": "decision", "t": "Row version + bounded retry, no If-Match", "b": "Existing concurrency pattern; last-write-wins per section; protects version and readiness transition.", "r": "D-9"}, {"id": "N8", "on": "sel", "st": "risk", "t": "Logo and cover deferred", "b": "FR-SHOP-010 shows them; they arrive with FEAT-035/036.", "r": "D-8"}, {"id": "N9", "on": "catalog", "st": "risk", "t": "Late subscriptions miss events", "b": "The first consumer needs its subscription before demo shops exist, or a backfill of ShopRegistered and the latest ShopChanged.", "r": "§8"}, {"id": "G1", "st": "consider", "t": "District level after the 2025 reform", "b": "Kept required as FR-SHOP-006 states (D-2, user decision); an SRS note is suggested to make it optional for FR-SHOP-006 and FR-ADDR-001.", "r": "D-2, §8"}], "specs": {"identity": {"host": "Identity service (.NET)", "trigger": "GET /v1/shops/me, PUT /v1/shops/me/{profile|pickup-address|payout}", "ops": ["validate every field together", "rename uniqueness (normalized name)", "AES-256-GCM encrypt account number", "profile_version and setupComplete", "ShopChanged in the same commit", "policy seller"], "data": "shops, outbox", "nfr": "FR-SHOP-005..008, FR-SHOP-010, NFR-SEC-008, FR-ROLE-003"}, "sel": {"host": "Seller centre (Vue)", "trigger": "/settings, /settings/profile, /settings/pickup-payout", "ops": ["profile form", "pickup address form", "payout card, masked, re-enter to change", "field errors from details", "dashboard checklist links"], "data": "MyShop", "nfr": "UC-004, SCR-SEL-007, SCR-SEL-008"}}, "sections": [{"type": "table", "title": "New error codes", "lead": "All 400, used as <code>details<\/code> codes under <code>common.validation_failed<\/code>, with vi/en messages (FR-LOC-004). Reused: <code>identity.phone_invalid<\/code>, <code>identity.shop_name_*<\/code>, <code>identity.shop_name_taken<\/code>.", "columns": ["Code", "Field"], "rows": [["<code>identity.shop_description_too_long<\/code> / <code>_invalid<\/code>", "description"], ["<code>identity.address_field_required<\/code> / <code>_too_long<\/code> / <code>_invalid<\/code>", "contactName, phone, province, district, ward, street"], ["<code>identity.bank_name_required<\/code> / <code>_too_long<\/code> / <code>_invalid<\/code>", "bankName"], ["<code>identity.bank_account_number_required<\/code> / <code>_invalid<\/code>", "accountNumber"], ["<code>identity.bank_account_holder_required<\/code> / <code>_too_long<\/code> / <code>_invalid<\/code>", "accountHolder"]]}, {"type": "notes", "title": "Decisions, risks and open items", "lead": "Decisions D-1..D-9 and open items from the design."}, {"type": "catalogue", "title": "Component catalogue"}]};
+
+(function () {
+var M = MODEL, meta = M.meta || {}, NS = 'http://www.w3.org/2000/svg';
+var svg = document.getElementById('dia');
+var KINDS = {
+  frontend: { tone: '--frontend-stroke', label: 'Frontend / UI' },
+  backend: { tone: '--backend-stroke', label: 'App / processing' },
+  service: { tone: '--service-stroke', label: 'Service / function' },
+  database: { tone: '--database-stroke', label: 'Data store' },
+  security: { tone: '--security-stroke', label: 'Edge / identity / gateway' },
+  cloud: { tone: '--cloud-stroke', label: 'Platform / ops' },
+  external: { tone: '--external-stroke', label: 'User / external' },
+  ghost: { tone: '--ghost-stroke', label: 'Consideration' }
+};
+Object.keys(meta.kindLabels || {}).forEach(function (k) { if (KINDS[k]) KINDS[k].label = meta.kindLabels[k]; });
+var CLASSES = Object.assign({ public: ['Public', '--backend-stroke'], internal: ['Internal', '--external-stroke'], conf: ['Confidential', '--cloud-stroke'], pii: ['Confidential · PII', '--service-stroke'], restr: ['Restricted', '--security-stroke'] }, meta.classes || {});
+var STATUS = { confirmed: 'Confirmed', aligned: 'Aligned', consider: 'Consider', decision: 'Decision', risk: 'Risk' };
+var SIGILS = {
+  frontend: '<rect x="2" y="3" width="12" height="10" rx="2"/><path d="M2 6.5h12"/>',
+  backend: '<path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>',
+  service: '<path d="M8 2v3M8 11v3M2 8h3M11 8h3"/><circle cx="8" cy="8" r="2.5"/>',
+  database: '<ellipse cx="8" cy="4" rx="5" ry="2"/><path d="M3 4v8c0 1.1 2.2 2 5 2s5-.9 5-2V4M3 8c0 1.1 2.2 2 5 2s5-.9 5-2"/>',
+  security: '<path d="M8 1.5 13 3.5v4c0 3-2.2 5.3-5 6.5-2.8-1.2-5-3.5-5-6.5v-4z"/>',
+  cloud: '<path d="M4.5 12h7a3 3 0 0 0 .4-6 4 4 0 0 0-7.7 1A2.5 2.5 0 0 0 4.5 12z"/>',
+  external: '<rect x="2.5" y="5" width="8.5" height="8" rx="1.5"/><path d="M8 2.5h5.5V8M13.5 2.5 7.5 8.5"/>',
+  ghost: '<circle cx="8" cy="8" r="5.5"/><path d="M8 5.5v3M8 10.5v.1"/>'
+};
+var nodes = M.nodes || [], edges = M.edges || [], notes = M.notes || [], flows = M.flows || {}, specs = M.specs || {};
+var byId = {}, edgeById = {};
+nodes.forEach(function (n) { byId[n.id] = n; });
+function el(tag, a, p) { var e = document.createElementNS(NS, tag); for (var k in a) e.setAttribute(k, a[k]); if (p) p.appendChild(e); return e; }
+function tone(kind) { return 'var(' + (KINDS[kind] || KINDS.external).tone + ')'; }
+// [[pii]] style tokens become classification pills anywhere text is rendered
+function rich(s) {
+  return String(s == null ? '' : s).replace(/\[\[([a-z0-9_-]+)\]\]/gi, function (m, k) {
+    var c = CLASSES[k]; if (!c) return m;
+    return '<span class="cls" style="color:var(' + c[1] + ');background:color-mix(in srgb,var(' + c[1] + ') 15%,transparent)">' + c[0] + '</span>';
+  });
+}
+function chip(st) { return '<span class="note-chip ' + st + '">' + (STATUS[st] || st) + '</span>'; }
+function list(v) { return Array.isArray(v) ? '<ul>' + v.map(function (x) { return '<li>' + rich(x) + '</li>'; }).join('') + '</ul>' : rich(v); }
+
+// ---- Header ----
+document.title = meta.title || 'Flow diagram';
+document.getElementById('title').textContent = meta.title || 'Flow diagram';
+document.getElementById('subtitle').innerHTML = rich(meta.subtitle || '');
+document.getElementById('dia-title').textContent = meta.title || '';
+document.getElementById('dia-desc').textContent = meta.description || '';
+document.getElementById('footnote').innerHTML = rich(meta.footnote || '');
+var vb = meta.viewBox || [1280, 820];
+svg.setAttribute('viewBox', '0 0 ' + vb[0] + ' ' + vb[1]);
+svg.style.minWidth = (meta.minWidth || Math.min(vb[0], 940)) + 'px';
+// Big-picture diagrams: let the page use the full window instead of the 1360px column.
+if (meta.wide) document.body.classList.add('wide');
+
+// ---- Frames (regions, lanes, sub-groups) ----
+var gF = document.getElementById('frames');
+(M.frames || []).forEach(function (f) {
+  var style = f.style || 'frame';
+  el('rect', { x: f.x, y: f.y, width: f.w, height: f.h, rx: style === 'region' ? 12 : 10, 'class': style === 'region' ? 'c-region' : 'c-frame' + (style === 'dashed' ? ' dashed' : ''), 'stroke-width': 1, style: f.tone ? 'stroke:color-mix(in srgb,' + tone(f.tone) + ' 55%,var(--lane-stroke))' : '' }, gF);
+  if (!f.label) return;
+  var ly = f.labelPos === 'bottom' ? f.y + f.h - 8 : f.y + 16, lx = f.labelX != null ? f.labelX : f.x + 10;
+  if (style === 'region') {
+    var w = f.label.length * 5.4 + 16;
+    el('rect', { x: lx - 2, y: ly - 12, width: w, height: 17, rx: 5, 'class': 'c-mask', style: 'stroke:color-mix(in srgb,var(--cloud-stroke) 38%,var(--mask));stroke-width:.8' }, gF);
+    el('text', { x: lx + 6, y: ly + 1, 'class': 't-cloud', 'font-size': 9, 'font-weight': 600 }, gF).textContent = f.label;
+  } else {
+    el('text', { x: lx, y: ly, 'class': 't-lane', 'font-size': 8.5, 'font-weight': 600 }, gF).textContent = f.label;
+  }
+});
+
+// ---- Edges (paths are pre-routed by build_diagram.py) ----
+var gE = document.getElementById('edges');
+edges.forEach(function (ed) {
+  var s = ed.s || 'default';
+  var g = el('g', { 'class': 'edge s-' + s + (ed.ghost ? ' ghost' : '') + (ed.data ? ' has-data' : ''), 'data-id': ed.id }, gE);
+  if (ed.data) { g.setAttribute('tabindex', 0); g.setAttribute('role', 'button'); }
+  el('title', {}, g).textContent = (byId[ed.from] || {}).label + ' → ' + (byId[ed.to] || {}).label + (ed.data ? ' · click for data' : '');
+  el('path', { d: ed.d, 'class': 'halo' }, g);
+  var marker = { default: 'default', dashed: 'default', emphasis: 'emphasis', security: 'security', ghost: 'ghost' }[s] || 'default';
+  el('path', { d: ed.d, 'class': 'line', 'marker-end': ed.noArrow ? '' : 'url(#ah-' + marker + ')' }, g);
+  if (ed.label) {
+    var w = ed.label.length * 4.9 + 10;
+    el('rect', { x: ed.lx - w / 2, y: ed.ly - 7, width: w, height: 13, rx: 6, 'class': 'lbl-bg' }, g);
+    el('text', { x: ed.lx, y: ed.ly + 3, 'text-anchor': 'middle', 'class': 'lbl' }, g).textContent = ed.label;
+  }
+  el('path', { d: ed.d, 'class': 'hit' }, g);
+  if (ed.data) {
+    g.addEventListener('click', function (ev) { ev.stopPropagation(); showEdge(ed.id); });
+    g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showEdge(ed.id); } });
+  }
+  ed.g = g; edgeById[ed.id] = ed;
+});
+
+// ---- Nodes ----
+var gN = document.getElementById('nodes');
+nodes.forEach(function (n) {
+  var kind = n.ghost ? 'ghost' : (n.kind || 'external'), t = tone(kind);
+  var g = el('g', { 'class': 'node k-' + kind + (n.ghost ? ' ghost' : ''), 'data-id': n.id, tabindex: 0, role: 'button', 'aria-label': n.label + (n.sub ? ', ' + n.sub : '') }, gN);
+  el('title', {}, g).textContent = n.label + (n.sub ? ' · ' + n.sub : '');
+  el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 8, 'class': 'c-mask' }, g);
+  el('rect', { x: n.x, y: n.y, width: n.w, height: n.h, rx: 8, 'class': 'body', style: n.ghost ? 'fill:color-mix(in srgb,' + t + ' 6%,var(--mask));stroke:' + t : 'fill:color-mix(in srgb,' + t + ' 13%,var(--mask));stroke:color-mix(in srgb,' + t + ' 72%,var(--mask))' }, g);
+  if (n.h >= 40) el('g', { 'class': 'sigil', stroke: t, transform: 'translate(' + (n.x + 6) + ' ' + (n.y + 6) + ') scale(0.6875)' }, g).innerHTML = SIGILS[n.sigil || kind] || SIGILS.external;
+  var cx = n.x + n.w / 2, cy = n.y + n.h / 2, off = n.sub2 ? -8 : 0, small = n.h < 40;
+  el('text', { x: cx, y: cy - (n.sub ? 2 : -4) + off, 'text-anchor': 'middle', 'class': 't-primary', 'font-size': small ? 10 : 11, 'font-weight': 600 }, g).textContent = n.label;
+  if (n.sub) el('text', { x: cx, y: cy + (small ? 10 : 13) + off, 'text-anchor': 'middle', 'class': 't-muted', 'font-size': small ? 8 : 9 }, g).textContent = n.sub;
+  if (n.sub2) el('text', { x: cx, y: cy + 30 + off, 'text-anchor': 'middle', 'class': 't-muted', 'font-size': 7.5 }, g).textContent = n.sub2;
+  n.g = g;
+  var act = function () { if (n.flow && flows[n.flow]) showFlow(n.flow); else selectNode(n.id); };
+  g.addEventListener('click', function (ev) { ev.stopPropagation(); act(); });
+  g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); act(); } });
+});
+
+// ---- Comment pins (stacked leftwards along the node's top edge) ----
+var gP = document.getElementById('pins'), pinCount = {};
+notes.forEach(function (nt) {
+  var n = byId[nt.on]; if (!n) return;
+  var k = pinCount[nt.on] = (pinCount[nt.on] || 0) + 1;
+  var g = el('g', { 'class': 'pin ' + (nt.st || 'consider') + (n.ghost ? ' ghost' : ''), tabindex: 0, role: 'button', 'aria-label': 'Note ' + nt.id + ': ' + nt.t, transform: 'translate(' + (n.x + n.w - 6 - (k - 1) * 22) + ' ' + n.y + ')' }, gP);
+  el('title', {}, g).textContent = nt.id + ' · ' + nt.t;
+  el('circle', { r: 9 }, g);
+  el('text', { y: 3, 'text-anchor': 'middle' }, g).textContent = nt.id;
+  g.addEventListener('click', function (ev) { ev.stopPropagation(); showNote(nt.id); });
+  g.addEventListener('keydown', function (ev) { if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); showNote(nt.id); } });
+});
+
+// ---- Legend (only what the diagram uses; legend items are not .node/.edge so they never dim) ----
+var legend = document.getElementById('legend');
+var lgY = meta.legendY != null ? meta.legendY : vb[1] - 62;
+legend.setAttribute('transform', 'translate(' + (meta.legendX || 30) + ' ' + lgY + ')');
+el('text', { x: 0, y: 0, 'class': 't-primary', 'font-size': 12, 'font-weight': 650 }, legend).textContent = 'Legend';
+var usedKinds = [], usedStyles = [], usedStatus = [];
+nodes.forEach(function (n) { var k = n.ghost ? 'ghost' : (n.kind || 'external'); if (usedKinds.indexOf(k) < 0) usedKinds.push(k); });
+edges.forEach(function (e) { var s = e.s || 'default'; if (usedStyles.indexOf(s) < 0) usedStyles.push(s); });
+notes.forEach(function (n) { var s = n.st || 'consider'; if (n.on && usedStatus.indexOf(s) < 0) usedStatus.push(s); });
+var lx = 0;
+Object.keys(KINDS).filter(function (k) { return usedKinds.indexOf(k) >= 0; }).forEach(function (k) {
+  var g = el('g', { 'class': 'lg', transform: 'translate(' + lx + ' 14)' }, legend), t = tone(k);
+  el('rect', { x: 0, y: 0, width: 14, height: 14, rx: 3, 'class': 'body', style: 'fill:color-mix(in srgb,' + t + ' 13%,var(--mask));stroke:' + t + (k === 'ghost' ? ';stroke-dasharray:3 2' : '') }, g);
+  el('text', { x: 20, y: 11, 'class': 't-muted', 'font-size': 10, 'font-weight': 500 }, g).textContent = KINDS[k].label;
+  lx += 30 + KINDS[k].label.length * 6.2;
+});
+var STYLE_LBL = Object.assign({ emphasis: 'Primary flow', default: 'Call / read-write', security: 'Auth / secrets', dashed: 'Async / deploy', ghost: 'Consideration' }, meta.edgeLabels || {});
+lx = 0;
+['emphasis', 'default', 'security', 'dashed', 'ghost'].filter(function (s) { return usedStyles.indexOf(s) >= 0; }).forEach(function (s) {
+  var g = el('g', { 'class': 'lg s-' + s, transform: 'translate(' + lx + ' 44)' }, legend);
+  el('path', { d: 'M0 0 L26 0', 'class': 'line', 'marker-end': 'url(#ah-' + (s === 'dashed' ? 'default' : s) + ')' }, g);
+  el('text', { x: 34, y: 3.5, 'class': 't-muted', 'font-size': 10 }, g).textContent = STYLE_LBL[s];
+  lx += 44 + STYLE_LBL[s].length * 6.2;
+});
+usedStatus.forEach(function (st) {
+  var g = el('g', { 'class': 'pin ' + st, transform: 'translate(' + (lx + 9) + ' 44)', style: 'cursor:default' }, legend);
+  el('circle', { r: 7 }, g);
+  el('text', { x: 14, y: 3.5, 'font-size': 10, style: 'fill:var(--text-muted);font-weight:400' }, g).textContent = STATUS[st] + ' note';
+  lx += 36 + (STATUS[st].length + 5) * 6.2;
+});
+
+// ---- Toolbar ----
+var tb = document.getElementById('toolbar');
+function tbtn(html, attrs) { var b = document.createElement('button'); b.type = 'button'; b.innerHTML = html; for (var k in attrs) b.setAttribute(k, attrs[k]); tb.appendChild(b); return b; }
+(meta.links || []).forEach(function (l) { var a = document.createElement('a'); a.href = l.href; a.textContent = l.label; tb.appendChild(a); });
+tbtn('All', { 'data-flow': 'all', 'aria-pressed': 'true' });
+Object.keys(flows).forEach(function (k) {
+  if (k === 'all') return;
+  var c = flows[k].color ? '<span class="chip-dot" style="background:' + tone(flows[k].color) + '"></span>' : '';
+  tbtn(c + (flows[k].button || flows[k].title), { 'data-flow': k, 'aria-pressed': 'false' });
+});
+var sep = document.createElement('span'); sep.className = 'sep'; tb.appendChild(sep);
+var hasPins = notes.some(function (n) { return n.on && byId[n.on]; });
+var hasGhost = nodes.some(function (n) { return n.ghost; }) || edges.some(function (e) { return e.ghost; });
+var btnPins = hasPins ? tbtn('Comments', { id: 'btn-pins', 'aria-pressed': 'true' }) : null;
+var btnGhost = hasGhost ? tbtn('Considerations', { id: 'btn-ghost', 'aria-pressed': 'false' }) : null;
+var btnTheme = tbtn('Theme', { id: 'btn-theme', title: 'Toggle theme (T)' });
+
+// ---- Side panel & interaction ----
+var side = document.getElementById('side'), badges = document.getElementById('badges'), current = 'all';
+var allFlow = Object.assign({ title: meta.title || 'Overview', intro: 'Pick a flow above, or click any component, arrow or numbered pin.', steps: [] }, flows.all || {});
+function flowOf(k) { return k === 'all' ? allFlow : flows[k]; }
+function clearHighlight() { svg.classList.remove('dim'); nodes.forEach(function (n) { n.g.classList.remove('on', 'selected'); }); edges.forEach(function (e) { e.g.classList.remove('on'); }); badges.innerHTML = ''; }
+function highlight(ids, extra) {
+  svg.classList.add('dim');
+  ids.forEach(function (id) { var e = edgeById[id]; if (!e) return; e.g.classList.add('on'); if (byId[e.from]) byId[e.from].g.classList.add('on'); if (byId[e.to]) byId[e.to].g.classList.add('on'); });
+  (extra || []).forEach(function (id) { if (byId[id]) byId[id].g.classList.add('on'); });
+}
+function badge(num, edgeId) {
+  // Badges sit just before the arrowhead: steps often share a trunk start (fan-outs, buses).
+  var e = edgeById[edgeId]; if (!e) return;
+  var path = e.g.querySelector('path.line'), p = path.getPointAtLength(Math.max(0, path.getTotalLength() - 16));
+  var g = el('g', { 'class': 'step-badge', transform: 'translate(' + p.x + ' ' + p.y + ')' }, badges);
+  el('circle', { r: 8 }, g);
+  el('text', { y: 3.2, 'text-anchor': 'middle' }, g).textContent = num;
+}
+function setGhost(on) { if (!btnGhost) return; svg.classList.toggle('show-ghost', on); btnGhost.setAttribute('aria-pressed', String(on)); }
+function specHtml(id) {
+  var s = specs[id]; if (!s) return '';
+  var rows = meta.specRows || [['host', 'Hosting'], ['trigger', 'Triggered by'], ['ops', 'Does'], ['data', 'Data'], ['nfr', 'NFR / notes']];
+  var extra = Object.keys(s).filter(function (k) { return !rows.some(function (r) { return r[0] === k; }); }).map(function (k) { return [k, k.charAt(0).toUpperCase() + k.slice(1)]; });
+  return '<dl class="spec">' + rows.concat(extra).map(function (r) { var v = s[r[0]]; return v ? '<dt>' + r[1] + '</dt><dd>' + list(v) + '</dd>' : ''; }).join('') + '</dl>';
+}
+function dataHtml(d) {
+  var rows = [['Payload', d.p], ['Format', d.f], ['Class', d.c ? rich('[[' + d.c + ']]') : ''], ['Security', d.s], ['When', d.w]].filter(function (r) { return r[1]; });
+  return '<div class="kv">' + rows.map(function (r) { return '<span>' + r[0] + '</span><span>' + rich(r[1]) + '</span>'; }).join('') + '</div>';
+}
+function showFlow(key) {
+  current = key;
+  tb.querySelectorAll('[data-flow]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.flow === key)); });
+  clearHighlight();
+  var f = flowOf(key), steps = f.steps || [];
+  if (steps.some(function (s) { return s.e.some(function (id) { return edgeById[id] && edgeById[id].ghost; }); })) setGhost(true);
+  var html = '<div class="eyebrow">' + (key === 'all' ? 'Overview' : (f.eyebrow || 'Flow')) + '</div><h2>' + rich(f.title) + '</h2>' + (f.intro ? '<p>' + rich(f.intro) + '</p>' : '');
+  if (f.tags) html += '<p>' + f.tags.map(function (t) { return '<span class="tagp">' + rich(t) + '</span>'; }).join('') + '</p>';
+  if (steps.length) {
+    var ids = [];
+    steps.forEach(function (s, i) { ids = ids.concat(s.e); badge(i + 1, s.e[0]); });
+    highlight(ids, f.nodes);
+    html += '<ol>' + steps.map(function (s) { return '<li>' + rich(s.t) + '</li>'; }).join('') + '</ol>';
+  } else if (meta.overview) {
+    html += '<div class="kv">' + meta.overview.map(function (r) { return '<span>' + rich(r[0]) + '</span><span>' + rich(r[1]) + '</span>'; }).join('') + '</div>';
+  }
+  side.innerHTML = html + '<p class="hint">Click a component, an arrow or a numbered pin · T toggles the theme · Esc resets</p>';
+}
+function selectNode(id) {
+  var n = byId[id]; clearHighlight();
+  tb.querySelectorAll('[data-flow]').forEach(function (b) { b.setAttribute('aria-pressed', 'false'); });
+  var vis = function (e) { return !e.ghost || svg.classList.contains('show-ghost'); };
+  var ins = edges.filter(function (e) { return e.to === id && vis(e); }), outs = edges.filter(function (e) { return e.from === id && vis(e); });
+  highlight(ins.concat(outs).map(function (e) { return e.id; }), [id]);
+  n.g.classList.add('selected');
+  function rel(e, other, arrow) { var o = byId[other] || { label: other }; return '<button type="button" data-edge="' + e.id + '">' + arrow + ' <span class="tag">' + o.label + '</span>' + (e.data && e.data.p ? ' · ' + rich(e.data.p) : (e.label ? ' · ' + e.label : '')) + '</button>'; }
+  var pins = notes.filter(function (nt) { return nt.on === id; });
+  side.innerHTML = '<div class="eyebrow">' + KINDS[n.ghost ? 'ghost' : (n.kind || 'external')].label + '</div><h2>' + n.label + '</h2>' + (n.desc ? '<p>' + rich(n.desc) + '</p>' : '') + specHtml(id) +
+    (ins.length + outs.length ? '<div class="links">' + ins.map(function (e) { return rel(e, e.from, '←'); }).join('') + outs.map(function (e) { return rel(e, e.to, '→'); }).join('') + '</div>' : '') +
+    pins.map(function (p) { return '<div class="note-box">' + chip(p.st || 'consider') + ' <b>' + p.id + ' · ' + rich(p.t) + '</b><div style="margin-top:.3rem">' + rich(p.b) + '</div></div>'; }).join('') +
+    (specs[id] ? '<p class="hint"><button class="linkish" type="button" data-goto="svc-' + id + '">Open in catalogue</button> · Esc returns</p>' : '<p class="hint">Esc returns</p>');
+}
+function showEdge(id) {
+  var e = edgeById[id]; clearHighlight(); highlight([id]);
+  side.innerHTML = '<div class="eyebrow">Connection · data contract</div><h2>' + (byId[e.from] || {}).label + ' → ' + (byId[e.to] || {}).label + '</h2>' + dataHtml(e.data || {}) + '<p class="hint">Esc returns to ' + rich(flowOf(current).title) + '</p>';
+}
+function showNote(nid) {
+  var nt = notes.filter(function (x) { return x.id === nid; })[0]; clearHighlight();
+  if (nt.on && byId[nt.on]) { highlight([], [nt.on]); byId[nt.on].g.classList.add('selected'); }
+  side.innerHTML = '<div class="eyebrow">Note ' + nt.id + '</div><h2>' + rich(nt.t) + '</h2><p>' + chip(nt.st || 'consider') + (nt.on && byId[nt.on] ? ' <span class="refs">on ' + byId[nt.on].label + '</span>' : '') + '</p><p>' + rich(nt.b) + '</p>' + (nt.r ? '<p class="refs">Refs: ' + rich(nt.r) + '</p>' : '') +
+    '<p class="hint"><button class="linkish" type="button" data-goto="note-' + nt.id + '">Show in notes list</button> · Esc returns</p>';
+}
+side.addEventListener('click', function (ev) {
+  var eb = ev.target.closest('[data-edge]'); if (eb) { if (edgeById[eb.dataset.edge].data) showEdge(eb.dataset.edge); return; }
+  var t = ev.target.closest('[data-goto]'); if (!t) return;
+  var target = document.getElementById(t.dataset.goto); if (!target) return;
+  target.hidden = false; target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  target.classList.add('flash'); setTimeout(function () { target.classList.remove('flash'); }, 1600);
+});
+tb.querySelectorAll('[data-flow]').forEach(function (b) { b.addEventListener('click', function () { showFlow(b.dataset.flow); }); });
+svg.addEventListener('click', function () { showFlow(current); });
+if (btnGhost) btnGhost.addEventListener('click', function () { setGhost(!svg.classList.contains('show-ghost')); });
+if (btnPins) btnPins.addEventListener('click', function () { var hide = !svg.classList.contains('hide-pins'); svg.classList.toggle('hide-pins', hide); btnPins.setAttribute('aria-pressed', String(!hide)); });
+function toggleTheme() { var t = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'; document.documentElement.setAttribute('data-theme', t); try { localStorage.setItem('flow-diagram-theme', t); } catch (_) {} }
+btnTheme.addEventListener('click', toggleTheme);
+document.addEventListener('keydown', function (ev) {
+  if (ev.target.tagName === 'INPUT' || ev.target.tagName === 'TEXTAREA') return;
+  if (ev.key === 't' || ev.key === 'T') toggleTheme();
+  if (ev.key === 'Escape') showFlow(current);
+});
+
+// ---- Sections below the diagram ----
+var secEl = document.getElementById('sections');
+var sections = M.sections || [notes.length ? { type: 'notes' } : null, Object.keys(specs).length ? { type: 'catalogue' } : null].filter(Boolean);
+function head(s, dflt) { return '<h2 class="section-title">' + rich(s.title || dflt) + '</h2>' + (s.lead ? '<p class="section-lead">' + rich(s.lead) + '</p>' : ''); }
+sections.forEach(function (s) {
+  var wrap = document.createElement('div'), html = '';
+  if (s.type === 'notes') {
+    html = head(s, 'Design notes') + '<div class="toolbar" style="margin-bottom:.75rem" data-note-filter></div><div class="grid-cards" data-notes>' + notes.map(function (nt) {
+      return '<article class="card" id="note-' + nt.id + '" data-st="' + (nt.st || 'consider') + '"><header><h3><span>' + nt.id + '</span>' + chip(nt.st || 'consider') + '<span>' + rich(nt.t) + '</span></h3></header><div class="note-body">' + rich(nt.b) + '</div><div class="refs">' +
+        (nt.on && byId[nt.on] ? 'On: ' + byId[nt.on].label : 'Cross-cutting') + (nt.r ? ' · Refs: ' + rich(nt.r) : '') + '</div></article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'catalogue') {
+    html = head(s, 'Component catalogue') + '<div class="grid-cards">' + nodes.filter(function (n) { return specs[n.id]; }).map(function (n) {
+      var k = n.ghost ? 'ghost' : (n.kind || 'external'), pins = notes.filter(function (nt) { return nt.on === n.id; });
+      return '<article class="card lefty" id="svc-' + n.id + '" style="--tone:' + tone(k) + '"><header><h3>' + n.label + '</h3><span class="kind">' + KINDS[k].label + '</span></header>' + specHtml(n.id) +
+        (pins.length ? '<div class="card-notes">' + pins.map(function (p) { return '<a class="note-chip ' + (p.st || 'consider') + '" href="#note-' + p.id + '" style="text-decoration:none">' + p.id + ' · ' + p.t + '</a>'; }).join('') + '</div>' : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'personas') {
+    html = head(s, 'Who does what') + '<div class="grid-cards">' + (s.items || []).map(function (p) {
+      return '<article class="card toned" style="--tone:' + tone(p.tone || 'external') + '"><header><div><h3>' + rich(p.title) + '</h3>' + (p.tags ? '<div style="margin-top:.35rem">' + p.tags.map(function (t) { return '<span class="tagp">' + rich(t) + '</span>'; }).join('') + '</div>' : '') + '</div></header>' +
+        '<dl class="spec">' + (p.rows || []).map(function (r) { return '<dt>' + r[0] + '</dt><dd>' + list(r[1]) + '</dd>'; }).join('') + '</dl>' +
+        (p.flow && flows[p.flow] ? '<div class="toolbar" style="margin-top:.75rem"><button type="button" data-show="' + p.flow + '">Show on diagram</button></div>' : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'table') {
+    var cell = function (v) { v = String(v); if (s.matrix) { if (v === '✓' || v.indexOf('✓') === 0) return '<span class="y">' + v + '</span>'; if (v === '–' || v === '-' || v === 'n/a') return '<span class="n">' + v + '</span>'; return '<span class="p">' + rich(v) + '</span>'; } return rich(v); };
+    html = head(s, '') + '<div class="tbl"><table class="grid' + (s.matrix ? ' matrix' : '') + '"><thead><tr>' + (s.columns || []).map(function (c) { return '<th>' + rich(c) + '</th>'; }).join('') + '</tr></thead><tbody>' +
+      (s.rows || []).map(function (r) { return '<tr>' + r.map(function (c, i) { return '<td>' + (i === 0 ? rich(c) : cell(c)) + '</td>'; }).join('') + '</tr>'; }).join('') + '</tbody></table></div>';
+  } else if (s.type === 'cards') {
+    html = head(s, '') + '<div class="grid-cards narrow">' + (s.items || []).map(function (c) {
+      return '<article class="card" style="--tone:' + tone(c.tone || 'external') + '"><header><h3><span class="card-dot"></span>' + rich(c.title) + '</h3></header>' + (c.bullets ? '<ul class="b">' + c.bullets.map(function (b) { return '<li>' + rich(b) + '</li>'; }).join('') + '</ul>' : '') + (c.html ? rich(c.html) : '') + '</article>';
+    }).join('') + '</div>';
+  } else if (s.type === 'html') {
+    html = head(s, '') + rich(s.html || '');
+  }
+  wrap.innerHTML = html; secEl.appendChild(wrap);
+});
+secEl.addEventListener('click', function (ev) { var b = ev.target.closest('[data-show]'); if (!b) return; showFlow(b.dataset.show); document.getElementById('diagram').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+var nf = secEl.querySelector('[data-note-filter]'), nl = secEl.querySelector('[data-notes]');
+if (nf) {
+  var present = ['decision', 'risk', 'consider', 'confirmed', 'aligned'].filter(function (st) { return notes.some(function (n) { return (n.st || 'consider') === st; }); });
+  [['all', 'All']].concat(present.map(function (st) { return [st, STATUS[st]]; })).forEach(function (f, i) {
+    var b = document.createElement('button'); b.type = 'button';
+    b.textContent = f[1] + ' (' + notes.filter(function (n) { return f[0] === 'all' || (n.st || 'consider') === f[0]; }).length + ')';
+    b.setAttribute('aria-pressed', i === 0 ? 'true' : 'false');
+    b.addEventListener('click', function () {
+      nf.querySelectorAll('button').forEach(function (x) { x.setAttribute('aria-pressed', String(x === b)); });
+      nl.querySelectorAll('.card').forEach(function (c) { c.hidden = f[0] !== 'all' && c.dataset.st !== f[0]; });
+    });
+    nf.appendChild(b);
+  });
+}
+
+// ?flow=<key> pre-selects a flow (handy for screenshots and deep links)
+var startFlow = 'all';
+try { var qf = new URLSearchParams(location.search).get('flow'); if (qf && flows[qf]) startFlow = qf; } catch (_) {}
+showFlow(startFlow);
+})();
+</script>
+</body>
+</html>

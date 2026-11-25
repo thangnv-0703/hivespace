@@ -1,4 +1,5 @@
 import { DashboardPage } from '@/features/dashboard'
+import { PickupPayoutPage, ShopProfilePage } from '@/features/settings'
 import { RegisterShopPage } from '@/features/shop'
 import NotFoundPage from '@/shared/pages/NotFoundPage.vue'
 import { createRouter, createWebHistory } from 'vue-router'
@@ -10,6 +11,10 @@ export const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     { path: '/', name: 'dashboard', component: DashboardPage },
+    // Settings group (ui-design U-11); `/settings` kept for FEAT-009 links and bookmarks.
+    { path: '/settings', redirect: '/settings/profile' },
+    { path: '/settings/profile', name: 'settings-profile', component: ShopProfilePage },
+    { path: '/settings/pickup-payout', name: 'settings-pickup-payout', component: PickupPayoutPage },
     // Outside the sidebar shell, on AuthLayout (ui-design U-1); `onboarding` is read by App.vue.
     { path: '/register-shop', name: 'register-shop', component: RegisterShopPage, meta: { onboarding: true } },
     { path: '/:pathMatch(.*)*', name: 'not-found', component: NotFoundPage },

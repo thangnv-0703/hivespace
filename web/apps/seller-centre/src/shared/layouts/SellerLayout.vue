@@ -29,7 +29,14 @@ const menuGroups = computed<SidebarMenuGroup[]>(() => [
         ],
       },
       { name: i18n.t('nav.orders'), icon: ClipboardList, path: '/orders' },
-      { name: i18n.t('nav.settings'), icon: Settings, path: '/settings' },
+      {
+        name: i18n.t('nav.settings'),
+        icon: Settings,
+        subItems: [
+          { name: i18n.t('nav.shopProfile'), path: '/settings/profile' },
+          { name: i18n.t('nav.pickupPayout'), path: '/settings/pickup-payout' },
+        ],
+      },
     ],
   },
 ])

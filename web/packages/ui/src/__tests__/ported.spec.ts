@@ -46,6 +46,16 @@ describe('form controls', () => {
     expect(wrapper.get(`#${area.attributes('aria-describedby')}`).text()).toBe('Too long')
   })
 
+  it('TextArea shows its hint under the field and swaps it for an error', async () => {
+    const wrapper = mount(TextArea, { props: { label: 'Note', hint: 'Up to 1,000 characters.' } })
+    const area = wrapper.get('textarea')
+
+    expect(wrapper.get(`#${area.attributes('aria-describedby')}`).text()).toBe('Up to 1,000 characters.')
+    await wrapper.setProps({ error: 'Too long' })
+    expect(wrapper.text()).not.toContain('Up to 1,000 characters.')
+    expect(wrapper.get(`#${area.attributes('aria-describedby')}`).text()).toBe('Too long')
+  })
+
   it('QuantityControl stops at min and max', async () => {
     const labels = { decrease: 'Less', increase: 'More', quantity: 'Quantity' }
     const wrapper = mount(QuantityControl, { props: { modelValue: 1, min: 1, max: 2, labels } })

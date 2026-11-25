@@ -1,0 +1,23 @@
+# Must FAIL hs-no-bank-number-in-responses (checked in CI: this file has to produce an error).
+openapi: 3.1.0
+info: { title: Fixture, version: 0.0.0 }
+paths:
+  /v1/shops/me:
+    get:
+      operationId: leakyGetShop
+      responses:
+        '200':
+          description: Leaks the account number.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Shop'
+components:
+  schemas:
+    Shop:
+      type: object
+      properties:
+        payout:
+          type: object
+          properties:
+            accountNumber: { type: string }
