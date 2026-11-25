@@ -1,6 +1,6 @@
 # Software Requirements Specification: HiveSpace (MVP)
 
-> Version: 0.16 · Status: Draft (pending user confirmation of "Inferred" items) · Last updated: 2026-11-16
+> Version: 0.19 · Status: Draft (pending user confirmation of "Inferred" items) · Last updated: 2026-11-26
 > Requirement syntax: EARS   *(governs §3.1 statements and all amendments)*
 
 ## Revision History
@@ -9,6 +9,9 @@
 | :------ | :--- | :----- | :------ |
 | 0.9 | 2026-11-14 | Requirements engineering (Claude) | Initial draft derived from `docs/product/prd.md` v1 and `docs/product/brainstorm-notes.md`. Not yet finalized. |
 | 0.10 | 2026-11-15 | Requirements engineering (Claude) | Change request CR-1 (all Must, user-requested, beyond the PRD): Google sign-in, change password, user profile, image upload (avatar, shop, product), email through Resend, extensible money model (VND only), vi/en localization. New areas FR-PROF, FR-MEDIA, FR-LOC, FR-CUR; new FR-AUTH-020..027, FR-NOTIF-014..015; new NFR-PERF-007, NFR-SEC-013..015, NFR-MNT-008..010, NFR-L10N-004, NFR-COST-004; EIR-SW-006..007, EIR-COM-005; use cases UC-025..028. FR-CAT-011 promoted to Must and reworded; OQ-10, OQ-11, OQ-25 resolved. |
+| 0.17 | 2026-11-25 | Clarify-feature (Claude), FEAT-012 | Modified FR-CAT-005: a value outside the product limits is also invalid; the limits are listed in its notes (user decision in the FEAT-012 feature spec). UC-005 4a updated. No requirement added or removed. |
+| 0.19 | 2026-11-26 | Clarify-feature (Claude), FEAT-014 | Added FR-CAT-021 (a top-level category shows its image, or a placeholder; images come from the category file). UC-007 traces updated. |
+| 0.18 | 2026-11-25 | Clarify-feature (Claude), FEAT-014 | Added FR-CAT-019 (loading the category tree: add, rename and loosen only; both languages required; whole load rejected on a breaking change) and FR-CAT-020 (multi-value list attributes up to a maximum). UC-005 and UC-020 traces updated. |
 | 0.16 | 2026-11-16 | Requirements engineering (Claude) | Change request CR-7 (user-requested, from the `hivespace.web` reference): sign in with an email one-time code. New FR-AUTH-028..036, FR-NOTIF-016, NFR-SEC-016; modified NFR-SEC-005 (code request and code submit rate limits) and NFR-SEC-009 (code sign-in audited); new use case UC-029; new OQ-35. §1.2, §2.2 and the glossary updated. |
 | 0.15 | 2026-11-16 | Requirements engineering (Claude) | Change request CR-6 (learning-first principle, gRPC): CON-3 reworded from a fixed language list to primary languages with other technologies allowed per service when recorded in an ADR. No requirement added, modified or removed. |
 | 0.14 | 2026-11-16 | Requirements engineering (Claude) | Change request CR-5: Cart becomes its own service in Go; CON-3 and CON-4 updated. No requirement added, modified or removed. |
@@ -205,7 +208,7 @@ Priority key: **Must** = explicit PRD P0; **Should** = implied by P0, marked `In
 | FR-CAT-002 | The system shall represent each product as one or more variants (SKUs), each with option values (such as size and colour), a price (amount and currency, FR-CUR-003) and a stock quantity. | Must | Active | P0-3, US-2 | A product with 2+ variants must be supported. |
 | FR-CAT-003 | The system shall provide a predefined category tree from which the seller selects exactly one leaf category per product. | Must | Active | P0-3 | Tree is seeded, no category admin UI. Category names have vi and en text (FR-LOC-007). |
 | FR-CAT-004 | Where a category defines attributes, the system shall require the seller to enter values for the attributes marked required. | Must | Active | P0-3 | |
-| FR-CAT-005 | If product data is invalid (missing title, price not a positive amount valid for its currency (whole dong for VND), negative stock, duplicate variant option combination), then the system shall reject it and identify each error. | Must | Active | P0-3 | |
+| FR-CAT-005 | If product data is invalid (missing title, price not a positive amount valid for its currency (whole dong for VND), negative stock, duplicate variant option combination, or a value outside the product limits), then the system shall reject it and identify each error. | Must | Active | P0-3 | Product limits (FEAT-012 spec, 2026-11-25): title 10–120 characters; description 20–5,000 characters; at most 2 options, option name up to 20 characters, up to 20 values per option, value up to 30 characters; at most 50 variants; price 1,000–100,000,000 ₫; stock 0–999,999. |
 | FR-CAT-006 | When a seller submits changes to their own product, the system shall save them. | Must | Active | P0-3, US-13 | |
 | FR-CAT-007 | When a seller sets the stock quantity of a variant, the system shall update the variant's on-hand stock subject to FR-INV-010. | Must | Active | P0-3, US-13 | |
 | FR-CAT-008 | When a seller deactivates a product, the system shall hide it from browse and search and prevent new cart additions, while keeping it on existing orders. | Should | Active | Inferred | Soft delete; no hard delete in MVP. |
@@ -219,6 +222,9 @@ Priority key: **Must** = explicit PRD P0; **Should** = implied by P0, marked `In
 | FR-CAT-016 | When the operator runs the seed command, the system shall load at least 200 Vietnamese products, with sellers, categories, variants and stock, into the catalog. | Must | Active | P0-3 | One command; data source OQ-1. |
 | FR-CAT-017 | When the operator runs the seed command more than once, the system shall not create duplicate records. | Should | Active | Inferred | |
 | FR-CAT-018 | When a product is created, changed, deactivated or reactivated, the system shall reflect the change in browse and search results within 60 seconds. | Should | Active | Inferred | |
+| FR-CAT-019 | When the operator loads the category tree, the system shall add new categories, attributes and list values, apply changed names and changes that loosen an attribute, and shall reject the whole load, identifying each problem, if it would remove or move a category, give a category that has products a child, remove an attribute or a list value, tighten an attribute, add a required attribute to a category that has products, or leave a vi or en name missing. | Must | Active | FEAT-014 spec (user decision 2026-11-25) | Loosen: required → optional, single → multiple values, a higher maximum. Tighten: optional → required, multiple → single, a lower maximum, list ↔ free text. Categories and attributes are identified by a stable key in the operator's file; categories keep the file's order. |
+| FR-CAT-020 | Where a list attribute allows several values, the system shall accept up to that attribute's maximum number of values for a product. | Must | Active | FEAT-014 spec (user decision 2026-11-25) | Each list attribute defines single or multiple values and its maximum. |
+| FR-CAT-021 | Where a top-level category has an image, the system shall show it with the category; otherwise it shall show a placeholder image. | Must | Active | FEAT-014 spec (user decision 2026-11-26) | Images come from the operator's category file (links to Tiki's category images, NFR-LEG-002 accepted by the owner); a later load may change or remove an image. Shown on the home page category bar (SCR-STF-001). |
 
 #### 3.1.6 Search, filter and sort (keyword baseline)
 
