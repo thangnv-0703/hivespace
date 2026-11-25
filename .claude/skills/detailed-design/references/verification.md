@@ -7,6 +7,12 @@ verification approach; the future pipeline-wide checker composes with this.)
 
 ## 1. Requirement coverage
 
+- feature-spec.md exists with `Status: Agreed` and a `Signed off` date (the
+  Phase 1 gate held).
+- Every `AC-*` in feature-spec.md has a row in the §6 mapping with at least
+  one technical check, its wording untouched; no AC was added here (new business
+  criteria go back to clarify-feature). Every `BR-*` is enforced somewhere in
+  §3–§5.
 - Every FR the plan assigned to this feature is covered by at least one
   acceptance criterion **and** at least one task. None missing from either.
 - Every UC flow the feature realizes (main + consequential alternates/exceptions)
@@ -21,6 +27,7 @@ verification approach; the future pipeline-wide checker composes with this.)
 
 ## 2. ID integrity
 
+- Every cited US/AC/BR ID exists in feature-spec.md.
 - Every cited FR/UC/SCR/NFR/ADR ID exists in its source document; no
   tombstoned requirement or screen is served. Source-gating respected where
   documents are absent.

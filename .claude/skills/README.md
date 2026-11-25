@@ -7,6 +7,7 @@ Skills here load in every Claude Code session on this repo, local or cloud, and 
 - `push-feature`: commit and push a feature's changes, then offer a PR.
 - `sync-notion`: push `docs/` to Notion.
 - `html-flow-diagram`: interactive HTML flow diagrams (used by `detailed-design`).
+- `clarify-feature`: first step per feature. Business-only Q&A with the user (both ways), writes `docs/features/FEAT-NNN-<slug>/feature-spec.md` (user stories, business rules, business acceptance criteria), amends the SRS when an answer changes a requirement, and ends with the user's sign-off (`Status: Agreed`). `/detailed-design` does not start without it.
 
 ## From agentic-sdlc-kit
 These 12 skills are copied from [agentic-sdlc-kit](https://github.com/zeeshanhanif/agentic-sdlc-kit) 2.0.7 (upstream commit `20f1c37`), Apache-2.0 (see `agentic-sdlc-kit.LICENSE` and `agentic-sdlc-kit.NOTICE`):
@@ -14,7 +15,7 @@ acceptance-verification, detailed-design, feature-implementation, implementation
 
 They are copied so cloud sessions get the same skills as this project's local setup, for example `/feature-implementation FEAT-002`.
 
-**Local changes** (not upstream): `detailed-design`, `ui-design` and `software-architecture` carry project changes (HTML flow diagrams, the design-canvas review artifact, and related references). Keep those when refreshing.
+**Local changes** (not upstream): `detailed-design`, `ui-design` and `software-architecture` carry project changes (HTML flow diagrams, the design-canvas review artifact, and related references). `detailed-design`, `sdlc-orchestrator`, `acceptance-verification` and `feature-implementation` also carry the `clarify-feature` split (detailed-design's signed-off `feature-spec.md` gate, §6 as an AC mapping, the **clarified** stage). Keep those when refreshing.
 
 **Refreshing from upstream:** diff the upstream `skills/` folder against these copies, take the upstream changes, keep the local changes listed above, and update the version and commit here.
 

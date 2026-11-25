@@ -11,13 +11,15 @@ the requirement or flow that demands it.
 # Technical Design: FEAT-NNN — <Feature name>
 
 > Feature from: docs/implementation-plan.md · Epic: <epic>
+> Business spec: [feature-spec.md](feature-spec.md) (Agreed <sign-off date>)
 > Implements: FR-… (list) · Realizes: UC-… · Screens: SCR-… (designed by ui-design)
 > Status: Draft | Verified · Date: <date>
 > Diagram: [design-flow.html](design-flow.html) (interactive flow diagram, html-flow-diagram)
 
 ## 1. Intent
-Two or three sentences: what this feature delivers, for whom, and why it's next
-(from the plan's value statement and sequencing rationale).
+One or two sentences on the technical shape of the solution. What the feature
+delivers, for whom and why is in feature-spec.md §1 — link it, don't restate it.
+Answer each item of feature-spec.md §7 "For detailed design" here or in §7.
 
 ## 2. Codebase context
 What the design conforms to, from the Phase 2 survey: the contract/error
@@ -47,11 +49,19 @@ back here). The full end-to-end picture of the solution lives in
 `design-flow.html` (Phase 6, html-flow-diagram); any Mermaid sketch here and
 that diagram must tell the same story.
 
-## 6. Acceptance criteria
-Testable statements, each citing its FR/UC: "Given/When/Then" or equally
-checkable form. Cover the main flow, the consequential alternates/exceptions,
-and the NFR constraints that bind this feature (cite NFR IDs — e.g., the
-response-time bound that applies to the new endpoint).
+## 6. Acceptance criteria mapping
+Business criteria come from feature-spec.md and are not reworded here. One row
+per `AC-*` in the spec, every one present:
+
+| AC (from feature-spec.md) | Technical checks that prove it |
+| :-- | :-- |
+| AC-NNN-1.1 | `POST /v1/…` → 201 with …; event `…/v1` published; row in … |
+| AC-NNN-1.2 | `POST /v1/…` → 409 `SHOP_NAME_TAKEN` |
+
+Then technical-only criteria the business spec doesn't state, each with a
+`TAC-NNN-n` ID in Given/When/Then and citing its source: the NFR constraints
+that bind this feature (e.g., the response-time bound on the new endpoint),
+idempotency, authorization, outbox/inbox behavior.
 
 ## 7. Decisions
 Feature-local forks, mini-ADR form: decision, driver (cite the ID or the code

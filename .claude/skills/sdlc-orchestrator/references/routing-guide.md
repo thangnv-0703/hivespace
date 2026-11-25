@@ -10,13 +10,16 @@ off the artifacts:
 
 | Artifacts present in `docs/features/FEAT-NNN-<slug>/` | Stage |
 | :--- | :--- |
-| no folder, or folder without technical-design.md | **planned** |
+| no folder, or no technical-design.md and no Agreed feature-spec.md | **planned** (next: clarify-feature) |
+| feature-spec.md with `Status: Agreed`, no technical-design.md | **clarified** (next: detailed-design) |
 | technical-design.md (+ tasks.md), no ui-design.md | **designed** |
 | ui-design.md present, tasks.md has unchecked boxes | **ui-designed** |
 | tasks.md fully checked, no accepted acceptance-report.md | **developer-done** |
 | acceptance-report.md, latest verdict Accepted | **verified** |
 
-Special reads: a tasks.md with a WIP failure note → **blocked** (a stop
+Special reads: a feature-spec.md still `Draft` → clarify-feature is waiting
+on the user's answers or sign-off; it is a **pause**, never driven past
+(only the user signs off); a tasks.md with a WIP failure note → **blocked** (a stop
 state, not a stage); a report whose latest verdict is Rework or Design
 defect → routes per the verdict (below); features whose screens list is
 empty skip ui-design (the stage table collapses accordingly — detailed-

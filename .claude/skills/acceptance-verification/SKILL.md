@@ -29,8 +29,8 @@ this skill never fixes production code. The one thing it may correct is the
 
 **The fresh-eyes rule.** Independence is this skill's entire value, and it is
 enforced through *derivation*, not session hygiene alone: every check is
-re-derived from the authoritative documents — technical-design §6's criteria,
-the FR/UC statements, the manifest — **never from tasks.md's checkboxes, the
+re-derived from the authoritative documents — the business criteria in
+feature-spec.md and technical-design §6's mapping of them, the FR/UC statements, the manifest — **never from tasks.md's checkboxes, the
 implementation's delivery summary, or any session's claims of green.** Those
 are the artifacts under audit, not evidence. Running in a fresh session is
 strongly recommended (and is how an orchestrator should invoke it), but the
@@ -40,7 +40,11 @@ skill is not refused in-session — the derivation rule does the real work.
 
 Defaults; user paths win; source-gated citation throughout.
 
-- **The feature folder** — technical-design.md (**§6 acceptance criteria: the
+- **The feature folder** — feature-spec.md (**the business acceptance
+  criteria `AC-*`, their wording as the user signed off**, and business rules
+  `BR-*`; features designed before clarify-feature existed have none, and
+  §6 alone is the standard), technical-design.md (**§6 acceptance criteria
+  mapping plus technical criteria `TAC-*`: together with feature-spec.md, the
   audit standard**, §3 contracts, §8 escalations), ui-design.md, tasks.md
   (read only to confirm developer-done state — never as evidence of
   correctness).

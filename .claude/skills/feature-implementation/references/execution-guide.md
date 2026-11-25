@@ -106,7 +106,8 @@ immediately and escalate** — no attempts are owed to a broken design.
 
 Author the acceptance-level tests here if the
 per-task tests don't already cover every criterion in technical-design §6 —
-each criterion demonstrably checked, cited by AC/FR ID. Then the full gate:
+each criterion demonstrably checked, cited by AC/FR ID. Business criteria
+(`AC-*`) are worded in feature-spec.md; §6 maps each to its technical checks. Then the full gate:
 feature suite green, whole-repo suite green (this feature broke nothing),
 boundaries clean, E2E (when owed) green, **the coverage gate green where the
 project enforces one**, no WIP markers in tasks.md or code. **The

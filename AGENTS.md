@@ -9,6 +9,7 @@ Instructions for any coding agent working in this repository. `CLAUDE.md` only p
 | Requirements (FR, NFR, CON IDs) | `docs/srs.md`, `docs/use-cases.md`, `docs/rtm.md` |
 | Design, services, events, gRPC calls | `docs/architecture.md`, decisions in `docs/adr/` |
 | Build order, features (`FEAT-*`), walking skeleton | `docs/implementation-plan.md` |
+| A feature's user stories, business rules and business acceptance criteria (signed off before design) | `docs/features/FEAT-*/feature-spec.md` (from `/clarify-feature`) |
 | Conventions and rules (and the tool that enforces each) | `docs/dev-standards.md` |
 | Folder layout per stack and shape | `docs/repo-structure.md` |
 | UI: design system and tokens | `docs/design.md` and `docs/tokens.json` (load both before building any screen) |

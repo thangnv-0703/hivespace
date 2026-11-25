@@ -94,7 +94,7 @@ Squash merge; the PR title becomes the commit message. Delete the branch after m
 | :-- | :-- |
 | PR title matches Conventional Commits with bracketed IDs that exist in the SRS | CI check (commitlint + ID resolver script) |
 | Required checks must pass before merge; `main` is protected | Repository branch protection |
-| Checklist in 4.4 | PR template; *Review* |
+| Checklist in 4.4 | PR templates in `.github/PULL_REQUEST_TEMPLATE/` (`feature.md`, `fix.md`, `chore.md`) plus the default `.github/pull_request_template.md`; filled in by the `push-feature` skill; *Review* |
 
 ## 5. Cross-cutting conventions
 

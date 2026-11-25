@@ -1,11 +1,11 @@
 ---
 name: push-feature
-description: Commit all pending changes for one feature (FEAT-NNN) on its feature branch and push it to origin, then offer to open or update the pull request to main. Use when the user asks to commit or push a feature's changes ("push FEAT-002", "commit everything for the profile feature", "ship feature 3 to remote") or runs /push-feature FEAT-NNN [commit message].
+description: Commit all pending changes for one feature (FEAT-NNN) or one fix/refactor/chore on its branch and push it to origin, then offer to open or update the pull request to main using the matching PR template. Use when the user asks to commit or push a change ("push FEAT-002", "commit everything for the profile feature", "ship feature 3 to remote", "push this bug fix", "open a PR for this refactor") or runs /push-feature [FEAT-NNN] [commit message].
 ---
 
 # Push a feature's changes
 
-Arguments: `FEAT-NNN` (or a feature name) and an optional commit message. Run every git command from the repo root. This skill changes shared state (commits, pushes, PRs), so it shows what it will do before each outward step.
+Arguments: `FEAT-NNN` (or a feature name) and an optional commit message. **Non-feature work** (fix, refactor, chore, docs, ci, perf, test): no `FEAT-NNN` is needed. The current branch `<type>/<slug>` (dev-standards §4.1) is the branch; skip the feature lookups in step 1, and use `<type>(<scope>): <summary> [<IDs>]` as the commit subject (IDs only when a requirement is involved). Run every git command from the repo root. This skill changes shared state (commits, pushes, PRs), so it shows what it will do before each outward step.
 
 **Never:** `git reset --hard`, `git clean`, `git stash drop`, `git push --force` (or `--force-with-lease`), `--no-verify`, `git commit --amend`, a push to `main`, or a push to any remote other than `origin`. Never commit without first showing the file list.
 
@@ -58,8 +58,9 @@ Ask once: commit everything listed (minus the flagged files), or exclude some. S
 Check for an open PR: `gh pr list --head <branch> --state open --json number,url,title`.
 Ask: **open PR** (or **update PR** when one exists) or **not now**. On yes:
 - **Base:** `main`, or the parent branch when stacked in step 3.
-- **Title** (dev-standards §4.2, CI checks it): `feat(<scope>): <feature name in lower case> [<FR IDs from the plan row>]`. Scope is the main service or folder touched (`identity`, `storefront`, `docs`…). For a docs-only change use `docs(<feature folder>)`.
-- **Body:** what changed (short bullets), links to the feature's `technical-design.md`, `tasks.md`, `ui-design.md` when present, the dev-standards §4.4 checklist as unchecked boxes, then the PR attribution line the session's instructions give.
+- **Title** (dev-standards §4.2, CI checks it): `feat(<scope>): <feature name in lower case> [<FR IDs from the plan row>]`. Scope is the main service or folder touched (`identity`, `storefront`, `docs`…). For a docs-only change use `docs(<feature folder>)`. For fix/refactor/chore use that type, `<type>(<scope>): <summary>`, with `[IDs]` when a requirement is involved.
+- **Template:** pick from the branch prefix: `feat/` → `.github/PULL_REQUEST_TEMPLATE/feature.md`; `fix/` → `fix.md`; `refactor/`, `chore/`, `docs/`, `ci/`, `perf/`, `test/` → `chore.md`. Unknown prefix: `.github/pull_request_template.md`.
+- **Body:** read the chosen template and fill every section from the diff and, for features, the feature folder's `technical-design.md`, `tasks.md`, `ui-design.md` (link them). Keep the checklist boxes unchecked and the section headings intact; replace the HTML comments with content. End with the PR attribution line the session's instructions give.
 - `gh pr create --base <base> --head <branch> --title … --body-file <tmp>` (or `gh pr edit <n> --body-file <tmp>` to update). Write the body to a file in the scratchpad, never inline.
 - Do not enable auto-merge.
 
