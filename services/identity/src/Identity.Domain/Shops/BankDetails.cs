@@ -82,4 +82,30 @@ public sealed partial class BankAccountNumber
 public sealed record EncryptedValue(string KeyId, byte[] Bytes);
 
 /// <summary>The shop's payout bank details. The number exists only as ciphertext plus its last four digits (FR-SHOP-010, NFR-SEC-008).</summary>
-public sealed record PayoutDetails(BankName BankName, AccountHolder AccountHolder, EncryptedValue AccountNumber, string Last4);
+public sealed record PayoutDetails
+{
+    public PayoutDetails(BankName bankName, AccountHolder accountHolder, EncryptedValue accountNumber, string last4)
+    {
+        BankName = bankName;
+        AccountHolder = accountHolder;
+        AccountNumber = accountNumber;
+        Last4 = last4;
+    }
+
+    // For EF Core: an owned navigation (the encrypted number) cannot be bound through a constructor.
+    private PayoutDetails()
+    {
+        BankName = null!;
+        AccountHolder = null!;
+        AccountNumber = null!;
+        Last4 = string.Empty;
+    }
+
+    public BankName BankName { get; private set; }
+
+    public AccountHolder AccountHolder { get; private set; }
+
+    public EncryptedValue AccountNumber { get; private set; }
+
+    public string Last4 { get; private set; }
+}

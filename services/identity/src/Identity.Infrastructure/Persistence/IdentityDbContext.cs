@@ -138,7 +138,20 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
 
         modelBuilder.Entity<Shop>(e =>
         {
-            e.ToTable("shops", t => t.HasCheckConstraint("ck_shops_seller_type", "seller_type in ('individual','business')"));
+            e.ToTable("shops", t =>
+            {
+                t.HasCheckConstraint("ck_shops_seller_type", "seller_type in ('individual','business')");
+                // A half-filled section would mean a save was cut in the middle (FEAT-010 §4).
+                t.HasCheckConstraint(
+                    "ck_shops_pickup_all_or_none",
+                    "(pickup_contact_name is null) = (pickup_phone is null) and (pickup_contact_name is null) = (pickup_province is null) "
+                    + "and (pickup_contact_name is null) = (pickup_district is null) and (pickup_contact_name is null) = (pickup_ward is null) "
+                    + "and (pickup_contact_name is null) = (pickup_street is null)");
+                t.HasCheckConstraint(
+                    "ck_shops_payout_all_or_none",
+                    "(payout_bank_name is null) = (payout_account_holder is null) and (payout_bank_name is null) = (payout_account_ciphertext is null) "
+                    + "and (payout_bank_name is null) = (payout_account_last4 is null) and (payout_bank_name is null) = (payout_key_id is null)");
+            });
             e.HasKey(s => s.Id);
             e.Property(s => s.Id).HasColumnName("id").ValueGeneratedNever();
             e.Property(s => s.OwnerUserId).HasColumnName("owner_user_id");
@@ -147,6 +160,33 @@ public sealed class IdentityDbContext(DbContextOptions<IdentityDbContext> option
             e.Property(s => s.SellerType).HasColumnName("seller_type").HasMaxLength(16);
             e.Property(s => s.CreatedAt).HasColumnName("created_at");
             e.Property(s => s.UpdatedAt).HasColumnName("updated_at");
+            e.Property(s => s.Description).HasColumnName("description").HasMaxLength(ShopDescription.MaxLength);
+            e.Property(s => s.ProfileVersion).HasColumnName("profile_version").HasDefaultValue(1);
+            // Postgres's own row version keeps profile_version and the readiness flip exact under concurrent saves (FEAT-010 D-9).
+            e.Property<uint>("Version").IsRowVersion();
+            e.OwnsOne(s => s.PickupAddress, a =>
+            {
+                a.Property(x => x.ContactName).HasColumnName("pickup_contact_name").HasMaxLength(80).IsRequired();
+                a.Property(x => x.Phone).HasColumnName("pickup_phone").HasMaxLength(16).IsRequired();
+                a.Property(x => x.Province).HasColumnName("pickup_province").HasMaxLength(60).IsRequired();
+                a.Property(x => x.District).HasColumnName("pickup_district").HasMaxLength(60).IsRequired();
+                a.Property(x => x.Ward).HasColumnName("pickup_ward").HasMaxLength(60).IsRequired();
+                a.Property(x => x.Street).HasColumnName("pickup_street").HasMaxLength(200).IsRequired();
+            });
+            e.OwnsOne(s => s.Payout, p =>
+            {
+                p.Property(x => x.BankName).HasColumnName("payout_bank_name").HasMaxLength(80).IsRequired()
+                    .HasConversion(v => v.Value, v => BankName.FromStored(v));
+                p.Property(x => x.AccountHolder).HasColumnName("payout_account_holder").HasMaxLength(80).IsRequired()
+                    .HasConversion(v => v.Value, v => AccountHolder.FromStored(v));
+                p.Property(x => x.Last4).HasColumnName("payout_account_last4").HasColumnType("char(4)").IsRequired();
+                p.OwnsOne(x => x.AccountNumber, n =>
+                {
+                    n.Property(x => x.Bytes).HasColumnName("payout_account_ciphertext").IsRequired();
+                    n.Property(x => x.KeyId).HasColumnName("payout_key_id").HasMaxLength(32).IsRequired();
+                });
+                p.Navigation(x => x.AccountNumber).IsRequired();
+            });
             // One shop per owner (FR-SHOP-002) and one normalized name per shop (FR-SHOP-003).
             e.HasIndex(s => s.OwnerUserId).IsUnique().HasDatabaseName("ix_shops_owner_user_id");
             e.HasIndex(s => s.NormalizedName).IsUnique().HasDatabaseName("ix_shops_normalized_name");

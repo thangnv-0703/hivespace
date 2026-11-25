@@ -115,6 +115,64 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
     }
 
     [Fact]
+    public async Task AddShopSettings_applies_down_and_up_after_AddShops()
+    {
+        await using var db = postgres.CreateContext();
+        var migrator = db.GetService<IMigrator>();
+        var ct = TestContext.Current.CancellationToken;
+
+        await migrator.MigrateAsync("20261124102658_AddShops", ct);
+        var before = await ListColumns(db, "shops");
+        await migrator.MigrateAsync(cancellationToken: ct);
+        var after = await ListColumns(db, "shops");
+
+        string[] added = ["description", "profile_version", "pickup_contact_name", "pickup_phone", "pickup_province", "pickup_district", "pickup_ward", "pickup_street",
+            "payout_bank_name", "payout_account_holder", "payout_account_ciphertext", "payout_account_last4", "payout_key_id"];
+        foreach (var column in added)
+        {
+            Assert.DoesNotContain(column, before);
+            Assert.Contains(column, after);
+        }
+    }
+
+    [Fact]
+    public async Task A_half_filled_pickup_or_payout_row_is_rejected_by_its_check()
+    {
+        await using var db = postgres.CreateContext();
+        var ct = TestContext.Current.CancellationToken;
+        var owner = Guid.CreateVersion7();
+        await db.Database.ExecuteSqlAsync(
+            $"""
+            insert into users (id, email, normalized_email, display_name, language, created_at, updated_at)
+            values ({owner}, {"half@x.com"}, {"half@x.com"}, {"H"}, {"vi"}, now(), now())
+            """,
+            ct);
+        var shop = Guid.CreateVersion7();
+        await db.Database.ExecuteSqlAsync(
+            $"""
+            insert into shops (id, owner_user_id, name, normalized_name, seller_type, created_at, updated_at)
+            values ({shop}, {owner}, {"Half"}, {"half"}, {"individual"}, now(), now())
+            """,
+            ct);
+
+        var pickup = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"update shops set pickup_contact_name = {"An"} where id = {shop}", ct));
+        var payout = await Assert.ThrowsAsync<Npgsql.PostgresException>(() => db.Database.ExecuteSqlAsync(
+            $"update shops set payout_bank_name = {"Vietcombank"}, payout_account_holder = {"AN"} where id = {shop}", ct));
+
+        Assert.Equal("ck_shops_pickup_all_or_none", pickup.ConstraintName);
+        Assert.Equal("ck_shops_payout_all_or_none", payout.ConstraintName);
+    }
+
+    [Fact]
+    public void The_model_has_no_pending_changes_after_AddShopSettings()
+    {
+        using var db = postgres.CreateContext();
+
+        Assert.False(db.Database.HasPendingModelChanges());
+    }
+
+    [Fact]
     public async Task Lockout_and_audit_checks_reject_values_outside_the_design()
     {
         await using var db = postgres.CreateContext();
@@ -301,6 +359,11 @@ public sealed class MigrationTests(PostgresFixture postgres) : IClassFixture<Pos
     private static async Task<List<string>> ListUserColumns(DbContext db) =>
         await db.Database
             .SqlQuery<string>($"select column_name as \"Value\" from information_schema.columns where table_schema = 'public' and table_name = 'users'")
+            .ToListAsync(TestContext.Current.CancellationToken);
+
+    private static async Task<List<string>> ListColumns(DbContext db, string table) =>
+        await db.Database
+            .SqlQuery<string>($"select column_name as \"Value\" from information_schema.columns where table_schema = 'public' and table_name = {table}")
             .ToListAsync(TestContext.Current.CancellationToken);
 
     private static async Task<List<string>> ListTables(DbContext db) =>
