@@ -64,6 +64,9 @@ public static class DependencyInjection
         services.AddScoped<UpdateMyLanguageHandler>();
         services.AddScoped<RegisterShopHandler>();
         services.AddScoped<GetMyShopHandler>();
+        services.AddScoped<UpdateShopProfileHandler>();
+        services.AddScoped<SetPickupAddressHandler>();
+        services.AddScoped<SetPayoutHandler>();
         return builder;
     }
 

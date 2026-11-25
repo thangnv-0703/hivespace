@@ -51,7 +51,20 @@ public sealed class Rig : IAsyncDisposable
         SignInWithCode = new SignInWithCodeHandler(users, users, Codes, users, users, Recorder, clock);
         RegisterShop = new RegisterShopHandler(users, users, users, outbox, clock);
         GetMyShop = new GetMyShopHandler(users);
+        UpdateShopProfile = new UpdateShopProfileHandler(users, users, outbox, clock);
+        SetPickupAddress = new SetPickupAddressHandler(users, users, outbox, clock);
+        SetPayout = new SetPayoutHandler(users, users, Protector, outbox, clock);
     }
+
+    /// <summary>The same fixed key as the test host, so a row written by one rig reads back in another.</summary>
+    public static readonly Identity.Application.Abstractions.IBankAccountProtector Protector = new AesGcmBankAccountProtector(Microsoft.Extensions.Options.Options.Create(
+        new BankEncryptionOptions { ActiveKeyId = "v1", Keys = new() { ["v1"] = IdentityApiFactory.TestBankKey } }));
+
+    public UpdateShopProfileHandler UpdateShopProfile { get; }
+
+    public SetPickupAddressHandler SetPickupAddress { get; }
+
+    public SetPayoutHandler SetPayout { get; }
 
     public RegisterShopHandler RegisterShop { get; }
 
@@ -59,6 +72,9 @@ public sealed class Rig : IAsyncDisposable
     public RegisterShopHandler RegisterShopBlindToNames() => new(_users, new NameCheckBlindStore(_users), _users, _outbox, Clock);
 
     public GetMyShopHandler GetMyShop { get; }
+
+    /// <summary>A rename whose name check always passes, as when a parallel request commits the same name just after the check.</summary>
+    public UpdateShopProfileHandler UpdateShopProfileBlindToNames() => new(new NameCheckBlindStore(_users), _users, _outbox, Clock);
 
     public SignInWithCodeHandler SignInWithCode { get; }
 
