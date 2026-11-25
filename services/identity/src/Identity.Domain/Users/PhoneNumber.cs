@@ -13,13 +13,13 @@ public sealed partial record PhoneNumber
 
     public string Value { get; }
 
-    public static (PhoneNumber? Phone, Violation? Violation) Create(string? raw)
+    public static (PhoneNumber? Phone, Violation? Violation) Create(string? raw, string field = "phone")
     {
         var compact = Separators().Replace(raw ?? string.Empty, string.Empty);
         var match = Shape().Match(compact);
         return match.Success
             ? (new PhoneNumber("+84" + match.Groups["national"].Value), null)
-            : (null, new Violation("phone", "identity.phone_invalid"));
+            : (null, new Violation(field, "identity.phone_invalid"));
     }
 
     /// <summary>Wraps a value read back from the database, which was normalized when it was saved.</summary>
