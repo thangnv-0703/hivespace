@@ -71,6 +71,52 @@ public sealed class ShopRegistrationFlowTests(StackFixture stack)
         Assert.False(shopBody.GetProperty("setup").GetProperty("pickupAddress").GetBoolean());
     }
 
+    /// <summary>
+    /// FEAT-010 T7, AC-8: a seller saves the three settings sections through the gateway on the seller host and reads them back;
+    /// a PUT without a session is 401 and a PUT without the CSRF header is 403.
+    /// </summary>
+    [Fact]
+    public async Task A_seller_saves_profile_pickup_address_and_payout_through_the_gateway_and_reads_them_back()
+    {
+        var email = $"system-settings-{Guid.NewGuid():N}@example.com";
+        using var gateway = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false }) { BaseAddress = stack.App.GetEndpoint("gateway") };
+        var browser = new Browser(gateway);
+        (await browser.SendAsync(StorefrontHost, HttpMethod.Post, "/v1/users", new { email, displayName = "Shop Test", password = "correct-horse-1" })).Dispose();
+        await VerifyEmailAsync(email);
+        (await browser.SendAsync(StorefrontHost, HttpMethod.Post, "/v1/users/sign-in", new { email, password = "correct-horse-1" })).Dispose();
+        await browser.FollowAsync(SellerHost, "/bff/login?returnUrl=/");
+        var name = $"Tiệm {Guid.NewGuid():N}";
+        (await browser.SendAsync(SellerHost, HttpMethod.Post, "/v1/shops", new { name, sellerType = "individual" })).Dispose();
+        (await browser.SendAsync(SellerHost, HttpMethod.Post, "/bff/session/refresh")).Dispose();
+
+        var profile = new { name = name + " 2", description = "Bánh mì nóng" };
+        var address = new { contactName = "An", phone = "0912 345 678", province = "Hà Nội", district = "Ba Đình", ward = "Phúc Xá", street = "12 Lê Lợi" };
+        var payout = new { bankName = "Vietcombank", accountNumber = "0071 0012 34567", accountHolder = "NGUYEN VAN AN" };
+        foreach (var (path, body) in new (string, object)[] { ("/v1/shops/me/profile", profile), ("/v1/shops/me/pickup-address", address), ("/v1/shops/me/payout", payout) })
+        {
+            using var saved = await browser.SendAsync(SellerHost, HttpMethod.Put, path, body);
+            Assert.Equal(HttpStatusCode.OK, saved.StatusCode);
+            Assert.DoesNotContain("0071001234567", await saved.Content.ReadAsStringAsync(Ct), StringComparison.Ordinal);
+        }
+
+        using var read = await browser.SendAsync(SellerHost, HttpMethod.Get, "/v1/shops/me");
+        var shop = await read.Content.ReadFromJsonAsync<JsonElement>(Ct);
+        Assert.Equal((name + " 2", "Bánh mì nóng", "+84912345678", "4567", true, true), (
+            shop.GetProperty("name").GetString(),
+            shop.GetProperty("description").GetString(),
+            shop.GetProperty("pickupAddress").GetProperty("phone").GetString(),
+            shop.GetProperty("payout").GetProperty("accountNumberLast4").GetString(),
+            shop.GetProperty("setup").GetProperty("pickupAddress").GetBoolean(),
+            shop.GetProperty("setup").GetProperty("payout").GetBoolean()));
+        Assert.DoesNotContain("0071001234567", shop.GetRawText(), StringComparison.Ordinal);
+
+        using var noCsrf = await browser.SendAsync(SellerHost, HttpMethod.Put, "/v1/shops/me/profile", profile, csrf: false);
+        Assert.Equal(HttpStatusCode.Forbidden, noCsrf.StatusCode);
+        var anonymous = new Browser(gateway);
+        using var noSession = await anonymous.SendAsync(SellerHost, HttpMethod.Put, "/v1/shops/me/profile", profile);
+        Assert.Equal(HttpStatusCode.Unauthorized, noSession.StatusCode);
+    }
+
     private async Task VerifyEmailAsync(string email)
     {
         await using var connection = new NpgsqlConnection(await stack.App.GetConnectionStringAsync("identitydb", Ct));
@@ -85,11 +131,15 @@ public sealed class ShopRegistrationFlowTests(StackFixture stack)
     {
         private readonly Dictionary<string, Dictionary<string, string>> _jars = new(StringComparer.OrdinalIgnoreCase);
 
-        public async Task<HttpResponseMessage> SendAsync(string host, HttpMethod method, string path, object? body = null)
+        public async Task<HttpResponseMessage> SendAsync(string host, HttpMethod method, string path, object? body = null, bool csrf = true)
         {
             using var request = new HttpRequestMessage(method, new Uri(gateway.BaseAddress!, path)) { Content = body is null ? null : JsonContent.Create(body) };
             request.Headers.Host = host;
-            request.Headers.Add("X-HS-CSRF", "1");
+            if (csrf)
+            {
+                request.Headers.Add("X-HS-CSRF", "1");
+            }
+
             request.Headers.Add("Accept-Language", "en");
             if (_jars.TryGetValue(host, out var jar) && jar.Count > 0)
             {
