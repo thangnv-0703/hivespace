@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
         services.AddSingleton<IVerificationTokenGenerator, Sha256TokenGenerator>();
         services.AddSingleton<ISignInCodeGenerator, SignInCodeGenerator>();
+        services.AddBankAccountProtection();
         // Sent rows still hold the verification token, so they are deleted after 24 hours (R-6, AC-8).
         services.AddOutboxCleanup<IdentityDbContext>(TimeSpan.FromHours(24));
 
@@ -64,5 +65,16 @@ public static class DependencyInjection
         services.AddScoped<RegisterShopHandler>();
         services.AddScoped<GetMyShopHandler>();
         return builder;
+    }
+
+    /// <summary>The bank number protector and its key options, validated when the host starts so a missing or short key stops Identity (FEAT-010 D-1).</summary>
+    public static IServiceCollection AddBankAccountProtection(this IServiceCollection services)
+    {
+        services.AddOptions<BankEncryptionOptions>()
+            .BindConfiguration(BankEncryptionOptions.SectionName)
+            .Validate(options => options.Problem() is null, "Identity:BankEncryption is missing or invalid (active key id, base64 keys of 32 bytes).")
+            .ValidateOnStart();
+        services.AddSingleton<IBankAccountProtector, AesGcmBankAccountProtector>();
+        return services;
     }
 }

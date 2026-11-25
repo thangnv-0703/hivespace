@@ -46,6 +46,8 @@ const specs: Record<string, ServiceSpec> = {
       // Fresh keys per run; production reads them from configuration (identity design D-7).
       Identity__SigningKeyPem: generateKeyPairSync('ec', { namedCurve: 'P-256' }).privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
       Identity__EncryptionKeyPem: generateKeyPairSync('rsa', { modulusLength: 2048 }).privateKey.export({ type: 'pkcs8', format: 'pem' }).toString(),
+      Identity__BankEncryption__ActiveKeyId: 'v1',
+      Identity__BankEncryption__Keys__v1: 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8=', // test key (FEAT-010)
       Identity__Clients__Storefront__ClientSecret: 'test-client-secret',
       Identity__Clients__Seller__ClientSecret: 'test-seller-secret',
       // Google sign-in against the fake IdP; Identity__Google__Authority is added once it is listening.

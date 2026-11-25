@@ -20,6 +20,8 @@ public sealed class IdentityApiFactory(string? googleAuthority = null, TimeProvi
     public const string Issuer = "http://localhost:5080";
     public const string SellerOrigin = "http://seller.localhost:5080";
     public const string ClientSecret = "test-client-secret";
+    /// <summary>A fixed 32-byte key (base64) for bank number encryption in tests (FEAT-010 D-1).</summary>
+    public const string TestBankKey = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8="; // pragma: allowlist secret - test value
     public const string SellerClientSecret = "test-seller-secret";
 
     /// <summary>The server's signing key, so tests can mint a token with a changed claim (wrong audience).</summary>
@@ -45,6 +47,8 @@ public sealed class IdentityApiFactory(string? googleAuthority = null, TimeProvi
         builder.UseSetting("Identity:Clients:Seller:BaseUrl", SellerOrigin);
         builder.UseSetting("Identity:SigningKeyPem", SigningKey.ExportPkcs8PrivateKeyPem());
         builder.UseSetting("Identity:EncryptionKeyPem", RSA.Create(2048).ExportPkcs8PrivateKeyPem());
+        builder.UseSetting("Identity:BankEncryption:ActiveKeyId", "v1");
+        builder.UseSetting("Identity:BankEncryption:Keys:v1", TestBankKey);
         builder.UseSetting("Identity:Clients:Storefront:ClientSecret", ClientSecret);
         builder.UseSetting("Identity:Clients:Seller:ClientSecret", SellerClientSecret);
         if (googleAuthority is not null)

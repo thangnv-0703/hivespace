@@ -7,7 +7,7 @@ namespace HiveSpace.AppHost.Resources;
 /// <c>.local/dev-secrets</c> folder at the repo root, so tokens and sessions survive AppHost restarts.
 /// Deployed environments get their own values from a vault (FEAT-037); nothing here is a real secret.
 /// </summary>
-internal sealed record IdentitySecrets(string SigningKeyPem, string EncryptionKeyPem, string StorefrontClientSecret, string SellerClientSecret);
+internal sealed record IdentitySecrets(string SigningKeyPem, string EncryptionKeyPem, string StorefrontClientSecret, string SellerClientSecret, string BankEncryptionKeyV1);
 
 /// <summary>
 /// The Google client Identity uses (FEAT-004 §3.6). <see cref="Real"/> is false when the fake IdP stands in for Google;
@@ -25,7 +25,9 @@ internal static class DevSecrets
             GetOrCreate(folder, "identity-signing-key.pem", () => ECDsa.Create(ECCurve.NamedCurves.nistP256).ExportPkcs8PrivateKeyPem()),
             GetOrCreate(folder, "identity-encryption-key.pem", () => RSA.Create(2048).ExportPkcs8PrivateKeyPem()),
             GetOrCreate(folder, "storefront-client-secret.txt", NewClientSecret),
-            GetOrCreate(folder, "seller-client-secret.txt", NewClientSecret));
+            GetOrCreate(folder, "seller-client-secret.txt", NewClientSecret),
+            // 32 random bytes in base64 for AES-256-GCM (FEAT-010 D-1); deployed keys come from a vault (FEAT-037).
+            GetOrCreate(folder, "bank-encryption-key-v1.txt", () => Convert.ToBase64String(RandomNumberGenerator.GetBytes(32))));
     }
 
     /// <summary>
