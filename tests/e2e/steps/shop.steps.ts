@@ -99,8 +99,9 @@ Then('the payout shows the masked number {string} and not the digits', async ({ 
   await expect(page.locator('input[value*="0071"]')).toHaveCount(0)
 })
 
-// The Settings group sits in the sidebar, off-canvas below lg: the link is followed by its address-bar target after opening the group.
+// The Settings group sits in the sidebar, off-canvas below lg: open the menu, expand the group, follow the link.
 When('the user opens {string} from the settings sidebar group', async ({ page }, name: string) => {
+  await openMenuIfCollapsed(page)
   const sidebar = page.getByTestId('sidebar')
   const link = sidebar.getByRole('link', { name, exact: true })
   if (!(await link.isVisible())) await sidebar.getByRole('button', { name: 'Shop settings' }).click()

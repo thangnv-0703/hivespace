@@ -7,9 +7,11 @@ Feature: Shop settings: profile, pickup address and payout
 
   Scenario: A new seller saves the profile, the pickup address and the payout and the checklist completes
     When a visitor registers as "E2E User" with a new email address
-    And the visitor opens the verification link
+    Then a verification email arrives with subject "Verify your HiveSpace email"
+    When the visitor opens the verification link
     And the visitor signs in from the home page
-    And the user follows the "Seller centre" link in the header
+    Then the account menu shows the display name
+    When the user follows the "Seller centre" link in the header
     And the user registers a shop with a unique name as "Individual"
     Then the dashboard shows the new shop and the checklist "0 of 2 done"
     When the user opens "Add address" from the dashboard checklist
