@@ -196,7 +196,11 @@ public sealed class ShopApiTests : IAsyncLifetime
         var db = scope.ServiceProvider.GetRequiredService<IdentityDbContext>();
         var aliceShop = await db.Shops.SingleAsync(s => s.OwnerUserId == alice.UserId, Ct);
         var bobShop = await db.Shops.SingleAsync(s => s.OwnerUserId == bob.UserId, Ct);
-        Assert.True(aliceShop.Description == "mine" || aliceShop.PickupAddress is not null || aliceShop.Payout is not null);
+        // The section this endpoint writes changed on the caller's shop, and only that one.
+        var written = path.EndsWith("profile", StringComparison.Ordinal) ? aliceShop.Description == "mine"
+            : path.EndsWith("address", StringComparison.Ordinal) ? aliceShop.PickupAddress is not null && aliceShop.Payout is null && aliceShop.Description is null
+            : aliceShop.Payout is not null && aliceShop.PickupAddress is null && aliceShop.Description is null;
+        Assert.True(written);
         Assert.Equal((null, null, null), (bobShop.Description, bobShop.PickupAddress, bobShop.Payout));
     }
 
