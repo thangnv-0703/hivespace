@@ -78,7 +78,7 @@ Button `loading` (width kept, `aria-busy`), fields disabled until the response.
   - Save payout: `PUT /v1/shops/me/payout {bankName, accountNumber, accountHolder}` (`setMyShopPayout`). "Change" pre-fills bank name and holder from `payout` and leaves account number empty (technical-design D-4).
   - `200 MyShop` → both cards re-render from the response; the payout form closes to the summary and the account number value is cleared from memory.
   - `400 common.validation_failed` → `details` on fields: `contactName`, `phone`, `province`, `district`, `ward`, `street` (`identity.address_field_*`, `identity.phone_invalid`); `bankName`, `accountNumber`, `accountHolder` (`identity.bank_*`).
-  - Success → toast "Pickup address saved" / "Payout details saved". When the response turns `setup.pickupAddress && setup.payout` from incomplete to complete, the toast is instead "Your shop is ready to publish products." with the action link "Go to dashboard" (→ `/`).
+  - Success → toast "Pickup address saved" / "Payout details saved". When the response turns `setup.pickupAddress && setup.payout` from incomplete to complete, the toast is instead "Your shop is ready to publish products." (no action link: the shared `Toast` has no action slot and the dashboard checklist already shows the ready state; decided 2026-11-25).
 - **Conformance:** pass. `Card`, `Input`, `Badge`, `Button`, `Alert`, a plain `dl`; badge tones per design.md §4.3 (success for done, warning for a missing required item, colour never the only signal: both carry text).
 - **Mockup:** `PickupPayout.dc.html` (both saved), `PickupPayoutFirst.dc.html` (first visit, both forms), `PickupPayoutErrors.dc.html` (validation errors and the change form), `PickupPayoutMobile.dc.html` (390 px, first visit).
 

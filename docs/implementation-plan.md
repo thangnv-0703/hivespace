@@ -323,5 +323,7 @@ Stand these up with the skeleton or in the slice that first needs them. Requirem
 | P-8 | Service Bus cost while provisioned (R-2) and undecided MongoDB host (R-13) | Skeleton deploy and FEAT-037 | Decide in the initial-deployment step; tear down between demo windows |
 | P-9 | Aspire support for the Function and gRPC over Container Apps internal ingress (R-9, R-14) | Verified in the skeleton | Fails → worker process for images; HTTP/2 config fix |
 | P-10 | Cold-start stacking (R-4) may miss NFR-PERF-007 and NFR-PERF-006 | Measured in FEAT-035 and FEAT-037 | Record results honestly; warm before demos |
+| P-11 | Cloud sessions cannot start the AppHost: `Parameters__postgres-password` is not supplied (FEAT-010 found it; FEAT-006 saw it too), so `tests/system` and `tests/e2e` stall silently | Every slice with a system or E2E done-when in a cloud session | Small chore before the next slice: `scripts/cloud-setup.sh` exports a throwaway value; `AGENTS.md` and scaffold-notes §7 say so (scaffold-notes updated) |
+| P-12 | Vietnam's 2025 reform removed the district level; FR-SHOP-006 and FR-ADDR-001 still require it. FEAT-010 keeps it required (D-2) | FEAT-010 follow-up and FEAT-008 | Requirements-engineering amends both FRs to make district optional; then FEAT-010 drops the `*` and the client check and the domain accepts an empty district, and FEAT-008 is designed without the requirement |
 
 Phases beyond the near term are a living order, re-sequenced as slices land.
