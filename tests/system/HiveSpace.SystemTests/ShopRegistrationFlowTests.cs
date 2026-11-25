@@ -112,7 +112,9 @@ public sealed class ShopRegistrationFlowTests(StackFixture stack)
 
         using var noCsrf = await browser.SendAsync(SellerHost, HttpMethod.Put, "/v1/shops/me/profile", profile, csrf: false);
         Assert.Equal(HttpStatusCode.Forbidden, noCsrf.StatusCode);
-        var anonymous = new Browser(gateway);
+        // A separate client: the first one keeps the seller's cookie in its own container.
+        using var bare = new HttpClient(new SocketsHttpHandler { AllowAutoRedirect = false, UseCookies = false }) { BaseAddress = gateway.BaseAddress };
+        var anonymous = new Browser(bare);
         using var noSession = await anonymous.SendAsync(SellerHost, HttpMethod.Put, "/v1/shops/me/profile", profile);
         Assert.Equal(HttpStatusCode.Unauthorized, noSession.StatusCode);
     }
