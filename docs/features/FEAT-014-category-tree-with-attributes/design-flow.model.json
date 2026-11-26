@@ -2,7 +2,7 @@
   "meta": {
     "title": "FEAT-014 — Category tree with attributes",
     "subtitle": "Design solution from <code>technical-design.md</code>: the operator loads the category tree and its attributes from a committed file with one command; the load is applied whole or refused whole, and the tree is read one level at a time. Pick a flow to follow one path; click any arrow for its data contract.",
-    "description": "The operator starts the manual-start Aspire resource catalog-load-categories, which runs the Catalog.Api subcommand load-categories over data/category-tree. The load handler reads and cleans categories.json and the attribute chunk files, takes a Postgres advisory lock, reads the current tree, and asks the pure domain diff for either every problem or a change set. Problems or no change roll back and print a report; a change set is applied in one transaction with a CategoryTreeChanged outbox row, which the running Catalog relays to Service Bus for Search-AI (FEAT-018). Shoppers and sellers read the tree through the gateway: GET /v1/categories returns roots or one parent's children with vi and en names, GET /v1/categories/{id} returns a leaf's attributes and values.",
+    "description": "The operator starts the manual-start Aspire resource catalog-load-categories, which runs the Catalog.Api subcommand load-categories over data/category-tree. The load handler reads and cleans categories.json, attributes.json (each list defined once, with allowsCustomValue) and the link files, takes a Postgres advisory lock, reads the current tree, and asks the pure domain diff for either every problem or a change set. Problems or no change roll back and print a report; a change set is applied in one transaction with a CategoryTreeChanged outbox row, which the running Catalog relays to Service Bus for Search-AI (FEAT-018). Shoppers and sellers read the tree through the gateway: GET /v1/categories returns roots or one parent's children with vi and en names, GET /v1/categories/{id} returns a leaf's effective attributes (its own, else its nearest ancestor's) and their values.",
     "viewBox": [
       1300,
       720
@@ -34,7 +34,7 @@
     "overview": [
       [
         "Implements",
-        "FR-CAT-003, FR-CAT-019, FR-CAT-020 (definition), FR-LOC-007, FR-CAT-021 (top-level images); supports FR-CAT-004, FR-LOC-008, NFR-LEG-002"
+        "FR-CAT-003, FR-CAT-019, FR-CAT-020, FR-CAT-022 (open lists), FR-CAT-023 (inheritance), FR-LOC-007, FR-CAT-021 (top-level images); supports FR-CAT-004, FR-LOC-008, NFR-LEG-002"
       ],
       [
         "Realizes",
@@ -50,7 +50,7 @@
       ],
       [
         "Schema",
-        "categories (recreated: int Id = Tiki key, ParentId, Position, IsLeaf, ImageUrl for top level), attributes, attribute_values, category_attributes (ValueIds int[])"
+        "categories (int Id = Tiki key, ParentId, Position, IsLeaf, ImageUrl for top level), attributes (Kind, AllowsMultiple, MaxValues, AllowsCustomValue), attribute_values (Position), category_attributes (Position, IsRequired) — migration SharedAttributeLists (D-11)"
       ],
       [
         "Depends on",
@@ -114,9 +114,9 @@
       "w": 190,
       "h": 70,
       "label": "data/category-tree",
-      "sub": "categories.json + chunks",
+      "sub": "categories · attributes · links",
       "sub2": "SOURCE.md (Tiki origin)",
-      "desc": "Committed operator file. <code>categories.json</code> (key, parent key, name {vi,en}, imageUrl on top-level categories, array order = sibling order) and <code>category-attributes/*.json</code> (attributes with isRequired, Dropdown/Checkbox, maxValueCount, values). <code>SOURCE.md</code> records the source for NFR-LEG-002."
+      "desc": "Committed operator file, v2 layout (D-13). <code>categories.json</code> (key, parent key, name {vi,en}, imageUrl on top-level categories, array order = sibling order), <code>attributes.json</code> (each attribute once: Dropdown/Checkbox, maxValueCount, allowsCustomValue, values in order) and <code>category-attributes/*.json</code> (links: attribute key, isRequired). <code>SOURCE.md</code> records the source for NFR-LEG-002."
     },
     {
       "id": "cmd",
@@ -303,10 +303,10 @@
       "s": "emphasis",
       "label": "read",
       "data": {
-        "p": "categories.json {externalCategoryId, externalParentCategoryId, name{vi,en}, imageUrl (top level only)} · category-attributes/*.json {externalCategoryId, attributes[{sourceAttributeId, name{vi,en}, isRequired, inputType, maxValueCount, values[{sourceValueId, name{vi,en}}]}]}",
+        "p": "categories.json {externalCategoryId, externalParentCategoryId, name{vi,en}, imageUrl (top level only)} · attributes.json {sourceAttributeId, name{vi,en}, inputType, maxValueCount, allowsCustomValue, values[{sourceValueId, name{vi,en}}]} · category-attributes/*.json {externalCategoryId, attributes[{sourceAttributeId, isRequired}]}",
         "f": "JSON files (System.Text.Json)",
         "c": "public",
-        "s": "Keys are Tiki's numeric ids, kept as the integer ids (D-9); other Tiki fields ignored (path, productSetId, imageUrl, displayName …); JSON errors reported with file and line"
+        "s": "v2 layout only, lists defined once per attribute (D-13); keys are Tiki's numeric ids (D-9); other Tiki fields ignored; JSON errors reported with file and line"
       }
     },
     {
@@ -329,7 +329,7 @@
       "label": "apply",
       "toAt": 0.45,
       "data": {
-        "p": "BEGIN; pg_advisory_xact_lock(CategoryTreeLock.Key); read tree; insert/update categories, attributes, values, links",
+        "p": "BEGIN; pg_advisory_xact_lock(CategoryTreeLock.Key); read tree; insert/update categories, attributes (list settings, allowsCustomValue), values (position), links (position, required)",
         "f": "EF Core / Npgsql, one transaction",
         "c": "internal",
         "s": "Refused or unchanged → ROLLBACK, nothing written (TAC-014-1, TAC-014-3)"
@@ -399,7 +399,7 @@
         "p": "GET /v1/categories · GET /v1/categories?parentId={int} · GET /v1/categories/{int}",
         "f": "HTTPS JSON, Accept-Language (error messages only)",
         "c": "public",
-        "s": "Responses: 200 CategoryList {items[{id (int), parentId, name{vi,en}, isLeaf, position, imageUrl (top level, null = placeholder)}]} · 200 CategoryDetail {…, path[], attributes[{id (int), name, required, kind, selection, maxValues, values[{id (int), name}]}]} · 404 common.not_found"
+        "s": "Responses: 200 CategoryList {items[{id (int), parentId, name{vi,en}, isLeaf, position, imageUrl (top level, null = placeholder)}]} · 200 CategoryDetail {…, path[], attributes (effective: own, else nearest ancestor's)[{id (int), name, required, kind, selection, maxValues, allowsCustomValue, values[{id (int), name}]}]} · 404 common.not_found"
       }
     },
     {
@@ -595,7 +595,8 @@
         "FR-CAT-003",
         "FR-LOC-007, 008",
         "AC-014-3.x, 4.x",
-        "FR-CAT-021"
+        "FR-CAT-021",
+        "FR-CAT-022, 023"
       ],
       "steps": [
         {
@@ -626,7 +627,7 @@
             "e12",
             "e13"
           ],
-          "t": "<strong>Leaf detail</strong>: <code>GET /v1/categories/{id}</code> → path and attributes (required, list or text, single or up to max, values in file order)."
+          "t": "<strong>Leaf detail</strong>: <code>GET /v1/categories/{id}</code> → path and the leaf's effective attributes (its own, else its nearest ancestor's; D-12): required, list or text, single or up to max, <code>allowsCustomValue</code>, values in file order."
         }
       ]
     }
@@ -644,9 +645,9 @@
       "id": "N2",
       "on": "db",
       "st": "confirmed",
-      "t": "Global names, per-category links",
-      "b": "Attribute and value keys are global; required flag and the ordered allowed values live on <code>category_attributes</code> (<code>ValueIds int[]</code>).",
-      "r": "D-2"
+      "t": "Lists live on the attribute",
+      "b": "Kind, selection, maximum, <code>AllowsCustomValue</code> and value order sit on <code>attributes</code> / <code>attribute_values</code>; a link keeps only position and required. Migration <code>SharedAttributeLists</code> reshapes and empties the tree tables. Supersedes D-2.",
+      "r": "D-11"
     },
     {
       "id": "N3",
@@ -668,9 +669,9 @@
       "id": "N5",
       "on": "diff",
       "st": "confirmed",
-      "t": "Non-leaf attributes kept, never used",
-      "b": "Answers feature-spec §7: a leaf that gains children keeps its links (removal is refused) but they are not returned or applied.",
-      "r": "D-5"
+      "t": "Leaves inherit from the nearest ancestor",
+      "b": "A leaf with no links uses its nearest ancestor's (FR-CAT-023). <code>EffectiveAttributes</code> serves getCategory, the load checks (<code>attribute.inherited_dropped</code>, required via inheritance) and FEAT-012. Supersedes D-5.",
+      "r": "D-12"
     },
     {
       "id": "N6",
@@ -685,7 +686,7 @@
       "on": "handler",
       "st": "risk",
       "t": "FEAT-012 must share the lock",
-      "b": "Product create takes <code>pg_advisory_xact_lock_shared</code> and implements <code>ICategoryUsage</code>; until then AC-014-2.5 and 2.7 are proved with a fake usage set.",
+      "b": "Product create takes <code>pg_advisory_xact_lock_shared</code> and implements <code>ICategoryUsage</code>; until then AC-014-2.5, 2.7 and 2.8 are proved with a fake usage set.",
       "r": "D-7, §8"
     },
     {
@@ -747,6 +748,21 @@
       "t": "ADR-0009 exception",
       "b": "Record that platform reference data from the category file keeps its integer source keys.",
       "r": "§8, D-9"
+    },
+    {
+      "id": "N12",
+      "on": "diff",
+      "st": "confirmed",
+      "t": "Open lists",
+      "b": "<code>allowsCustomValue</code> false → true is a loosening; true → false is <code>attribute.tightened</code>. Typed-text rules belong to FEAT-012 (BR-012-7).",
+      "r": "FR-CAT-022, D-11"
+    },
+    {
+      "id": "G5",
+      "st": "risk",
+      "t": "Re-measure with the v2 file",
+      "b": "Open lists of up to 1,000 values can make getCategory a few hundred KB; re-measure TAC-014-5/6 on the owner's v2 file.",
+      "r": "§8"
     }
   ],
   "specs": {
@@ -770,11 +786,11 @@
       "ops": [
         "children ordered by position",
         "path via recursive CTE",
-        "attributes only for leaves",
+        "effective attributes for leaves (own, else nearest ancestor)",
         "en falls back to vi"
       ],
       "data": "category tables (read only)",
-      "nfr": "FR-CAT-003, FR-CAT-020, FR-LOC-007, FR-LOC-008, NFR-PERF-001"
+      "nfr": "FR-CAT-003, FR-CAT-020, FR-LOC-007, FR-LOC-008, NFR-PERF-001, FR-CAT-022, FR-CAT-023"
     },
     "diff": {
       "host": "Catalog.Domain (pure)",
@@ -784,10 +800,11 @@
         "file-integrity problems",
         "add / rename / loosen / reorder",
         "refuse remove, move, tighten, child or required on used category",
-        "leaf flags and positions"
+        "leaf flags and positions",
+        "attribute-level tighten/loosen incl. allowsCustomValue; used-leaf checks through effective attributes"
       ],
       "data": "in memory",
-      "nfr": "BR-014-2..11"
+      "nfr": "BR-014-2..14, FR-CAT-022, FR-CAT-023"
     }
   },
   "sections": [
@@ -818,7 +835,7 @@
         ],
         [
           "<code>attribute.*</code> / <code>value.*</code> integrity",
-          "duplicate or conflicting keys, invalid selection, duplicate value names (BR-014-11)"
+          "duplicate keys, a link to an unknown attribute (<code>attributes.unknown</code>), invalid selection, duplicate value names (BR-014-11)"
         ],
         [
           "<code>category.removed</code> / <code>category.moved</code>",
@@ -826,22 +843,22 @@
         ],
         [
           "<code>attribute.removed</code> / <code>value.removed</code>",
-          "a stored link or list value absent"
+          "a stored link, attribute definition or list value absent"
         ],
         [
           "<code>attribute.tightened</code>",
-          "optional → required, multiple → single, lower max, list ↔ text"
+          "optional → required, multiple → single, lower max, list ↔ text, accepts other values → does not"
         ],
         [
-          "<code>category.child_under_used_leaf</code> / <code>attribute.required_on_used_category</code>",
-          "changes to a category with products"
+          "<code>category.child_under_used_leaf</code> / <code>attribute.required_on_used_category</code> / <code>attribute.inherited_dropped</code>",
+          "changes to a leaf with products, including through the attributes it inherits (FR-CAT-023)"
         ]
       ]
     },
     {
       "type": "notes",
       "title": "Decisions, risks and open items",
-      "lead": "Decisions D-1..D-10 and open items from the design."
+      "lead": "Decisions D-1..D-13 (D-2 and D-5 superseded by D-11 and D-12) and open items from the design."
     },
     {
       "type": "catalogue",

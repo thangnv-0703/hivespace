@@ -1,11 +1,11 @@
 # Technical Design: FEAT-014 — Category tree with attributes
 
 > Feature from: docs/implementation-plan.md · Epic: E3 Catalog
-> Business spec: [feature-spec.md](feature-spec.md) (Agreed 2026-11-26)
-> Implements: FR-CAT-003, FR-CAT-019, FR-CAT-020 (definition; FEAT-012 applies it to products), FR-LOC-007 (categories, attribute names and values), FR-CAT-021 (top-level category images: data and contract; FEAT-018 shows them); supports FR-CAT-004 (required flag), FR-LOC-008, NFR-LEG-002
+> Business spec: [feature-spec.md](feature-spec.md) (Agreed 2026-11-26, second amendment: open lists and inheritance)
+> Implements: FR-CAT-003, FR-CAT-019, FR-CAT-020, FR-CAT-022, FR-CAT-023 (definitions; FEAT-012 applies them to products), FR-LOC-007 (categories, attribute names and values), FR-CAT-021 (top-level category images: data and contract; FEAT-018 shows them); supports FR-CAT-004 (required flag), FR-LOC-008, NFR-LEG-002
 > Realizes: UC-020 (main 1–2 for categories, alt 1a), UC-005 (step 1–2: what the seller picks from), UC-007 (the images the home page category bar shows) · Screens: none (operator command); consumed by SCR-SEL-004 (FEAT-012) and SCR-STF-001/002 (FEAT-018)
 > Depends on: walking skeleton (Catalog service, outbox, `GET /v1/categories`, storefront `CategoryBar`)
-> Status: Draft · Date: 2026-11-26
+> Status: Draft · Date: 2026-11-26 (amended for SRS 0.20: §1, §2, §3.1, §3.4, §3.5, §4, §5, §6, D-11..D-13, §8; tasks T9–T14)
 > Diagram: [design-flow.html](design-flow.html) (interactive flow diagram, html-flow-diagram)
 
 ## 1. Intent
@@ -19,6 +19,11 @@ Answers to feature-spec §7:
 - **Category images (FR-CAT-021):** the file's `imageUrl` is read on top-level categories only and stored on the category; a reload may add, change or remove it. `GET /v1/categories` returns `imageUrl`, `null` when there is none, and the client shows the placeholder for `null` (D-10).
 - **All-or-nothing and the report:** diff in memory, apply in one transaction under an advisory lock, print a count table and the problem list, exit code 0 or 2 (§5.3, D-3, D-7).
 
+Answers to the amendment's §7 items (feature-spec Q25–Q37, SRS 0.20):
+- **Open lists (FR-CAT-022):** the file's `attributes.json` defines each attribute once, with its list settings, its values and `allowsCustomValue`. Catalog stores these on the attribute, not per category (D-11). `CategoryAttribute.allowsCustomValue` is added to the contract. Opening a list is a loosening; closing one is `attribute.tightened` (§3.5).
+- **Shared lists:** the loader reads the v2 layout only (D-13): `attributes.json` plus link-only `category-attributes/*.json`. New file problems: `attribute.duplicate_key` and `attributes.unknown`.
+- **Inheritance (FR-CAT-023):** a leaf's effective attributes are its own links, or else those of its nearest ancestor that has links. One domain function, `EffectiveAttributes`, works this out for the read endpoint, for the load checks (AC-014-2.7–2.9) and for FEAT-012 (D-12, superseding D-5).
+
 ## 2. Codebase context
 Surveyed on 2026-11-25 on `feat/014-category-tree-with-attributes` at `9c49542` (FEAT-001..006, 009, 010 merged). The design conforms to the following.
 
@@ -31,6 +36,11 @@ Surveyed on 2026-11-25 on `feat/014-category-tree-with-attributes` at `9c49542` 
 - **Tests:** `Catalog.IntegrationTests/PostgresFixture.cs` (Testcontainers `pgvector/pgvector:pg17`), `MigrationTests.cs` (asserts the skeleton row, so it changes here), `Catalog.UnitTests`. Contract tests run the built `Catalog.Api.dll` against a Postgres container and seed state by direct SQL (ADR-0025). `tests/contract/steps/catalog.steps.ts` reads `slug`.
 - **Concurrency:** Identity uses `xmin` row versions. Catalog has none. There is no HTTP caching, ETag or Cache-Control anywhere.
 - **Input data surveyed:** `references/hivespace.crawler/crawler-state/tiki-v2`. `categories.json` has 6,101 categories, 38 roots, depth up to 8 and parents before children, and no position or leaf field. `category-attributes/chunk-*.json` (62 files) holds attributes per category. Attribute keys (386) and value keys (8,058) are global and carry the same name everywhere. However, `isRequired` differs between categories for 18 attributes and the value list differs for 21. `inputType` is only `Dropdown` (single) or `Checkbox` (`maxValueCount` 5), and, in the attribute files as edited on 2026-11-25, 1,178 categories have attributes: 1,170 leaves and 8 non-leaf categories. 3,727 of the 4,897 leaves have none. In all 8 non-leaf cases the attributes sit on the parent and every child has none (for example `7075` "Loa" with 7 empty child leaves), because Tiki defines them on the parent's product set. 27 of the 38 roots have an `imageUrl` (566 categories in all), every one on `salt.tikicdn.com`, the longest 82 characters.
+- **Amendment survey (2026-11-26, after T1–T8 were built and accepted):**
+  - `CategoryTreeSource.BuildLink` derives kind, selection and maximum per category link, and `SourceLink` / `CategoryAttribute` carry `ValueIds` per link.
+  - `CategoryTreeDiff` checks tightening and value removal per link. `CategoryReadStore.GetDetailAsync` returns links only for `IsLeaf` categories (D-5).
+  - The ports were just split one per file (`PortLayoutTests`, uncommitted on this branch). New ports follow that rule.
+  - The re-crawl (`crawler-state/tiki-v2`) shows names and option lists identical across categories; only `isRequired` differs per category. Every attribute's settings can therefore live on the attribute.
 - **Divergences recorded:** (1) ADR-0018 leaves Catalog's store open; the user chose PostgreSQL on 2026-11-25 (D-1, §8). (2) dev-standards §2 and repo-structure put seeds under `tools/seed/`; the tree loader lives in Catalog instead (D-3). (3) `data/` at the repo root is not in repo-structure.md (§8). (4) UC-020 has no exception flow for a refused load; FR-CAT-019 and the spec define it (§8).
 
 ## 3. API contracts
@@ -53,10 +63,14 @@ Conventions inherited: JSON, camelCase, `/v1` prefix, shared `Error`, public rea
   - `imageUrl` is set only on top-level categories that have an image (FR-CAT-021, BR-014-13); `null` means "show the placeholder" for a top-level category and "no image" below it (D-10).
 - **`CategoryDetail`** = `CategorySummary` + `{path: CategoryRef[], attributes: CategoryAttribute[]}`.
   - `path` runs from the root to the category's parent; it is empty for a root. `CategoryRef` = `{id, name}`.
-  - `attributes` follow file order and are `[]` for a non-leaf (BR-014-10, D-5) or for a leaf with none (AC-014-4.4).
-- **`CategoryAttribute`** = `{id, name: LocalizedText, required: boolean, kind: "list"|"text", selection: "single"|"multiple"|null, maxValues: integer|null, values: AttributeValue[]}`.
-  - For `kind: list`: `selection` is set, `maxValues` is 1 for single and ≥ 2 for multiple, and `values` follow file order.
-  - For `kind: text`: `selection` and `maxValues` are `null` and `values` is `[]` (BR-014-8, BR-014-9).
+  - `attributes` are the leaf's **effective** attributes (FR-CAT-023, D-12): its own links in file order, or, when it has none, the links of its nearest ancestor that has links, in that ancestor's file order.
+  - `attributes` are `[]` for a non-leaf (products go only in leaves) and for a leaf where neither it nor any ancestor has links (AC-014-4.4).
+  - No field says where inherited attributes came from; no requirement needs it.
+- **`CategoryAttribute`** = `{id, name: LocalizedText, required: boolean, kind: "list"|"text", selection: "single"|"multiple"|null, maxValues: integer|null, allowsCustomValue: boolean, values: AttributeValue[]}`.
+  - `required` comes from the link (per category). Every other field comes from the attribute definition (D-11).
+  - For `kind: list`: `selection` is set, `maxValues` is 1 for single and ≥ 2 for multiple, and `values` follow the order of `attributes.json`.
+  - For `kind: text`: `selection` and `maxValues` are `null`, `values` is `[]` and `allowsCustomValue` is `false` (BR-014-8, BR-014-9).
+  - `allowsCustomValue: true` means a seller may type their own text besides picking from `values` (FR-CAT-022, BR-014-8). The field is new and required, which is an additive change to the response.
 - **`AttributeValue`** = `{id, name: LocalizedText}`.
 - **`LocalizedText`** stays `{vi, en}`, both required. FR-LOC-008: if a stored `en` were ever blank, the mapper returns `vi` in `en` (the loader never stores a blank, BR-014-4).
 - **Removed:** `Category.slug` and the `Category` schema itself (replaced by `CategorySummary`). This breaks the skeleton contract (D-8). `publishPing` is unchanged.
@@ -85,36 +99,44 @@ Catalog.Api load-categories --source <dir>
 - In the cloud it runs as a one-off job on the Catalog image (FEAT-037 wires it; not needed now).
 - Exit codes: `0` applied or unchanged, `2` refused (problems listed), `1` unexpected failure (nothing committed).
 
-**Source directory** (`data/category-tree/`, committed; user decision 2026-11-25):
+**Source directory** (`data/category-tree/`, committed; user decision 2026-11-25). The layout is v2, with lists defined once (D-13, amendment 2026-11-26):
 
 | File | Shape (fields the loader reads; others ignored) |
 | :-- | :-- |
 | `categories.json` | `{categories: [{externalCategoryId: string, externalParentCategoryId: string\|null, name: {vi, en}, imageUrl: string\|null}]}`. `imageUrl` is read only for top-level categories (no parent): an absolute `https` URL of at most 500 characters, or `null`/absent for none (BR-014-13). Keys are Tiki's numeric ids written as strings (`"2549"`) or numbers, parsed to `int` and kept as the ids (D-9). Array order is sibling order (BR-014-3). A child may appear before its parent. |
-| `category-attributes/*.json` | `{categories: [{externalCategoryId, attributes: [{sourceAttributeId, name: {vi, en}, isRequired: bool, inputType: "Dropdown"\|"Checkbox", maxValueCount: int, values: [{sourceValueId, name: {vi, en}}]}]}]}`. Files are read in file-name order; a category with no entry has no attributes. |
+| `attributes.json` (new) | `{attributes: [{sourceAttributeId, name: {vi, en}, inputType: "Dropdown"\|"Checkbox", maxValueCount: int, allowsCustomValue: bool (optional, default false), values: [{sourceValueId, name: {vi, en}}]}]}`. Each attribute is defined once, with its values in display order (BR-014-3, BR-014-14). Absent file = no attributes. |
+| `category-attributes/*.json` | `{categories: [{externalCategoryId, attributes: [{sourceAttributeId, isRequired: bool}]}]}`. These are links only, in display order, and each must name an attribute in `attributes.json`. Files are read in file-name order. A category with no entry has no attributes of its own and may inherit (FR-CAT-023). Any other field on a link is ignored, so a link cannot redefine a list. |
 | `SOURCE.md` | Records the source (Tiki seller category taxonomy, adapted), the owner's acceptance of its use and of linking Tiki's top-level category images (NFR-LEG-002, BR-014-12). |
 
 Fields the loader ignores: `path`, `productSetId`, `imageUrl` below the top level (AC-014-5.4), `metadata`, `status`, `errorSummary`, `displayName`, `totalValueCount`, `valuesTruncated`, and the `source`/`crawl` headers.
 
-**Mapping:**
+**Mapping (per attribute in `attributes.json`):**
 - `Dropdown` → single, maximum 1.
 - `Checkbox` → multiple, maximum = `maxValueCount`, which must be ≥ 2.
-- No `values` → free text, and `inputType`/`maxValueCount` are ignored (BR-014-8).
+- No `values` → free text. `inputType`, `maxValueCount` and `allowsCustomValue` are then ignored, and the stored `AllowsCustomValue` is false (BR-014-8).
+- `allowsCustomValue: true` on a list → an open list (FR-CAT-022). The owner marks the 8 long lists first (BR-014-8).
+- An attribute defined but linked to no category is stored all the same; the removal rules then apply to it (BR-014-7).
 
 **Report** (stdout; problems also go to the log):
 ```
 Category tree load · source data/category-tree · load 0193…
 Result: APPLIED                 (or: UNCHANGED · REFUSED, 7 problems)
-               added  renamed  loosened  reordered  unchanged   total
-categories        12        3         –          1       6085    6101
-leaves            10        –         –          –       4887    4897
-attributes        40        2         5          –      54945   54992
-list values      310        8         –          –     709822  710140
+                 added  renamed  loosened  reordered  unchanged   total
+categories          12        3         –          1       6085    6101
+leaves              10        –         –          –       4887    4897
+attributes           4        2         1          –        379     386
+attribute links     40        –         5          2      54945   54992
+list values        310        8         –          6      13515   13839
 images (top level): 2 added, 1 changed, 0 removed, 24 unchanged
 Problems (refused loads only), one per line:
   [category.moved] category 54286 "Các loại thịt khác": parent 54276 → 54280
   [name.missing] value 4146177 of attribute 1799 in category 68492: en is missing
 ```
-- Rows are counted per kind. `attributes` counts category–attribute links: `renamed` counts attribute names (global, per key) and `loosened` counts links. `list values` counts values in category lists: `renamed` counts value names (global, per key). `leaves` added = leaves that are new or that were not leaves before.
+- Rows are counted per kind (amended with D-11):
+  - `attributes` counts attribute definitions. `loosened` = single → multiple, a higher maximum, or a list that starts accepting other values.
+  - `attribute links` counts category–attribute links. `loosened` = required → optional.
+  - `list values` counts the values of attribute lists, and `reordered` is a position change within an attribute's list.
+  - `leaves` added = leaves that are new or that were not leaves before.
 - `images` counts top-level images: a new link, a different link, a link left out; all three are allowed (BR-014-6).
 - `reordered` is a position change only. It is allowed and needs no business rule because it follows the file (BR-014-3).
 
@@ -130,19 +152,23 @@ Problems (refused loads only), one per line:
 | `category.image_invalid` | a top-level `imageUrl` that is not a string, not an absolute `https` URL, or longer than 500 characters | FR-CAT-021 (input integrity) |
 | `category.parent_unknown` | parent key not in the file | BR-014-5 |
 | `category.cycle` | a category is its own ancestor | FR-CAT-003 (tree) |
-| `attributes.category_unknown` / `attributes.category_duplicate` | an attribute entry for a key not in `categories.json`, or for one key twice | BR-014-5 |
-| `attribute.duplicate_in_category` | the same attribute key twice in one category | BR-014-5 |
-| `attribute.conflicting_name` | one attribute key with different names in different categories | BR-014-5 |
-| `attribute.invalid_selection` | `inputType` not `Dropdown`/`Checkbox`, or `Checkbox` with `maxValueCount` < 2 | BR-014-9 |
-| `value.duplicate_key` / `value.conflicting_name` / `value.other_attribute` | a value key twice in one list; one value key with different names; one value key under two attributes | BR-014-5 |
-| `value.duplicate_name` | two values in one list equal ignoring case after cleaning (vi compared with vi, en with en) | BR-014-11 |
+| `attributes.category_unknown` / `attributes.category_duplicate` | a link entry for a key not in `categories.json`, or for one key twice | BR-014-5 |
+| `attribute.duplicate_key` (new) | one `sourceAttributeId` twice in `attributes.json` | BR-014-5 |
+| `attributes.unknown` (new) | a link names a `sourceAttributeId` that is not in `attributes.json` (names the category) | BR-014-5 |
+| `attribute.duplicate_in_category` | the same attribute key twice in one category's links | BR-014-5 |
+| `attribute.invalid_selection` | `inputType` not `Dropdown`/`Checkbox`, or `Checkbox` with `maxValueCount` < 2, on an attribute with values | BR-014-9 |
+| `value.duplicate_key` / `value.other_attribute` | a value key twice in one attribute's list; one value key under two attributes | BR-014-5 |
+| `value.duplicate_name` | two values in one attribute's list equal ignoring case after cleaning (vi compared with vi, en with en) | BR-014-11 |
 | `category.removed` | a stored category key absent from the file | BR-014-7 |
 | `category.moved` | a stored category under a different parent | BR-014-7 |
 | `category.child_under_used_leaf` | a category with products gets a child (named: the parent) | BR-014-7, AC-014-2.5 |
-| `attribute.removed` | a stored category–attribute link absent | BR-014-7 |
-| `value.removed` | a stored value absent from that category's list | BR-014-7 |
-| `attribute.tightened` | optional → required; multiple → single; a lower maximum; list → text or text → list (the detail names which) | BR-014-7 |
-| `attribute.required_on_used_category` | a new required link on a category with products | BR-014-7, AC-014-2.7 |
+| `attribute.removed` | a stored category–attribute link absent (names the category), or a stored attribute definition absent from `attributes.json` | BR-014-7 |
+| `value.removed` | a stored value absent from its attribute's list | BR-014-7 |
+| `attribute.tightened` | on the attribute: multiple → single, a lower maximum, list → text or text → list, accepts other values → does not; on a link: optional → required (the detail names which) | BR-014-7, FR-CAT-019 |
+| `attribute.required_on_used_category` | a used leaf (one with products) gets a required attribute among its effective attributes that it did not have, whether through its own new link or through an ancestor it inherits from (names the leaf) | BR-014-7, AC-014-2.7 |
+| `attribute.inherited_dropped` (new) | a used leaf's effective attributes come from a different category in the file than in the store (it got its own links, or a nearer ancestor got links), and an attribute it had is missing (names the leaf and each attribute) | BR-014-7, AC-014-2.8 |
+
+Removed with D-13: `attribute.conflicting_name` and `value.conflicting_name`. They cannot occur, because a name is given once in `attributes.json`.
 
 ## 4. Schema changes
 One migration, `CategoryTree`, after `20261117142656_Initial`. Columns use PascalCase like `Initial`. Category, attribute and value ids are `integer`: the Tiki key from the file, never generated (`ValueGeneratedNever`, D-9). Names use `character varying`. Every table belongs to the Catalog entities "category tree (vi, en) … attributes" (architecture §5.2) and the plan's data "Category (vi/en), category attributes (required flag, list or free text)". No new conceptual entity is introduced.
@@ -154,9 +180,25 @@ One migration, `CategoryTree`, after `20261117142656_Initial`. Columns use Pasca
 | `attribute_values` | new | `Id` int PK (Tiki `sourceValueId`), `AttributeId` int not null FK → `attributes` (restrict), `NameVi`, `NameEn` varchar(300) not null. Index on `AttributeId`. |
 | `category_attributes` | new | `CategoryId` int FK → `categories` (restrict), `AttributeId` int FK → `attributes` (restrict), PK (`CategoryId`, `AttributeId`), `Position` int not null, `IsRequired` bool not null, `Kind` varchar(8) not null with `CK_category_attributes_Kind` (`list`/`text`), `AllowsMultiple` bool not null, `MaxValues` int not null with `CK_category_attributes_MaxValues` (`Kind = 'text' AND MaxValues = 1 AND NOT AllowsMultiple OR Kind = 'list' AND (AllowsMultiple AND MaxValues >= 2 OR NOT AllowsMultiple AND MaxValues = 1)`), `ValueIds` int[] not null default `'{}'` (ordered; empty iff `Kind = 'text'`). Index on `AttributeId`. |
 
-- **Why `ValueIds int[]`:** names and keys are global per attribute and value, but each category has its own ordered subset (the survey found differences in 21 attributes). An ordered array on the link keeps 55k rows instead of 710k link rows. FEAT-012 checks `value = ANY(ValueIds)` (D-2).
+- **Why `ValueIds int[]`** (superseded by §4.1 and D-11): names and keys are global per attribute and value, but each category had its own ordered subset in the first crawl (differences in 21 attributes). An ordered array on the link kept 55k rows instead of 710k link rows (D-2).
 - **Down:** drop the new tables and recreate the skeleton `categories` table with its `Slug` index and row. Down discards any loaded tree, which is acceptable because Catalog has no released data (dev-standards §7 checks up and down on an empty database).
 - **Collation:** default (as `Initial`). Duplicate-name checks run in the domain, not in the database.
+
+### 4.1 Amendment migration `SharedAttributeLists` (after `CategoryTree`; D-11)
+The amendment moves list settings from the link to the attribute. It changes no conceptual entity, only where the columns sit.
+
+| Table | Change | Columns / constraints |
+| :-- | :-- | :-- |
+| `attributes` | add columns | `Kind` varchar(8) not null with `CK_attributes_Kind` (`list`/`text`). `AllowsMultiple` bool not null. `MaxValues` int not null with `CK_attributes_MaxValues` (the same expression `category_attributes` had). `AllowsCustomValue` bool not null with `CK_attributes_AllowsCustomValue` (`NOT "AllowsCustomValue" OR "Kind" = 'list'`). |
+| `attribute_values` | add column, index | `Position` int not null (index within the attribute's list, from `attributes.json`). Unique index `IX_attribute_values_AttributeId_Position` replaces the plain `AttributeId` index. |
+| `category_attributes` | drop columns | Drops `Kind`, `AllowsMultiple`, `MaxValues`, `ValueIds` and `CK_category_attributes_Kind` / `CK_category_attributes_MaxValues`. It keeps `CategoryId`, `AttributeId`, `Position` and `IsRequired`. |
+
+- **Existing rows:**
+  - `Up` first empties the four tree tables (`TRUNCATE categories, attributes, attribute_values, category_attributes`). They hold at most the 17-category sample or test data: no released data and no products exist (FEAT-012 is not built).
+  - The operator reloads the v2 file afterwards. Converting per-link lists into one list per attribute could not be done faithfully in SQL when links disagree.
+  - `services/catalog/README.md` and the PR note this.
+- **Down:** empties the tables again and restores the `CategoryTree` link columns and checks (up/down on an empty DB, dev-standards §7).
+- FEAT-012 validates a value as `attribute_values.AttributeId = link.AttributeId` (and `Attributes.AllowsCustomValue` for typed text), no longer `= ANY(ValueIds)`.
 
 ## 5. Component design
 
@@ -209,10 +251,10 @@ Reads: `GET /v1/categories[?parentId]` → `ListCategoriesHandler` → `ICategor
   - Top-level images: added, changed or removed per the file, never a problem except `category.image_invalid` (BR-014-6, BR-014-13); `imageUrl` below the top level is dropped while building the source (AC-014-5.4).
   - It applies BR-014-6/7 per §3.5, BR-014-2 (`IsLeaf` = no children in the source) and BR-014-3 (`Position` = index among siblings, attributes and values in file order).
   - It is pure, so all of AC-014-1.3/1.4/1.5 and 2.x are unit-testable.
-  - Value-list rules per link:
+  - Value-list rules (moved from the link to the attribute by §5.7):
     - The new list must contain every stored value id (else `value.removed`). Kept values take their file order, and new values are added where the file puts them.
-    - A link that becomes `list` from `text`, or the reverse, is `attribute.tightened`. Text → list is refused too, because FR-CAT-019 lists "list ↔ free text" as tightening.
-- **Attributes on non-leaf categories** are stored like any link (and the removal rules apply to them), but `IsLeaf = false` keeps them out of reads and out of FEAT-012 (D-5).
+    - An attribute that becomes `list` from `text`, or the reverse, is `attribute.tightened`. Text → list is refused too, because FR-CAT-019 lists "list ↔ free text" as tightening.
+- **Attributes on non-leaf categories** are stored like any link, and the removal rules apply to them. Since the amendment, leaves without links of their own inherit them (D-12, which supersedes D-5).
 
 ### 5.3 Application (`Catalog.Application/Features/Categories`)
 - **`LoadCategoryTreeHandler.HandleAsync(string sourcePath, CancellationToken)`** returns `LoadReport {Outcome: Applied|Unchanged|Refused, LoadId, Counts, Problems}`. Steps:
@@ -269,7 +311,50 @@ Reads: `GET /v1/categories[?parentId]` → `ListCategoriesHandler` → `ICategor
   - It is excluded from the deployed profile (dev-standards §3: heavy jobs stay out).
 
 ### 5.6 Web (storefront, wiring only)
-`features/catalog/api.ts` keeps `fetchCategories()` (roots, no parameter) and the regenerated type `CategorySummary`. `CategoryBar.vue` is unchanged except for the type name and keys on `id`; it stays text-only, and FEAT-018 adds the images and placeholder to the home page (D-10). `App.spec.ts` mocks drop `slug`. There is no UI for the tree in this feature: FEAT-012 builds the picker and FEAT-018 builds browse.
+`features/catalog/api.ts` keeps `fetchCategories()` (roots, no parameter) and the regenerated type `CategorySummary`. `CategoryBar.vue` is unchanged except for the type name and keys on `id`; it stays text-only, and FEAT-018 adds the images and placeholder to the home page (D-10). `App.spec.ts` mocks drop `slug`. There is no UI for the tree in this feature: FEAT-012 builds the picker and FEAT-018 builds browse. The amendment's `allowsCustomValue` reaches the storefront only through the regenerated client; no storefront code reads it.
+
+### 5.7 Amendment: shared lists, open lists, inheritance (SRS 0.20; D-11..D-13)
+**Domain (`Catalog.Domain/Categories`)**
+- **`AttributeDefinition`** gains `Kind`, `AllowsMultiple`, `MaxValues` and `AllowsCustomValue`. `Loosen(allowsMultiple, maxValues, allowsCustomValue)` applies them, after the caller has checked that each is a loosening.
+- **`AttributeValue`** gains `Position` and `Reposition(int)`.
+- **`CategoryAttribute`** keeps `CategoryId`, `AttributeId`, `Position` and `IsRequired`, with `Reposition` and `MakeOptional()`. It loses `Kind`, `AllowsMultiple`, `MaxValues`, `ValueIds`, `Loosen` and `SetValueIds`.
+- **Raw and source records:**
+  - `RawAttributeDefinition(Key, Name, InputType, MaxValueCount, AllowsCustomValue, Values)` and `RawLink(Key, IsRequired)`.
+  - `RawCategoryAttributes(CategoryKey, Links)`. `RawCategoryTree` gains `Attributes`.
+  - `SourceAttribute(Id, Name, Kind, AllowsMultiple, MaxValues, AllowsCustomValue, ValueIds)`, `SourceValue(Id, AttributeId, Position, Name)` and `SourceLink(CategoryId, AttributeId, Position, IsRequired)`.
+- **`CategoryTreeSource.Build`:**
+  - It builds attributes from `attributes.json` first, which is where selection, values, duplicate names and `value.other_attribute` are checked.
+  - It then builds links per category. Those checks are `attributes.unknown`, `attribute.duplicate_in_category` and the category key checks.
+  - `allowsCustomValue` is kept only for a list (§3.4).
+- **`EffectiveAttributes.For(int leafId, parentOf, linksByCategory)`** (new, pure) returns `(int? FromCategoryId, IReadOnlyList<link>)`. These are the leaf's own links when it has any; otherwise the nearest ancestor's links (walking `ParentId`, depth ≤ 8); otherwise none. It is used for both the stored tree and the source tree.
+- **`CategoryTreeDiff.FindProblems`** (amended):
+  - **Attribute level:** `attribute.removed` for a missing definition. `attribute.tightened` for kind, multiple → single, a lower maximum, or `AllowsCustomValue` true → false. `value.removed` against the attribute's list.
+  - **Link level:** `attribute.removed` for a missing link, and `attribute.tightened` for optional → required.
+  - **Each leaf in `categoriesWithProducts`:** it computes the effective attributes of the stored tree (`cur`) and of the source (`src`).
+    - `src` contains a required attribute that is not in `cur` → `attribute.required_on_used_category`, naming the leaf. This replaces the old own-link-only rule and covers inheritance (AC-014-2.7).
+    - `cur.FromCategoryId != src.FromCategoryId` and an attribute of `cur` is missing from `src` → `attribute.inherited_dropped`, naming the leaf and each attribute (AC-014-2.8). With the same provider, a missing attribute is already reported as `attribute.removed`, so it is not reported twice.
+    - A superset passes (AC-014-2.9).
+- **`CategoryTreeDiff.Build`** (amended): `ChangeSet` replaces `LinkUpdates` with `AttributeUpdates(Id, AllowsMultiple, MaxValues, AllowsCustomValue)`, `LinkUpdates(CategoryId, AttributeId, Position, IsRequired)` and `ValueRepositions(Id, Position)`. `LoadCounts` gains the `attribute links` row (§3.4).
+
+**Application**
+- **`ICategoryReadStore.GetDetailAsync`** returns effective attributes: the store loads the leaf's path (already read for `path`), then the links of the leaf and its ancestors in one query, and picks with `EffectiveAttributes.For`.
+- **`AttributeData`** carries the definition (with the list settings) and its values ordered by `Position`. `GetCategoryHandler` maps `allowsCustomValue`.
+- **New port method `ICategoryReadStore.GetEffectiveAttributesAsync(int leafId)`**: `GetDetailAsync` uses it, and FEAT-012's product create reuses it so that the form and the validation agree (§8).
+- `LoadCategoryTreeHandler` is unchanged.
+
+**Infrastructure**
+- **`JsonCategoryTreeSourceReader`** reads `attributes.json` (`{attributes: [...]}`; `file.malformed` when `allowsCustomValue` is not a boolean) and link-only attribute files. Old-format fields on a link (`name`, `values`, `inputType`) are ignored (D-13).
+- **`EfCategoryTreeStore.ApplyAsync`** applies `AttributeUpdates`, the reduced `LinkUpdates` and `ValueRepositions`.
+- **`CatalogDbContext`** maps the new columns and checks (§4.1). Migration `SharedAttributeLists`.
+
+**Data**
+- `data/category-tree/` (the 17-category sample), its `README.md` (format of §3.4) and every fixture under `Fixtures/category-tree/` are converted to v2.
+- New fixtures:
+  - `v2-open-list`: brand marked `allowsCustomValue`.
+  - `v2-close-list`: brand unmarked again.
+  - `inherit`: a parent with links and two empty leaves.
+  - `inherit-own-subset` and `inherit-own-superset`: one of those leaves gets links of its own.
+- The crawler's export (`references/hivespace.crawler`, plan B3 `--format v2`) is the owner's and is not a task here.
 
 ## 6. Acceptance criteria mapping
 
@@ -282,19 +367,24 @@ Reads: `GET /v1/categories[?parentId]` → `ListCategoriesHandler` → `ICategor
 | AC-014-1.5 | Integration: loading `valid-v1` twice → second report UNCHANGED with every count in "unchanged", no change to any row, and still exactly one `CategoryTreeChanged` outbox row. |
 | AC-014-2.1 | Integration: `valid-v1` then `v2-grow` (new category, new link, new value) → APPLIED; the new rows exist; a second outbox row. |
 | AC-014-2.2 | Unit + integration: renaming a category, an attribute and a value under the same key changes only `NameVi`/`NameEn`; `Id`, `ParentId`, `Position`, links and `ValueIds` are unchanged. |
-| AC-014-2.3 | Unit: required → optional, single → multiple (max 5), max 5 → 8 each counted as loosened and applied; integration shows the stored flags. |
-| AC-014-2.4 | Unit: each of omitted category, moved category, omitted link, omitted value, optional → required, multiple → single, max 5 → 3, list → text, text → list → its own §3.5 problem; integration: the whole load is refused and nothing changes. |
+| AC-014-2.3 | Unit: required → optional (link), single → multiple (max 5), max 5 → 8, and `allowsCustomValue` false → true (attribute) are each counted as loosened and applied. Integration: `valid-v1` then `v2-open-list` → APPLIED, and the stored `AllowsCustomValue` is true. |
+| AC-014-2.4 | Unit: each of omitted category, moved category, omitted link, omitted attribute definition, omitted value, optional → required, multiple → single, max 5 → 3, list → text, text → list, and `allowsCustomValue` true → false gives its own §3.5 problem. Integration: `v2-open-list` then `v2-close-list` → REFUSED with `attribute.tightened` ("accepts other values → does not"), and nothing changes. |
 | AC-014-2.5 | Unit with `categoriesWithProducts = {leaf}`: a child under that leaf → `category.child_under_used_leaf` naming the leaf. End-to-end once FEAT-012 implements `ICategoryUsage` (§8). |
-| AC-014-2.6 | Unit + integration: a child under a leaf without products → APPLIED; the old leaf has `IsLeaf = false`, `GET /v1/categories/{old}` shows `isLeaf: false` and `attributes: []`; the child is a leaf. |
-| AC-014-2.7 | Unit with `categoriesWithProducts = {leaf}`: a new required link → `attribute.required_on_used_category`; the same link as optional → applied. End-to-end once FEAT-012 lands (§8). |
+| AC-014-2.6 | Unit + integration: a child under a leaf without products → APPLIED; the old leaf has `IsLeaf = false`, `GET /v1/categories/{old}` shows `isLeaf: false` and `attributes: []`; the child is a leaf and, having no links of its own, shows the old leaf's attributes (D-12). |
+| AC-014-2.7 | Unit with `categoriesWithProducts = {leaf}`: a new required link on the leaf → `attribute.required_on_used_category`, and the same link as optional → applied. With the leaf inheriting from parent P, a new required link on P → `attribute.required_on_used_category` naming the leaf, and as optional → applied. End-to-end once FEAT-012 lands (§8). |
+| AC-014-2.8 | Unit with `categoriesWithProducts = {leaf}`, where the leaf inherits P's attributes {A, B}: the file gives the leaf its own links {A} → `attribute.inherited_dropped`, naming the leaf and B. The file gives a nearer ancestor links {A} → the same problem. End-to-end once FEAT-012 lands (§8). |
+| AC-014-2.9 | Unit, same setup: the leaf gets its own links {A, B, C} (C optional) → applied, and its effective attributes become its own. With C required → `attribute.required_on_used_category`. Integration (no products): `inherit` then `inherit-own-superset` → APPLIED. |
 | AC-014-3.1 | Contract: `GET /v1/categories` items each carry `name.vi` and `name.en` equal to the seeded names (the client shows the one for its language, as `CategoryBar` does). |
 | AC-014-3.2 | Contract: children of a seeded parent come back ordered by `position`, which is the seeded file order, with the same order whatever `Accept-Language` is sent. |
 | AC-014-3.3 | Contract: each item has `isLeaf`; a leaf's `GET /v1/categories?parentId={leaf}` returns `[]`. FEAT-012 rejects a non-leaf product category (its design). |
 | AC-014-3.4 | Unit: the mapper given a stored blank `en` returns `en = vi` in both `CategorySummary` and `CategoryDetail`. |
-| AC-014-4.1 | Contract: `GET /v1/categories/{leaf}` → each attribute has `name {vi,en}`, `required`, `kind`. |
+| AC-014-4.1 | Contract: `GET /v1/categories/{leaf}` → each attribute has `name {vi,en}`, `required`, `kind` and `allowsCustomValue`. |
 | AC-014-4.2 | Contract: a list attribute has `selection` (`single`/`multiple`), `maxValues` (1, or the maximum when multiple), and `values` with `name {vi,en}` in seeded order. |
-| AC-014-4.3 | Unit: a source attribute with `values: []` → link `Kind = text`. Contract: it is returned with `kind: "text"`, `selection: null`, `maxValues: null`, `values: []`. |
-| AC-014-4.4 | Contract: a leaf with no links → `attributes: []`. |
+| AC-014-4.3 | Unit: a source attribute with `values: []` → `Kind = text`, `AllowsCustomValue = false` even when the file marks it. Contract: it is returned with `kind: "text"`, `selection: null`, `maxValues: null`, `allowsCustomValue: false`, `values: []`. |
+| AC-014-4.4 | Contract: a leaf with no links and no ancestor with links → `attributes: []`. |
+| AC-014-4.6 | Contract: a seeded brand attribute with `AllowsCustomValue = true` → `allowsCustomValue: true`, and its `values` are in seeded order. |
+| AC-014-4.7 | Unit: `EffectiveAttributes.For` on a leaf without links under P (links) under R (links) returns P's links and `FromCategoryId = P`. Contract: `GET /v1/categories/{leaf}` under a seeded parent with links returns the parent's attributes with the parent's `required`, `selection`, `maxValues` and `allowsCustomValue`. |
+| AC-014-4.8 | Unit: a leaf with its own links under P (links) returns only its own. Contract: the same with seeded rows. |
 | AC-014-4.5 | Unit: a value `{vi: "Samsung", en: "Samsung"}` is accepted (no problem). Contract: returned with identical `vi` and `en`. |
 | AC-014-5.1 | Integration: a top-level category with `imageUrl` in `valid-v1` has it stored. Contract: `GET /v1/categories` returns that `imageUrl` on the category. The image on the home page is checked by FEAT-018 (§8). |
 | AC-014-5.2 | Contract: a top-level category with no image returns `imageUrl: null`, which the contract defines as "show the placeholder" (D-10). The placeholder on screen is checked by FEAT-018 (§8). |
@@ -309,6 +399,8 @@ Technical criteria:
 - **TAC-014-5 (load time, NFR-REL-007).** Given the full Tiki-size source (6,101 categories, 54,992 links), a first load on the local stack completes in under 2 minutes. This is measured once and recorded in the acceptance report.
 - **TAC-014-6 (read latency, NFR-PERF-001).** With the full tree loaded, 95% of `GET /v1/categories?parentId=…` and `GET /v1/categories/{leaf}` (the leaf with the most attributes) complete within 300 ms at 50 concurrent users on the local stack. Acceptance verification measures this.
 - **TAC-014-7 (contract hygiene, dev-standards §6, ADR-0025).** Spectral shows 0 errors on `catalog.yaml`; `listCategories` and `getCategory` each have `@operation` scenarios covering 200 and 404; the regenerated client compiles in storefront lint, typecheck and tests.
+- **TAC-014-9 (amendment migration, dev-standards §7).** `SharedAttributeLists` applies up, down and up on Testcontainers Postgres after `CategoryTree`. `has-pending-model-changes` reports none. `CK_attributes_AllowsCustomValue` rejects `AllowsCustomValue` on a `text` attribute, and the unique `(AttributeId, Position)` index rejects two values at one position.
+- **TAC-014-10 (file format, D-13).** Reader tests: a missing `attributes.json` with links → `attributes.unknown` per link; a non-boolean `allowsCustomValue` → `file.malformed` with file and item; a duplicate `sourceAttributeId` → `attribute.duplicate_key`; old-format fields on a link are ignored. The converted `data/category-tree/` sample loads APPLIED, then UNCHANGED.
 - **TAC-014-8 (boundaries).** `Catalog.ArchitectureTests` stay green: `CategoryTreeDiff` and `NameCleaner` live in Domain with no framework reference, and System.Text.Json and EF are used only in Infrastructure.
 
 ## 7. Decisions
@@ -318,7 +410,7 @@ Technical criteria:
 - Rejected: MongoDB (new outbox, fixtures and migration story); one jsonb document per leaf (weak per-value checks).
 - Consequence: ADR-0018 gets an amendment recording Catalog = PostgreSQL (§8).
 
-**D-2 Global attribute and value definitions, per-category links with an ordered `int[]` of allowed values.**
+**D-2 Global attribute and value definitions, per-category links with an ordered `int[]` of allowed values.** *(Superseded by D-11 on 2026-11-26.)*
 - Driver: survey data. Keys and names are global, but required and value lists differ per category for 18 and 21 attributes. A rename under one key is one change (AC-014-2.2).
 - Rejected: per-category copies of attributes (a rename touches thousands of rows, and names drift); a link row per category value (710k rows).
 - Consequence: FEAT-012 validates a product's value with `= ANY(ValueIds)`.
@@ -333,7 +425,7 @@ Technical criteria:
 - Rejected: a whole-tree endpoint (large payload on every picker open); server-side language selection (a second convention, and it breaks `CategoryBar`).
 - Consequence: the lists are not paged (bounded per level). Picker search is FEAT-012's to add.
 
-**D-5 Attributes on a non-leaf are stored and kept, but never exposed or applied.**
+**D-5 Attributes on a non-leaf are stored and kept, but never exposed or applied.** *(Superseded by D-12 on 2026-11-26: they are now inherited by leaves without attributes of their own.)*
 - Driver: feature-spec §7 asks. The source has 8 such categories, and their children have no attributes of their own. BR-014-10 says only a leaf's attributes count, and BR-014-7 refuses removing an attribute, so a leaf that gains children (AC-014-2.6) keeps its links in the file.
 - Rejected: refusing attributes on non-leaves (it would make AC-014-2.6 impossible without breaking the removal rule); inheriting them into children (contradicts BR-014-10).
 - Consequence: the report shows them as ordinary links, and the owner may simply leave them.
@@ -363,6 +455,32 @@ Technical criteria:
 - Rejected: copying the images into HiveSpace storage (the Media service is FEAT-035, and the owner chose links); Catalog returning a placeholder URL (couples the API to a front-end asset path).
 - Consequence: the API returns `imageUrl` or `null`; FEAT-018 renders the image or the placeholder and falls back to the placeholder when an image fails to load. The visible part of AC-014-5.1/5.2 is checked there (§8).
 
+**D-11 List settings and values live on the attribute; a link holds only position and required.**
+- Driver: user decision 2026-11-26.
+  - The re-crawl shows lists identical across categories, and only `isRequired` differs.
+  - The owner's file defines each list once (BR-014-14).
+  - An open list has up to 1,000 values; copying them onto every link would store tens of thousands of copies.
+- Rejected: keeping per-link `ValueIds` and settings, with the reader expanding the shared file (smallest code change, but a second copy of every list to keep consistent, and tightening checked per link for a global setting).
+- Consequence:
+  - Migration `SharedAttributeLists` (§4.1) empties and reshapes the tree tables, and the sample is reloaded.
+  - Tightening and value removal become attribute-level checks.
+  - FEAT-012 validates against `attribute_values` by `AttributeId`.
+  - It is no longer possible for a category to offer only part of an attribute's list.
+
+**D-12 Inheritance is worked out when read and when checked, never copied into storage.**
+- Driver: FR-CAT-023, BR-014-10 (user decision 2026-11-26: "let it take from the parent"; nearest ancestor, only when the leaf has none).
+- Rejected:
+  - Copying inherited links onto leaves during the load. A copied link would look like the leaf's own, and a later file change to the parent would then not reach it.
+  - Merging all ancestors (the user chose nearest-only).
+- Consequence:
+  - One pure function, `EffectiveAttributes`, serves `getCategory`, the load checks (`attribute.required_on_used_category`, `attribute.inherited_dropped`) and FEAT-012's validation.
+  - A detail read adds one query for the ancestors' links. The ancestors themselves are already read for `path`, so this stays inside TAC-014-6.
+
+**D-13 The loader reads the v2 layout only.**
+- Driver: user decision 2026-11-26. `attributes.json` defines lists once and carries `allowsCustomValue`; the crawler writes v2.
+- Rejected: reading both layouts (two readers to test, and the old layout cannot express one list per attribute).
+- Consequence: every fixture and the committed sample are converted (task T12). `attribute.conflicting_name` and `value.conflicting_name` are dropped, and `attribute.duplicate_key` and `attributes.unknown` are added.
+
 ## 8. Escalations & open items
 - **Architecture amendment (ADR-0018):** record "Catalog: PostgreSQL, relational tables, decided 2026-11-25 in FEAT-014" and close the open item for Catalog. The user made the decision; the ADR edit belongs to the architecture owner (software-architecture amendment).
 - **Architecture amendment (ADR-0009):** add the exception of D-9 (platform reference data from the category file keeps its integer source keys). Owner: architecture.
@@ -371,8 +489,11 @@ Technical criteria:
   - Implement `ICategoryUsage` over its products table and replace `EmptyCategoryUsage`.
   - Take `pg_advisory_xact_lock_shared(CategoryTreeLock.Key)` in product create before reading the category.
   - Accept only `IsLeaf` categories.
-  - Validate values against `ValueIds` and `MaxValues`.
-  - Until then, AC-014-2.5 and AC-014-2.7 are proved at unit level with a fake usage set; their end-to-end check moves with FEAT-012.
+  - Validate against the leaf's effective attributes, from `ICategoryReadStore.GetEffectiveAttributesAsync` (FR-CAT-023, D-12):
+    - list values by `attribute_values.AttributeId`;
+    - `AllowsMultiple` and `MaxValues` from `attributes`;
+    - typed text only where `AllowsCustomValue` (FR-CAT-022, D-11), following FEAT-012's BR-012-7: cleaned, 1–100 characters, and matched to a list value ignoring case.
+  - Until then, AC-014-2.5, 2.7 and 2.8 are proved at unit level with a fake usage set; their end-to-end check moves with FEAT-012.
 - **FEAT-018 obligations:**
   - Subscribe to `CategoryTreeChanged`.
   - Read the tree through a Catalog read path it designs (gRPC per ADR-0019).
@@ -380,7 +501,13 @@ Technical criteria:
 - **The owner's final file is pending** (feature-spec §5). Implementation uses test fixtures and a Tiki-size conversion for TAC-014-5. `data/category-tree/` holds `SOURCE.md` and the format README until the file arrives. A reminder for the owner: a leaf that gains children keeps its attributes in the file (D-5), and lists must not drop values once loaded.
 - **Repository layout:** `data/category-tree/` at the repo root is new. Suggest repo-structure.md add `data/` ("operator data files committed with the code").
 - **Requirements:** UC-020 has no exception flow for a refused load. Suggest the requirements owner add "2a. The file breaks a loading rule: nothing changes and each problem is listed (FR-CAT-019)". Not blocking.
-- **Value list size:** the Tiki source has lists of up to 1,000 values, which makes `getCategory` responses large (worst case about 1 MB). The owner's trimmed file should keep lists reasonable. If not, FEAT-012 may need a value search; TAC-014-6 will show it.
+- **Value list size:**
+  - Open lists keep up to 1,000 values (BR-014-14), and a leaf may have several such lists (brand, colour, size). The worst-case `getCategory` response is therefore a few hundred KB.
+  - TAC-014-6 must be re-measured with the v2 file (acceptance report, minor finding 3).
+  - If it fails, the fix is a technical choice for FEAT-012's picker (for example a per-attribute value search) and needs no business change.
+- **FEAT-018 (filters):** category filters should use the effective attributes (FR-CAT-023). Note this for its design.
+- **Architecture:** no new entity and no boundary change; D-11 only moves columns within the Catalog "attributes" entity. No escalation.
+- **Plan:** the implementation plan's FEAT-014/FEAT-012 rows do not list FR-CAT-022/023 yet (implementation-planning to add).
 - **FEAT-018 obligations (images):** show each top-level category's `imageUrl` on the home page category bar, and the placeholder (a design-system asset, ui-design's to choose) for `null` or when the image fails to load. The images are served by Tiki's servers, so a failed image must never break the page (NFR-REL-008). There is no Content-Security-Policy today; if one is added, `img-src` must allow `https://salt.tikicdn.com`. FEAT-018 is also where AC-014-5.1 and 5.2 are checked on screen.
 - **Plan:** the implementation plan's FEAT-014 and FEAT-018 rows do not list FR-CAT-021 yet (implementation-planning to add).
 - **E2E:** the architecture names no critical E2E flows that include UC-020 or UC-005 step 1, and FEAT-014 has no screen, so tasks.md has no E2E task.
