@@ -30,6 +30,11 @@ public static class DependencyInjection
         builder.Services.AddScoped<ICategoryReadStore, CategoryReadStore>();
         builder.Services.AddScoped<IEventOutbox, EfEventOutbox>();
         builder.Services.AddScoped<IInventoryClient, InventoryClient>();
+        builder.Services.AddScoped<ICategoryTreeSourceReader, JsonCategoryTreeSourceReader>();
+        builder.Services.AddScoped<ICategoryTreeStore, EfCategoryTreeStore>();
+        builder.Services.AddScoped<ICategoryUsage, EmptyCategoryUsage>();
+        builder.Services.AddScoped<LoadCategoryTreeHandler>();
+        builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddScoped<ListCategoriesHandler>();
         builder.Services.AddScoped<PublishPingHandler>();
         return builder;

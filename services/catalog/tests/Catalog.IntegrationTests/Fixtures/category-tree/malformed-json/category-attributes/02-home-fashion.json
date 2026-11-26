@@ -1,0 +1,430 @@
+{
+  "categories": [
+    {
+      "externalCategoryId": "2350",
+      "attributes": [
+        {
+          "sourceAttributeId": "1005",
+          "name": {
+            "vi": "Chất liệu",
+            "en": "Material"
+          },
+          "isRequired": false,
+          "inputType": "Dropdown",
+          "maxValueCount": 1,
+          "values": []
+        },
+        {
+          "sourceAttributeId": "1006",
+          "name": {
+            "vi": "Xuất xứ",
+            "en": "Origin"
+          },
+          "isRequired": false,
+          "inputType": "Dropdown",
+          "maxValueCount": 1,
+          "values": [
+            {
+              "sourceValueId": "5401",
+              "name": {
+                "vi": "Việt Nam",
+                "en": "Vietnam"
+              }
+            },
+            {
+              "sourceValueId": "5402",
+              "name": {
+                "vi": "Trung Quốc",
+                "en": "China"
+              }
+            },
+            {
+              "sourceValueId": "5403",
+              "name": {
+                "vi": "Nhật Bản",
+                "en": "Japan"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "externalCategoryId": "2351",
+      "attributes": [
+        {
+          "sourceAttributeId": "1006",
+          "name": {
+            "vi": "Xuất xứ",
+            "en": "Origin"
+          },
+          "isRequired": false,
+          "inputType": "Dropdown",
+          "maxValueCount": 1,
+          "values": [
+            {
+              "sourceValueId": "5401",
+              "name": {
+                "vi": "Việt Nam",
+                "en": "Vietnam"
+              }
+            },
+            {
+              "sourceValueId": "5402",
+              "name": {
+                "vi": "Trung Quốc",
+                "en": "China"
+              }
+            },
+            {
+              "sourceValueId": "5403",
+              "name": {
+                "vi": "Nhật Bản",
+                "en": "Japan"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "externalCategoryId": "915",
+      "attributes": [
+        {
+          "sourceAttributeId": "1004",
+          "name": {
+            "vi": "Kích cỡ",
+            "en": "Size"
+          },
+          "isRequired": true,
+          "inputType": "Dropdown",
+          "maxValueCount": 1,
+          "values": [
+            {
+              "sourceValueId": "5301",
+              "name": {
+                "vi": "S",
+                "en": "S"
+              }
+            },
+            {
+              "sourceValueId": "5302",
+              "name": {
+                "vi": "M",
+                "en": "M"
+              }
+            },
+            {
+              "sourceValueId": "5303",
+              "name": {
+                "vi": "L",
+                "en": "L"
+              }
+            },
+            {
+              "sourceValueId": "5304",
+              "name": {
+                "vi": "XL",
+                "en": "XL"
+              }
+            }
+          ]
+        },
+        {
+          "sourceAttributeId": "1003",
+          "name": {
+            "vi": "Màu sắc",
+            "en": "Color"
+          },
+          "isRequired": false,
+          "inputType": "Checkbox",
+          "maxValueCount": 3,
+          "values": [
+            {
+              "sourceValueId": "5201",
+              "name": {
+                "vi": "Đen",
+                "en": "Black"
+              }
+            },
+            {
+              "sourceValueId": "5202",
+              "name": {
+                "vi": "Trắng",
+                "en": "White"
+              }
+            },
+            {
+              "sourceValueId": "5203",
+              "name": {
+                "vi": "Xanh",
+                "en": "Blue"
+              }
+            },
+            {
+              "sourceValueId": "5204",
+              "name": {
+                "vi": "Đỏ",
+                "en": "Red"
+              }
+            }
+          ]
+        },
+        {
+          "sourceAttributeId": "1005",
+          "name": {
+            "vi": "Chất liệu",
+            "en": "Material"
+          },
+          "isRequired": false,
+          "inputType": "Dropdown",
+          "maxValueCount": 1,
+          "values": []
+        }
+      ]
+    },
+    {
+      "externalCategoryId": "917",
+      "attributes": [
+        {
+          "sourceAttributeId": "1004",
+          "name": {
+            "vi": "Kích cỡ",
+            "en": "Size"
+          },
+          "isRequired": true,
+          "inputType": "Dropdown",
+          "maxValueCount": 1,
+          "values": [
+            {
+              "sourceValueId": "5301",
+              "name": {
+                "vi": "S",
+                "en": "S"
+              }
+            },
+            {
+              "sourceValueId": "5302",
+              "name": {
+                "vi": "M",
+                "en": "M"
+              }
+            },
+            {
+              "sourceValueId": "5303",
+              "name": {
+                "vi": "L",
+                "en": "L"
+              }
+            },
+            {
+              "sourceValueId": "5304",
+              "name": {
+                "vi": "XL",
+                "en": "XL"
+              }
+            }
+          ]
+        },
+        {
+          "sourceAttributeId": "1003",
+          "name": {
+            "vi": "Màu sắc",
+            "en": "Color"
+          },
+          "isRequired": false,
+          "inputType": "Checkbox",
+          "maxValueCount": 3,
+          "values": [
+            {
+              "sourceValueId": "5201",
+              "name": {
+                "vi": "Đen",
+                "en": "Black"
+              }
+            },
+            {
+              "sourceValueId": "5202",
+              "name": {
+                "vi": "Trắng",
+                "en": "White"
+              }
+            },
+            {
+              "sourceValueId": "5203",
+              "name": {
+                "vi": "Xanh",
+                "en": "Blue"
+              }
+            },
+            {
+              "sourceValueId": "5204",
+              "name": {
+                "vi": "Đỏ",
+                "en": "Red"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "externalCategoryId": "919",
+      "attributes": [
+        {
+          "sourceAttributeId": "1007",
+          "name": {
+            "vi": "Kích cỡ giày",
+            "en": "Shoe size"
+          },
+          "isRequired": true,
+          "inputType": "Dropdown",
+          "maxValueCount": 1,
+          "values": [
+            {
+              "sourceValueId": "5500",
+              "name": {
+                "vi": "38",
+                "en": "38"
+              }
+            },
+            {
+              "sourceValueId": "5501",
+              "name": {
+                "vi": "39",
+                "en": "39"
+              }
+            },
+            {
+              "sourceValueId": "5502",
+              "name": {
+                "vi": "40",
+                "en": "40"
+              }
+            },
+            {
+              "sourceValueId": "5503",
+              "name": {
+                "vi": "41",
+                "en": "41"
+              }
+            },
+            {
+              "sourceValueId": "5504",
+              "name": {
+                "vi": "42",
+                "en": "42"
+              }
+            },
+            {
+              "sourceValueId": "5505",
+              "name": {
+                "vi": "43",
+                "en": "43"
+              }
+            }
+          ]
+        },
+        {
+          "sourceAttributeId": "1003",
+          "name": {
+            "vi": "Màu sắc",
+            "en": "Color"
+          },
+          "isRequired": false,
+          "inputType": "Checkbox",
+          "maxValueCount": 3,
+          "values": [
+            {
+              "sourceValueId": "5201",
+              "name": {
+                "vi": "Đen",
+                "en": "Black"
+              }
+            },
+            {
+              "sourceValueId": "5202",
+              "name": {
+                "vi": "Trắng",
+                "en": "White"
+              }
+            },
+            {
+              "sourceValueId": "5203",
+              "name": {
+                "vi": "Xanh",
+                "en": "Blue"
+              }
+            },
+            {
+              "sourceValueId": "5204",
+              "name": {
+                "vi": "Đỏ",
+                "en": "Red"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "externalCategoryId": "920",
+      "attributes": [
+        {
+          "sourceAttributeId": "1007",
+          "name": {
+            "vi": "Kích cỡ giày",
+            "en": "Shoe size"
+          },
+          "isRequired": true,
+          "inputType": "Dropdown",
+          "maxValueCount": 1,
+          "values": [
+            {
+              "sourceValueId": "5500",
+              "name": {
+                "vi": "38",
+                "en": "38"
+              }
+            },
+            {
+              "sourceValueId": "5501",
+              "name": {
+                "vi": "39",
+                "en": "39"
+              }
+            },
+            {
+              "sourceValueId": "5502",
+              "name": {
+                "vi": "40",
+                "en": "40"
+              }
+            },
+            {
+              "sourceValueId": "5503",
+              "name": {
+                "vi": "41",
+                "en": "41"
+              }
+            },
+            {
+              "sourceValueId": "5504",
+              "name": {
+                "vi": "42",
+                "en": "42"
+              }
+            },
+            {
+              "sourceValueId": "5505",
+              "name": {
+                "vi": "43",
+                "en": "43"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

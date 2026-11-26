@@ -1,0 +1,75 @@
+{
+  "categories": [
+    {
+      "externalCategoryId": "1789",
+      "externalParentCategoryId": null,
+      "name": {
+        "vi": "Điện Thoại - Máy Tính Bảng",
+        "en": "Phones & Tablets"
+      },
+      "imageUrl": "https://example.com/sample-images/categories/phones-tablets.jpg"
+    },
+    {
+      "externalCategoryId": "1795",
+      "externalParentCategoryId": "1789",
+      "name": {
+        "vi": "Điện thoại Smartphone",
+        "en": "Smartphones"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "1794",
+      "externalParentCategoryId": "1789",
+      "name": {
+        "vi": "Máy tính bảng",
+        "en": "Tablets"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "8062",
+      "externalParentCategoryId": "8061",
+      "name": {
+        "vi": "Ốp lưng điện thoại",
+        "en": "Phone cases"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "8061",
+      "externalParentCategoryId": "1789",
+      "name": {
+        "vi": "Phụ kiện điện thoại",
+        "en": "Phone accessories"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "8063",
+      "externalParentCategoryId": "8061",
+      "name": {
+        "vi": "Cáp sạc",
+        "en": "Charging cables"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "8322",
+      "externalParentCategoryId": null,
+      "name": {
+        "vi": "Nhà Cửa - Đời Sống",
+        "en": "Home & Living"
+      },
+      "imageUrl": "https://example.com/sample-images/categories/home-living.jpg"
+    },
+    {
+      "externalCategoryId": "2349",
+      "externalParentCategoryId": "8322",
+      "name": {
+        "vi": "Đồ dùng nhà bếp",
+        "en": "Kitchenware"
+      },
+      "imageUrl": null
+    },
+   
