@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://hivespace.dev/events/CategoryTreeChanged/v1.schema.json",
+  "title": "CategoryTreeChanged v1 (producer: catalog). A category load applied at least one change (FEAT-014). Correlation id is the load id. Carries no tree content: consumers read the current tree.",
+  "type": "object",
+  "required": ["changedAt"],
+  "properties": {
+    "changedAt": { "type": "string", "format": "date-time" }
+  },
+  "additionalProperties": false
+}

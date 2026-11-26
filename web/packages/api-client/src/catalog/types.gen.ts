@@ -5,16 +5,65 @@ export type ClientOptions = {
 };
 
 export type CategoryList = {
-    items: Array<Category>;
+    items: Array<CategorySummary>;
     /**
      * Skeleton only. Value returned by Inventory over gRPC; removed when FEAT-015 lands.
      */
     availabilityProbe?: string;
 };
 
-export type Category = {
-    id: Id;
-    slug: string;
+export type CategorySummary = {
+    /**
+     * The source (Tiki) category key.
+     */
+    id: number;
+    parentId: number | null;
+    name: LocalizedText;
+    isLeaf: boolean;
+    /**
+     * Order among siblings (file order).
+     */
+    position: number;
+    /**
+     * Set only on top-level categories that have an image; `null` means show the placeholder (top level) or no image (below it).
+     */
+    imageUrl: string | null;
+};
+
+export type CategoryRef = {
+    id: number;
+    name: LocalizedText;
+};
+
+export type CategoryDetail = CategorySummary & {
+    /**
+     * From the root to the category's parent; empty for a root.
+     */
+    path: Array<CategoryRef>;
+    attributes: Array<CategoryAttribute>;
+};
+
+export type CategoryAttribute = {
+    id: number;
+    name: LocalizedText;
+    required: boolean;
+    kind: 'list' | 'text';
+    /**
+     * Set for kind list, null for text.
+     */
+    selection: 'single' | 'multiple' | null;
+    /**
+     * 1 for single, at least 2 for multiple; null for text.
+     */
+    maxValues: number | null;
+    /**
+     * In file order; `[]` for text.
+     */
+    values: Array<AttributeValue>;
+};
+
+export type AttributeValue = {
+    id: number;
     name: LocalizedText;
 };
 
@@ -45,14 +94,34 @@ export type Error = {
  */
 export type Id = string;
 
+/**
+ * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+ */
+export type AcceptLanguage = 'vi' | 'en';
+
 export type ListCategoriesData = {
     body?: never;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
     path?: never;
-    query?: never;
+    query?: {
+        /**
+         * Category whose children to list. Category ids are the source integer keys.
+         */
+        parentId?: number;
+    };
     url: '/v1/categories';
 };
 
 export type ListCategoriesErrors = {
+    /**
+     * `common.not_found`: `parentId` is not a category, or not an integer.
+     */
+    404: Error;
     /**
      * Error
      */
@@ -63,12 +132,49 @@ export type ListCategoriesError = ListCategoriesErrors[keyof ListCategoriesError
 
 export type ListCategoriesResponses = {
     /**
-     * Categories with vi and en names (FR-LOC-007).
+     * Categories with vi and en names (FR-LOC-007) and, for top-level ones, an image link (FR-CAT-021).
      */
     200: CategoryList;
 };
 
 export type ListCategoriesResponse = ListCategoriesResponses[keyof ListCategoriesResponses];
+
+export type GetCategoryData = {
+    body?: never;
+    headers?: {
+        /**
+         * Response and stored-user language, `vi` (default) or `en` (D-2, FR-LOC-004).
+         */
+        'Accept-Language'?: 'vi' | 'en';
+    };
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/v1/categories/{id}';
+};
+
+export type GetCategoryErrors = {
+    /**
+     * `common.not_found`: unknown or malformed id.
+     */
+    404: Error;
+    /**
+     * Error
+     */
+    default: Error;
+};
+
+export type GetCategoryError = GetCategoryErrors[keyof GetCategoryErrors];
+
+export type GetCategoryResponses = {
+    /**
+     * The category detail. `attributes` is `[]` for a non-leaf or a leaf with none.
+     */
+    200: CategoryDetail;
+};
+
+export type GetCategoryResponse = GetCategoryResponses[keyof GetCategoryResponses];
 
 export type PublishPingData = {
     body?: never;

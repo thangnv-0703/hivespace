@@ -2,7 +2,7 @@ openapi: 3.1.0
 info:
   title: HiveSpace Catalog API
   version: 1.0.0
-  description: Walking-skeleton surface only. Feature slices extend this spec first (dev-standards §6).
+  description: Feature slices extend this spec first (dev-standards §6).
 servers:
   - url: /
 tags:
@@ -11,16 +11,66 @@ paths:
   /v1/categories:
     get:
       operationId: listCategories
-      summary: List top-level categories (skeleton round trip through gateway, Catalog and Postgres).
+      summary: List the root categories, or the children of one category (one level per request).
+      description: Without `parentId` the items are the root categories; with it, that category's children (`[]` for a leaf). Ordered by `position`.
       tags: [catalog]
       security: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+        - name: parentId
+          in: query
+          required: false
+          description: Category whose children to list. Category ids are the source integer keys.
+          schema:
+            type: integer
+            format: int32
       responses:
         '200':
-          description: Categories with vi and en names (FR-LOC-007).
+          description: Categories with vi and en names (FR-LOC-007) and, for top-level ones, an image link (FR-CAT-021).
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/CategoryList'
+        '404':
+          description: "`common.not_found`: `parentId` is not a category, or not an integer."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+        default:
+          description: Error
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
+  /v1/categories/{id}:
+    get:
+      operationId: getCategory
+      summary: Get one category with its path and, for a leaf, its attributes and their values.
+      description: Public read. Ids are the source integer keys. A non-leaf returns no attributes.
+      tags: [catalog]
+      security: []
+      parameters:
+        - $ref: './shared/components.yaml#/components/parameters/AcceptLanguage'
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int32
+      responses:
+        '200':
+          description: The category detail. `attributes` is `[]` for a non-leaf or a leaf with none.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CategoryDetail'
+        '404':
+          description: "`common.not_found`: unknown or malformed id."
+          content:
+            application/json:
+              schema:
+                $ref: './shared/components.yaml#/components/schemas/Error'
         default:
           description: Error
           content:
@@ -55,18 +105,89 @@ components:
         items:
           type: array
           items:
-            $ref: '#/components/schemas/Category'
+            $ref: '#/components/schemas/CategorySummary'
         availabilityProbe:
           type: string
           description: Skeleton only. Value returned by Inventory over gRPC; removed when FEAT-015 lands.
-    Category:
+    CategorySummary:
       type: object
-      required: [id, slug, name]
+      required: [id, parentId, name, isLeaf, position, imageUrl]
       properties:
         id:
-          $ref: './shared/components.yaml#/components/schemas/Id'
-        slug:
+          type: integer
+          format: int32
+          description: The source (Tiki) category key.
+        parentId:
+          type: [integer, 'null']
+          format: int32
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        isLeaf:
+          type: boolean
+        position:
+          type: integer
+          description: Order among siblings (file order).
+        imageUrl:
+          type: [string, 'null']
+          format: uri
+          description: Set only on top-level categories that have an image; `null` means show the placeholder (top level) or no image (below it).
+    CategoryRef:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+    CategoryDetail:
+      allOf:
+        - $ref: '#/components/schemas/CategorySummary'
+        - type: object
+          required: [path, attributes]
+          properties:
+            path:
+              type: array
+              description: From the root to the category's parent; empty for a root.
+              items:
+                $ref: '#/components/schemas/CategoryRef'
+            attributes:
+              type: array
+              items:
+                $ref: '#/components/schemas/CategoryAttribute'
+    CategoryAttribute:
+      type: object
+      required: [id, name, required, kind, selection, maxValues, values]
+      properties:
+        id:
+          type: integer
+          format: int32
+        name:
+          $ref: '#/components/schemas/LocalizedText'
+        required:
+          type: boolean
+        kind:
           type: string
+          enum: [list, text]
+        selection:
+          type: [string, 'null']
+          enum: [single, multiple, null]
+          description: "Set for kind list, null for text."
+        maxValues:
+          type: [integer, 'null']
+          description: "1 for single, at least 2 for multiple; null for text."
+        values:
+          type: array
+          description: In file order; `[]` for text.
+          items:
+            $ref: '#/components/schemas/AttributeValue'
+    AttributeValue:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: integer
+          format: int32
         name:
           $ref: '#/components/schemas/LocalizedText'
     LocalizedText:
