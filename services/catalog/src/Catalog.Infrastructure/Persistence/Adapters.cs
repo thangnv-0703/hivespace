@@ -8,7 +8,7 @@ namespace Catalog.Infrastructure.Persistence;
 internal sealed class CategoryReadStore(CatalogDbContext db) : ICategoryReadStore
 {
     public async Task<IReadOnlyList<Category>> ListAsync(CancellationToken cancellationToken) =>
-        await db.Categories.AsNoTracking().OrderBy(c => c.Slug).ToListAsync(cancellationToken).ConfigureAwait(false);
+        await db.Categories.AsNoTracking().Where(c => c.ParentId == null).OrderBy(c => c.Position).ToListAsync(cancellationToken).ConfigureAwait(false);
 }
 
 internal sealed class EfEventOutbox(CatalogDbContext db) : IEventOutbox

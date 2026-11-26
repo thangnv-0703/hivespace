@@ -7,7 +7,7 @@ namespace Catalog.UnitTests;
 
 public sealed class ListCategoriesHandlerTests
 {
-    private static readonly Category Fashion = new(Guid.CreateVersion7(), "thoi-trang", "Thời trang", "Fashion");
+    private static readonly Category Fashion = new(1, null, 0, new LocalizedName("Thời trang", "Fashion"), true, null);
 
     [Fact]
     public async Task Returns_categories_with_both_names_and_the_inventory_probe()

@@ -4,7 +4,7 @@ namespace Catalog.Application.Features.Categories;
 
 public sealed record LocalizedText(string Vi, string En);
 
-public sealed record CategoryDto(Guid Id, string Slug, LocalizedText Name);
+public sealed record CategoryDto(int Id, LocalizedText Name);
 
 public sealed record CategoryListDto(IReadOnlyList<CategoryDto> Items, string? AvailabilityProbe);
 
@@ -27,7 +27,7 @@ public sealed class ListCategoriesHandler(ICategoryReadStore store, IInventoryCl
         }
 
         var items = categories
-            .Select(c => new CategoryDto(c.Id, c.Slug, new LocalizedText(c.NameVi, c.NameEn)))
+            .Select(c => new CategoryDto(c.Id, new LocalizedText(c.Name.Vi, c.Name.En)))
             .ToList();
         return new CategoryListDto(items, probe);
     }
