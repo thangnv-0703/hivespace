@@ -1,13 +1,13 @@
 <script setup lang="ts">
 // Walking skeleton: the header's category bar is the one UI call that crosses gateway → Catalog → Postgres.
-// Loading, empty and error states per NFR-USE-002. FEAT-014/FEAT-018 make it the real category tree.
+// Loading, empty and error states per NFR-USE-002. It shows the root categories; FEAT-018 adds images and browsing.
 import { Button, Spinner } from '@hivespace/ui'
 import { onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
-import { fetchCategories, type Category } from './api'
+import { fetchCategories, type CategorySummary } from './api'
 
 const { locale } = useI18n()
-const categories = ref<Category[]>([])
+const categories = ref<CategorySummary[]>([])
 const state = ref<'loading' | 'ready' | 'error'>('loading')
 
 async function load() {
