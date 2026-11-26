@@ -15,7 +15,7 @@ acceptance-verification, detailed-design, feature-implementation, implementation
 
 They are copied so cloud sessions get the same skills as this project's local setup, for example `/feature-implementation FEAT-002`.
 
-**Local changes** (not upstream): `detailed-design`, `ui-design` and `software-architecture` carry project changes (HTML flow diagrams, the design-canvas review artifact, and related references). `detailed-design`, `sdlc-orchestrator`, `acceptance-verification` and `feature-implementation` also carry the `clarify-feature` split (detailed-design's signed-off `feature-spec.md` gate, §6 as an AC mapping, the **clarified** stage). Keep those when refreshing.
+**Local changes** (not upstream): `detailed-design`, `ui-design` and `software-architecture` carry project changes (HTML flow diagrams, the design-canvas review artifact, and related references). `detailed-design`, `sdlc-orchestrator`, `acceptance-verification` and `feature-implementation` also carry the `clarify-feature` split (detailed-design's signed-off `feature-spec.md` gate, §6 as an AC mapping, the **clarified** stage). `detailed-design`, `feature-implementation` and `acceptance-verification` also read `docs/repo-structure.md` and `docs/dev-standards.md`, and let a written rule win over older code that breaks it. Keep those when refreshing.
 
 **Refreshing from upstream:** diff the upstream `skills/` folder against these copies, take the upstream changes, keep the local changes listed above, and update the version and commit here.
 

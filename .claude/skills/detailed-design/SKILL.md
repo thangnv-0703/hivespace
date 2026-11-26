@@ -44,7 +44,11 @@ Three principles govern it:
    months after feature 1, in a fresh session, against code that has evolved past
    the skeleton. Design against *reality*: the contracts, schema migrations,
    and conventions earlier features established. A design that conflicts with
-   existing code is wrong even if it matches the documents.
+   existing code is wrong even if it matches the documents. **One exception:
+   written conventions.** Where a layout or coding rule (repo-structure,
+   dev-standards, ADRs) and older code disagree, the rule wins for new code.
+   Record the mismatch in §2, then add a task that fixes the files the feature
+   touches, or ask the user. Never design new code into the old pattern.
 3. **Depth here, and only here.** This is where the pipeline's
    depth-on-demand promise is kept: full concrete detail for *this* feature —
    contracts, columns, components, tasks — and nothing for features that haven't
@@ -71,6 +75,10 @@ Defaults below; user-provided paths win; source-gated citation throughout
   (entity ownership, consistency boundaries), the ADRs constraining this
   feature, cross-cutting concepts (auth, error handling, observability
   conventions the design must follow).
+- **Written conventions** — mandatory when the project has them:
+  `docs/repo-structure.md` (layout of the touched stack and service shape) and
+  `docs/dev-standards.md` (rules and what enforces each). Read both before
+  naming any new file, folder or component.
 - **The live codebase** — mandatory read, not optional: existing route/contract
   patterns, the current schema and migration history, module boundaries,
   shared utilities, conventions in `docs/scaffold-notes.md` and the

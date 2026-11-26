@@ -187,6 +187,10 @@ New services are generated from `templates/` with Copier, never copied by hand. 
 | Rule | Enforced by |
 | :-- | :-- |
 | A service's shape matches the table above and its `.copier-answers.yml` | *Review* |
+| .NET rich: each port (interface) under `Application/Abstractions/` has its own file, named after it. A record that only that port takes or returns may sit in the same file | `PortLayoutTests` in each service's tests |
+| .NET rich: no catch-all `Ports.cs` or `Adapters.cs` | `PortLayoutTests` |
+| .NET rich: Infrastructure adapters sit in folders by concern, one adapter per file (`partial` files of one adapter are allowed; repo-structure §4.1) | *Review* |
+| A written rule (this document, repo-structure, ADRs) wins over older code that breaks it. New code follows the rule; report the old code, do not extend its pattern | *Review* |
 | Templates still generate a service that builds and passes its tests, for each stack and shape | CI `templates` job |
 
 ### 8.1 .NET (Identity, Catalog, Order, Payment, Media, gateway, image processor, ServiceDefaults)

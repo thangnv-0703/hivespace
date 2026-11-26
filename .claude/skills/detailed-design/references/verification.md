@@ -45,6 +45,9 @@ verification approach; the future pipeline-wide checker composes with this.)
 
 - Contracts follow the surveyed conventions (envelope, naming, errors,
   pagination). Any deliberate divergence is a §7 decision with a driver.
+- Written rules: every new file, folder and component named in §5 and tasks.md
+  conforms to repo-structure and dev-standards, even where older code does not.
+  Each such mismatch is recorded in §2.
 - No collision: new endpoints/tables don't conflict with existing ones or
   with prior feature designs in `docs/features/`.
 - Breaking changes to prior features' contracts/schema are recorded as decisions

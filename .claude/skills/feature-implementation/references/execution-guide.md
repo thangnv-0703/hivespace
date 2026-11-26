@@ -15,7 +15,11 @@ committed, nothing important only in memory.
 2. **Survey the touchpoint**: the files this task changes, the conventions in
    force there (technical-design §2 recorded them; the code confirms them),
    the stubs to replace (skeleton stubs carry comments naming their
-   replacing feature).
+   replacing feature). Before adding files, read the touched stack's rules in
+   `docs/repo-structure.md` and `docs/dev-standards.md` (when present). A
+   written rule beats older code. If the design or a task tells you to break
+   one, that is a divergence (failure-and-escalation.md): raise it, don't
+   follow it silently.
 3. **Implement** the smallest change that satisfies the design. Follow the
    established envelope/error/naming conventions exactly — a second
    convention is a defect even if internally clean.
