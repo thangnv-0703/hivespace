@@ -1,7 +1,9 @@
 using Catalog.Application.Abstractions;
 using Catalog.Application.Features.Categories;
 using Catalog.Application.Features.Ping;
+using Catalog.Infrastructure.CategorySource;
 using Catalog.Infrastructure.GrpcClients;
+using Catalog.Infrastructure.Messaging;
 using Catalog.Infrastructure.Persistence;
 using HiveSpace.BuildingBlocks.Messaging;
 using HiveSpace.Contracts.Inventory.V1;

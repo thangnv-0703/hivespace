@@ -225,7 +225,7 @@ Reads: `GET /v1/categories[?parentId]` → `ListCategoriesHandler` → `ICategor
   7. If there are problems or no change: dispose (rollback) and return the report.
   8. Otherwise `ApplyAsync(changeSet)`, `IEventOutbox` stage of `CategoryTreeChanged`, and commit.
   - File problems are reported together with the diff problems when the file could be parsed at all. A file that is unreadable stops at step 1 and is still reported in full (each file's errors).
-- **New ports** in `Abstractions/Ports.cs`:
+- **New ports**, one per file under `Abstractions/` (`CategorySource/`, `Persistence/`, `Messaging/`, `Inventory/`; repo-structure §4.1):
   - `ICategoryTreeSourceReader`.
   - `ICategoryTreeStore` (load unit of work).
   - `ICategoryUsage`, which FEAT-014's adapter answers with an empty set because there is no products table yet. FEAT-012 replaces it with a query on its products (§8).

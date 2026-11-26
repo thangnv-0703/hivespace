@@ -2,6 +2,7 @@ using System.Text.Json;
 using Catalog.Application.Abstractions;
 using Catalog.Application.Features.Categories;
 using Catalog.Domain.Categories;
+using Catalog.Infrastructure.CategorySource;
 using Catalog.Infrastructure.Persistence;
 using HiveSpace.BuildingBlocks.Messaging;
 using Json.Schema;

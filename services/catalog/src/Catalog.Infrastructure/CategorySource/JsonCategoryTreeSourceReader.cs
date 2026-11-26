@@ -3,7 +3,7 @@ using System.Text.Json;
 using Catalog.Application.Abstractions;
 using Catalog.Domain.Categories;
 
-namespace Catalog.Infrastructure.Persistence;
+namespace Catalog.Infrastructure.CategorySource;
 
 /// <summary>
 /// Reads <c>categories.json</c> and <c>category-attributes/*.json</c> (design §3.4). Reports unreadable or malformed
