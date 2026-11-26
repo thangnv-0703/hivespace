@@ -29,9 +29,8 @@ public sealed class SkeletonTests(StackFixture stack)
         using var body = JsonDocument.Parse(
             await gateway.GetStringAsync(new Uri("/v1/categories", UriKind.Relative), TestContext.Current.CancellationToken));
 
-        var category = Assert.Single(body.RootElement.GetProperty("items").EnumerateArray(),
-            c => c.GetProperty("slug").GetString() == "thoi-trang");
-        Assert.Equal("Thời trang", category.GetProperty("name").GetProperty("vi").GetString());
+        // The tree is loaded by an operator command (FEAT-014), so a fresh stack returns an empty root list.
+        Assert.Equal(JsonValueKind.Array, body.RootElement.GetProperty("items").ValueKind);
         // The probe only comes back if Catalog reached Inventory over gRPC.
         Assert.Equal("inventory-ok", body.RootElement.GetProperty("availabilityProbe").GetString());
     }
