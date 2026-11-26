@@ -63,7 +63,7 @@
 | FR-ADDR-004 | an address field is missing or invalid, then reject the submission and identify … | Should | Active | Inferred | UC-011 | _TBD_ | FEAT-008 | _TBD_ |
 | FR-CAT-001 | a seller submits a new product with title, description, category, attribute valu… | Must | Active | P0-3, US-13 | UC-005 | _TBD_ | FEAT-012 | _TBD_ |
 | FR-CAT-002 | represent each product as one or more variants (SKUs), each with option values (… | Must | Active | P0-3, US-2 | UC-005 | ADR-0010 | FEAT-012 | _TBD_ |
-| FR-CAT-003 | provide a predefined category tree from which the seller selects exactly one lea… | Must | Active | P0-3 | UC-005 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014 | _TBD_ |
+| FR-CAT-003 | provide a predefined category tree from which the seller selects exactly one lea… | Must | Active | P0-3 | UC-005 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014 | features/FEAT-014-category-tree-with-attributes/acceptance-report.md |
 | FR-CAT-004 | a category defines attributes, require the seller to enter values for the attrib… | Must | Active | P0-3 | UC-005 | _TBD_ | FEAT-012 | _TBD_ |
 | FR-CAT-005 | product data is invalid (missing title, price not a positive amount valid for it… | Must | Active | P0-3 | UC-005 | ADR-0010 | FEAT-012 | _TBD_ |
 | FR-CAT-006 | a seller submits changes to their own product, save them. | Must | Active | P0-3, US-13 | UC-006 | _TBD_ | FEAT-013 | _TBD_ |
@@ -79,9 +79,9 @@
 | FR-CAT-016 | the operator runs the seed command, load at least 200 Vietnamese products, with … | Must | Active | P0-3 | UC-020 | _TBD_ | FEAT-039 | _TBD_ |
 | FR-CAT-017 | the operator runs the seed command more than once, not create duplicate records. | Should | Active | Inferred | UC-020 | _TBD_ | FEAT-039 | _TBD_ |
 | FR-CAT-018 | a product is created, changed, deactivated or reactivated, reflect the change in… | Should | Active | Inferred | UC-005, UC-006 | ADR-0002, ADR-0003 | FEAT-018 | _TBD_ |
-| FR-CAT-019 | the operator loads the category tree, add new categories and attributes and apply… | Must | Active | FEAT-014 spec | UC-020 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014 | _TBD_ |
-| FR-CAT-020 | a list attribute allows several values, accept up to that attribute's maximum num… | Must | Active | FEAT-014 spec | UC-005 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014, FEAT-012 | _TBD_ |
-| FR-CAT-021 | a top-level category has an image, show it with the category; otherwise show a pl… | Must | Active | FEAT-014 spec | UC-007 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014, FEAT-018 | _TBD_ |
+| FR-CAT-019 | the operator loads the category tree, add new categories and attributes and apply… | Must | Active | FEAT-014 spec | UC-020 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014 | features/FEAT-014-category-tree-with-attributes/acceptance-report.md |
+| FR-CAT-020 | a list attribute allows several values, accept up to that attribute's maximum num… | Must | Active | FEAT-014 spec | UC-005 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014, FEAT-012 | features/FEAT-014-category-tree-with-attributes/acceptance-report.md (partial) |
+| FR-CAT-021 | a top-level category has an image, show it with the category; otherwise show a pl… | Must | Active | FEAT-014 spec | UC-007 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014, FEAT-018 | features/FEAT-014-category-tree-with-attributes/acceptance-report.md (partial) |
 | FR-SRCH-001 | a user submits a keyword query, return active products whose title or descriptio… | Must | Active | P0-4 | UC-007 | ADR-0003 | FEAT-018 | _TBD_ |
 | FR-SRCH-002 | a user submits a query written without Vietnamese diacritics, also match product… | Should | Active | Inferred | UC-007 | ADR-0003 | FEAT-018 | _TBD_ |
 | FR-SRCH-003 | a user browses a category, list the active products in that category and its des… | Must | Active | P0-4, US-2 | UC-007 | ADR-0003 | FEAT-018 | _TBD_ |
@@ -230,7 +230,7 @@
 | FR-LOC-004 | the system rejects a request, it shall return a stable error code and a message … | Must | Active | CR-1 | UC-027 | ADR-0019, features/FEAT-001-register-and-sign-in/technical-design.md | Foundations | features/FEAT-001-register-and-sign-in/acceptance-report.md |
 | FR-LOC-005 | the system sends an email, it shall use the recipient's saved language, and for … | Must | Active | CR-1 | UC-001, UC-018 | ADR-0016, features/FEAT-001-register-and-sign-in/technical-design.md | FEAT-001, FEAT-032 | features/FEAT-001-register-and-sign-in/acceptance-report.md (partial) |
 | FR-LOC-006 | format dates, numbers and money according to the active language. | Must | Active | CR-1 | UC-027 | ADR-0010 | Foundations | _TBD_ |
-| FR-LOC-007 | provide Vietnamese and English names for platform-owned content (categories, att… | Must | Active | CR-1 | UC-005, UC-007 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014, Foundations | _TBD_ |
+| FR-LOC-007 | provide Vietnamese and English names for platform-owned content (categories, att… | Must | Active | CR-1 | UC-005, UC-007 | features/FEAT-014-category-tree-with-attributes/technical-design.md | FEAT-014, Foundations | features/FEAT-014-category-tree-with-attributes/acceptance-report.md (partial) |
 | FR-LOC-008 | a translation is missing for the active language, then show the Vietnamese text. | Must | Active | CR-1 | UC-027 | _TBD_ | Foundations | _TBD_ |
 | FR-CUR-001 | keep a currency table (code, symbol, minor-unit exponent) and shall enable only … | Must | Active | CR-1 | UC-005 | ADR-0010 | Foundations | _TBD_ |
 | FR-CUR-002 | the system shows a money amount, it shall format it according to the currency an… | Must | Active | CR-1 | UC-005, UC-009, UC-011 | ADR-0010 | Foundations | _TBD_ |
