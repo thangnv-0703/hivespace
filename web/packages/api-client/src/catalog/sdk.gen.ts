@@ -26,7 +26,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const listCategories = <ThrowOnError extends boolean = false>(options?: Options<ListCategoriesData, ThrowOnError>): RequestResult<ListCategoriesResponses, ListCategoriesErrors, ThrowOnError> => (options?.client ?? client).get<ListCategoriesResponses, ListCategoriesErrors, ThrowOnError>({ url: '/v1/categories', ...options });
 
 /**
- * Get one category with its path and, for a leaf, its attributes and their values.
+ * Get one category with its path and, for a leaf, its effective attributes and their values.
  *
  * Public read. Ids are the source integer keys. A non-leaf returns no attributes.
  */

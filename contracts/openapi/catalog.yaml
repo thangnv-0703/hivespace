@@ -46,7 +46,7 @@ paths:
   /v1/categories/{id}:
     get:
       operationId: getCategory
-      summary: Get one category with its path and, for a leaf, its attributes and their values.
+      summary: Get one category with its path and, for a leaf, its effective attributes and their values.
       description: Public read. Ids are the source integer keys. A non-leaf returns no attributes.
       tags: [catalog]
       security: []
@@ -60,7 +60,7 @@ paths:
             format: int32
       responses:
         '200':
-          description: The category detail. `attributes` is `[]` for a non-leaf or a leaf with none.
+          description: The category detail. `attributes` is `[]` for a non-leaf, or a leaf where neither it nor any ancestor defines attributes.
           content:
             application/json:
               schema:
@@ -153,11 +153,12 @@ components:
                 $ref: '#/components/schemas/CategoryRef'
             attributes:
               type: array
+              description: "A leaf's effective attributes (FR-CAT-023): its own in file order or, when it defines none, those of its nearest ancestor that defines attributes, in that ancestor's file order. `[]` for a non-leaf."
               items:
                 $ref: '#/components/schemas/CategoryAttribute'
     CategoryAttribute:
       type: object
-      required: [id, name, required, kind, selection, maxValues, values]
+      required: [id, name, required, kind, selection, maxValues, allowsCustomValue, values]
       properties:
         id:
           type: integer
@@ -176,6 +177,9 @@ components:
         maxValues:
           type: [integer, 'null']
           description: "1 for single, at least 2 for multiple; null for text."
+        allowsCustomValue:
+          type: boolean
+          description: "True for a list where a seller may type their own text besides picking from `values` (FR-CAT-022). False for text."
         values:
           type: array
           description: In file order; `[]` for text.

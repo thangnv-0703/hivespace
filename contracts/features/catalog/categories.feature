@@ -1,6 +1,6 @@
 @service:catalog
 Feature: Category tree
-  Shoppers and sellers read the category tree one level at a time and a leaf's attributes (FR-CAT-003, FR-CAT-020, FR-CAT-021, FR-LOC-007).
+  Shoppers and sellers read the category tree one level at a time and a leaf's attributes (FR-CAT-003, FR-CAT-020, FR-CAT-021, FR-CAT-022, FR-CAT-023, FR-LOC-007).
   The tree is loaded by an operator command; these scenarios start from a known loaded tree.
 
   Background:
@@ -73,6 +73,40 @@ Feature: Category tree
     When a client requests category 8061
     Then the response status is 200
     And the category has no attributes
+
+  @operation:getCategory @FR-CAT-022 @UC-005
+  Scenario: An open list accepts other values and keeps its values in order
+    Given the attribute "1001" accepts other values
+    When a client requests category 1795
+    Then the response status is 200
+    And the attribute "1001" accepts other values
+    And the attribute "1001" is a required single list with maximum 1 and values "5001,5002,5003,5004"
+    And the attribute "1003" does not accept other values
+
+  @operation:getCategory @FR-CAT-022
+  Scenario: A text attribute does not accept other values
+    When a client requests category 8062
+    Then the response status is 200
+    And the attribute "1005" does not accept other values
+
+  @operation:getCategory @FR-CAT-023 @UC-005
+  Scenario: A leaf with no attributes of its own shows its parent's attributes
+    Given category 8322 has the required attribute "1006"
+    And the attribute "1006" accepts other values
+    When a client requests category 1883
+    Then the response status is 200
+    And the category attributes are "1006"
+    And the attribute "1006" is a required single list with maximum 1 and values "5401,5402,5403"
+    And the attribute "1006" accepts other values
+    When a client requests category 8322
+    Then the category has no attributes
+
+  @operation:getCategory @FR-CAT-023
+  Scenario: A leaf with its own attributes shows only those
+    Given category 2349 has the required attribute "1004"
+    When a client requests category 2351
+    Then the response status is 200
+    And the category attributes are "1006"
 
   @operation:listCategories @operation:getCategory @FR-CAT-021 @UC-007
   Scenario: A root with an image returns it and a root without one returns null

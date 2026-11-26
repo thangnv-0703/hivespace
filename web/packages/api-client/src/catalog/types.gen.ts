@@ -40,6 +40,9 @@ export type CategoryDetail = CategorySummary & {
      * From the root to the category's parent; empty for a root.
      */
     path: Array<CategoryRef>;
+    /**
+     * A leaf's effective attributes (FR-CAT-023): its own in file order or, when it defines none, those of its nearest ancestor that defines attributes, in that ancestor's file order. `[]` for a non-leaf.
+     */
     attributes: Array<CategoryAttribute>;
 };
 
@@ -56,6 +59,10 @@ export type CategoryAttribute = {
      * 1 for single, at least 2 for multiple; null for text.
      */
     maxValues: number | null;
+    /**
+     * True for a list where a seller may type their own text besides picking from `values` (FR-CAT-022). False for text.
+     */
+    allowsCustomValue: boolean;
     /**
      * In file order; `[]` for text.
      */
@@ -169,7 +176,7 @@ export type GetCategoryError = GetCategoryErrors[keyof GetCategoryErrors];
 
 export type GetCategoryResponses = {
     /**
-     * The category detail. `attributes` is `[]` for a non-leaf or a leaf with none.
+     * The category detail. `attributes` is `[]` for a non-leaf, or a leaf where neither it nor any ancestor defines attributes.
      */
     200: CategoryDetail;
 };
