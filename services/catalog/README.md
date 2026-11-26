@@ -19,3 +19,14 @@ New migration (from the repository root):
 ```bash
 dotnet ef migrations add <Name> --project services/catalog/src/Catalog.Infrastructure --startup-project services/catalog/src/Catalog.Infrastructure --output-dir Persistence/Migrations
 ```
+
+## Loading the category tree (FEAT-014)
+
+The platform's category tree, attributes and list values are loaded by an operator command, not an endpoint:
+
+```bash
+# Locally: start `catalog-load-categories` from the Aspire dashboard (manual start; the report is in its console log), or:
+ConnectionStrings__catalogdb='Host=...' dotnet run --project services/catalog/src/Catalog.Api -- load-categories --source data/category-tree
+```
+
+The command checks the whole file against the stored tree, then either applies every change in one transaction and queues `CategoryTreeChanged`, or changes nothing and lists every problem. It prints a report and exits with `0` (applied or unchanged), `2` (refused) or `1` (unexpected failure, nothing committed). The file format is in [`data/category-tree/README.md`](../../data/category-tree/README.md); the rules are in `docs/features/FEAT-014-category-tree-with-attributes/technical-design.md`. The event leaves the outbox the next time the running Catalog service starts (the command does not run the relay).

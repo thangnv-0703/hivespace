@@ -1,8 +1,14 @@
+using Catalog.Api;
 using Catalog.Api.Endpoints;
 using Catalog.Infrastructure;
 using Catalog.Infrastructure.Persistence;
 using HiveSpace.BuildingBlocks.Errors;
 using Microsoft.EntityFrameworkCore;
+
+if (args.Length > 0 && args[0] == LoadCategoriesCommand.Name)
+{
+    return await LoadCategoriesCommand.RunAsync(args);
+}
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -25,6 +31,7 @@ if (app.Configuration.GetValue("Database:MigrateOnStartup", defaultValue: true))
 app.MapCategoryEndpoints();
 
 await app.RunAsync();
+return 0;
 
 /// <summary>Entry point marker for WebApplicationFactory in contract tests.</summary>
 public partial class Program;
