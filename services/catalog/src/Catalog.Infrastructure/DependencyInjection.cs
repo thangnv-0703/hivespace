@@ -36,6 +36,7 @@ public static class DependencyInjection
         builder.Services.AddScoped<LoadCategoryTreeHandler>();
         builder.Services.AddSingleton(TimeProvider.System);
         builder.Services.AddScoped<ListCategoriesHandler>();
+        builder.Services.AddScoped<GetCategoryHandler>();
         builder.Services.AddScoped<PublishPingHandler>();
         return builder;
     }

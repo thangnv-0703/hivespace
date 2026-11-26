@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\Catalog.Domain\Catalog.Domain.csproj" />
+    <ProjectReference Include="..\..\..\..\libs\dotnet\HiveSpace.BuildingBlocks.Abstractions\HiveSpace.BuildingBlocks.Abstractions.csproj" />
   </ItemGroup>
 </Project>
