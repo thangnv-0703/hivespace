@@ -137,3 +137,58 @@ None.
 
 ## RTM
 Test ref appended for FR-CAT-022 and FR-CAT-023, both with `(partial)` because their Plan ref also names FEAT-012. FR-CAT-019 already carries this report; its amended scope is covered by this section and no cell changed.
+
+---
+
+# Re-verification 2026-11-27 (2) — used-leaf required rule and the owner's category file
+
+> Verdict: Accepted · Date: 2026-11-27
+> Standard: feature-spec.md (AC-014-1.1–5.4, BR-014-1..14) + technical-design.md §6 (TAC-014-1..10) @ 43ea7a6 · Sources: srs.md (FR-CAT-019..023), use-cases.md
+> Repo state audited: f3f56ef (audited as an uncommitted working tree on 6426195, then committed unchanged as 43ea7a6 and f3f56ef; the audit changed no code)
+
+## Verdict summary
+The criteria hold with the new rule and with the owner's real v2 file. Every suite listed below was run from a clean copy of the working tree and is green; the system tests needed a second run (see Independent execution). TAC-014-5 and TAC-014-6, owed since the previous section, are now measured on the real data and pass. There are no rework or design-defect findings.
+
+## Audit table (changed since the previous section; all other criteria re-ran green)
+| AC | Encodes | Test(s) | Audit | Observed |
+| :- | :------ | :------ | :---- | :------- |
+| 2.4, 2.9 with BR-014-7 | FR-CAT-019 | `CategoryTreeDiffTests.Ac_2_9_an_inherited_optional_attribute_that_becomes_required_for_a_used_leaf_is_refused` (own links; nearer ancestor); `Ac_2_9_a_flip_to_required_on_the_same_provider_is_reported_once` | faithful: BR-014-7 refuses optional → required, and AC-014-2.9 applies "under the other rules". The design §3.5, §5.7 and §6 edits match them | green; mutation check: disabling the new check turned both theory cases red (2 of 78) |
+| TAC-5 | NFR-REL-007 | measured below | pass | 4.9 s |
+| TAC-6 | NFR-PERF-001 | measured below | pass (little headroom on the largest response) | p95 at most 179 ms on the requests the criterion names |
+| TAC-10 | file format | sample load below | faithful | green |
+
+## Corrected tests
+None. The test change since 6426195 only adds cases.
+
+## Independent execution
+- `dotnet build HiveSpace.slnx`: 0 warnings, 0 errors.
+- `dotnet test --solution HiveSpace.slnx`: **672 tests; 665 passed on the first run, and the 7 system tests passed on the rerun.** In the first run the system-test AppHost never started: a developer AppHost was running (fixed ports, same data volumes), and the audit had also overridden `Parameters__postgres-password` with a value that did not match the volume. After that AppHost was stopped, `tests/system` passed 7 of 7 with the stored user secrets.
+- `tests/contract`: 162 of 162 scenarios, 827 of 827 steps. A first attempt failed before any scenario on a Docker port collision.
+- `web`: `pnpm turbo run lint typecheck test build` passed 13 of 13 tasks (storefront 108 tests).
+- Spectral (CI command): 0 errors, 18 warnings.
+- `dotnet format --verify-no-changes` on the two changed C# files: clean.
+- Go and Python suites: not run; the branch changes no Go or Python code. No E2E path is owed (design §8).
+- **Incident:** during the first system-test run, the test stack started a second Postgres on the developer's `hivespace-postgres` volume while the first was running. It ran crash recovery and a checkpoint. It was force-killed and removed. Afterwards every database dumped cleanly, and after a clean stop Postgres restarted on the volume with no recovery or damage messages and dumped cleanly again.
+
+## Direct verification
+- **TAC-014-5:** the owner's file (5,266 categories, 4,244 leaves, 349 attributes, 22,314 links, 12,596 list values) first-loaded into an empty Postgres 17 container in **4.9 s** (limit 2 minutes), APPLIED, one outbox row. A reload took 2.0 s and reported UNCHANGED.
+- **TAC-014-6:** Release `Catalog.Api` against that database, 50 concurrent clients, 5,000 requests per set, no non-200 responses. Indicative: developer machine, load client on the same host. An instant stub answered the walking-skeleton Inventory probe for the list requests, so a real stack adds one local gRPC call. With no Inventory at all, each list request waited for the probe's 2 s deadline.
+  - `GET /v1/categories?parentId=…` (27 children): p95 23.9 and 20.1 ms. Roots: p95 19.4 and 13.9 ms.
+  - Leaf with the most attributes (15; 148 kB): p95 178.8 and 136.7 ms.
+  - Extra, not named by the criterion: the leaf with the largest response (9 attributes, 4,316 values, 391 kB) had p95 260, 592, 309, 254 and 253 ms over five runs.
+- **Sample (`data/category-tree/test`):** APPLIED (17 categories, 11 leaves, 7 attributes, 19 links, 24 values), then UNCHANGED. Loading the real file over it was REFUSED (37 problems, exit 2), as the data README says.
+- **Real data against the rules:** no missing vi or en names; lists hold at most 1,000 values; 8 open lists; 23 of 25 top-level categories have images; 984 owner ids are unique in 100000000–100000983. The counts match the data README. A pattern search for secrets found only product and category names.
+- **Pending:** the end-to-end checks deferred to FEAT-012 and FEAT-018 (design §8).
+
+## Findings
+- **Rework:** none.
+- **Design defect:** none.
+- **Minor:**
+  1. One value name, `CÔNG TY CỔ PHẦN COLOR LIFE - TikiNGON`, contains "Tiki", which BR-014-1 excludes from names. It is in the owner's data (loading does not filter) and looks like part of a company name. A later load can rename it; it cannot be removed once loaded.
+  2. TAC-014-6 has little headroom on the largest responses. Re-measure after any list grows (design §8).
+  3. Design §8 still says the owner's final file is pending.
+  4. Test harness: `tests/system` uses the same fixed ports and persistent data volumes as a developer AppHost and does not refuse to start when one is running, which led to the incident above.
+  5. Test names carry AC ids but no trait or comment (carried over).
+
+## RTM
+No change: FR-CAT-003, 019–023 and FR-LOC-007 already carry this report in Test ref.
