@@ -9,6 +9,8 @@
     <PackageReference Include="xunit.runner.visualstudio" />
     <PackageReference Include="Testcontainers.PostgreSql" />
     <PackageReference Include="JsonSchema.Net" />
+    <!-- Host.CreateApplicationBuilder, to resolve the read port through AddCatalogInfrastructure (AC-014-2.6). -->
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
