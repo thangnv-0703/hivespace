@@ -74,3 +74,66 @@ None. The test diff from `042ce89` to head has no skips, deleted cases, loosened
 
 ## RTM
 Test ref appended for FR-CAT-003, FR-CAT-019, FR-CAT-020 (partial), FR-CAT-021 (partial), FR-LOC-007 (partial). FR-CAT-020, FR-CAT-021 and FR-LOC-007 carry the marker because their Plan ref includes other features.
+
+---
+
+# Re-verification 2026-11-27 — open lists and inheritance (SRS 0.20/0.21, tasks T9–T14)
+
+> Verdict: Accepted · Date: 2026-11-27
+> Standard: feature-spec.md (AC-014-1.1–5.4, BR-014-1..14) + technical-design.md §6 (TAC-014-1..10) · Sources: srs.md 0.21 (FR-CAT-019..023), use-cases.md
+> Repo state audited: f10c821 (no code changed by this audit; a mutation check was reverted, tree clean)
+
+## Verdict summary
+The amended criteria hold. The standard was re-derived from the 0.21 SRS and the amended spec. Every new or changed criterion (AC-014-2.3, 2.4, 2.6–2.9, 4.1, 4.3, 4.4, 4.6–4.8) and TAC-014-9 and 10 has a faithful test, and every suite was run fresh and is green. A mutation check on the "closing an open list" rule turned its test red. There are no rework or design-defect findings. TAC-014-5 and TAC-014-6 are pending re-measurement on the owner's real v2 file, as the design says (see Direct verification). That is flagged, not blocking.
+
+## Audit table (amended and new criteria; the rest are unchanged from the 2026-11-26 section and re-ran green)
+| AC | Encodes | Test(s) | Audit | Observed |
+| :- | :------ | :------ | :---- | :------- |
+| 2.3 | FR-CAT-019, FR-CAT-022 | `CategoryTreeDiffTests.Ac_2_3_each_loosening_is_applied_on_its_own`; `CategoryLoadTests.Ac_2_3_opening_a_list_is_stored` (`v2-open-list`) | faithful (closed → open applied and stored) | green |
+| 2.4 | FR-CAT-019 | `Ac_2_4_a_list_that_stops_accepting_other_values_is_tightening`; `…an_omitted_attribute_definition…`; `CategoryLoadTests.Ac_2_4_closing_a_list_is_refused_and_nothing_changes` | faithful (REFUSED, nothing changes) | green; mutation: breaking the open → closed check turned the unit test red |
+| 2.5 | FR-CAT-019 | unchanged unit test | faithful at unit level; end-to-end deferred to FEAT-012 | green |
+| 2.6 | FR-CAT-019, FR-CAT-023 | `Ac_2_6_a_leaf_without_products_can_gain_a_child`; `Ac_2_6_the_former_leaf_shows_no_attributes_and_its_new_child_inherits_them` | faithful (read path, `isLeaf: false`, `attributes: []`, child inherits) | green |
+| 2.7 | FR-CAT-019, FR-CAT-023 | `Ac_2_7_…_on_a_category_with_products_…`; `Ac_2_7_…_on_a_parent_a_used_leaf_inherits_…` | faithful (own and inherited; optional accepted); end-to-end deferred to FEAT-012 | green |
+| 2.8 | FR-CAT-019 | `Ac_2_8_own_links_that_leave_out_an_inherited_attribute_are_refused`; `Ac_2_8_links_on_a_nearer_ancestor_…` | faithful (leaf and dropped attribute named); end-to-end deferred to FEAT-012 | green |
+| 2.9 | FR-CAT-019 | `Ac_2_9_own_links_with_every_inherited_attribute_…` (superset applied; new required refused); `CategoryLoadTests.Ac_2_9_…` (`inherit` → `inherit-own-superset`) | faithful | green |
+| 4.1 | FR-CAT-004, FR-CAT-020, FR-CAT-022 | contract `An open list…`, `A text attribute does not accept other values`; `GetCategoryHandlerTests` | faithful (`allowsCustomValue` present on every attribute) | green |
+| 4.3 | BR-014-8 | `Ac_4_3_attribute_without_values_is_free_text_whatever_its_input_type_or_marker`; contract `A text attribute has no values` | faithful | green |
+| 4.4 | UC-005 | `EffectiveAttributesTests.Ac_4_4_…`; contract `A leaf with no attributes returns an empty list` | faithful | green |
+| 4.6 | FR-CAT-022 | `GetCategoryHandlerTests.Ac_4_6_…`; contract `An open list accepts other values and keeps its values in order` | faithful | green |
+| 4.7 | FR-CAT-023 | `EffectiveAttributesTests.Ac_4_7_…`; `GetCategoryHandlerTests.Ac_4_7_…`; contract `A leaf with no attributes of its own shows its parent's attributes` | faithful (inherits the ancestor's required, selection and other-values settings) | green |
+| 4.8 | FR-CAT-023 | `EffectiveAttributesTests.Ac_4_8_…`; contract `A leaf with its own attributes shows only those` | faithful | green |
+| TAC-9 | migration | `MigrationTests.Tac_9_*` (up, down, up; both checks and the unique index reject bad rows) | faithful | green |
+| TAC-10 | file format | `CategoryLoadTests.Tac_10_*` (4 tests); `CategoryTreeSourceTests.Tac_10_*`; sample load below | faithful | green |
+
+AC-014-1.x, 2.1, 2.2, 3.x, 4.2, 4.5 and 5.x still pass on the converted fixtures, and their assertions were only rewritten for the v2 record shapes (see the diff review below).
+
+## Corrected tests
+None.
+
+## Independent execution (cold start, repo state f10c821)
+- `dotnet build HiveSpace.slnx`: 0 warnings, 0 errors.
+- `dotnet test --solution HiveSpace.slnx` (with `Parameters__postgres-password` set): **669 passed, 0 failed, 0 skipped.** This includes `Catalog.UnitTests` (75 tests, run again after the mutation), `Catalog.IntegrationTests` (migrations up/down/up), `Catalog.ArchitectureTests` including the port-layout rule, Gateway tests and the system tests.
+- `tests/contract`: **162 of 162 scenarios, 827 of 827 steps.**
+- `web`: `pnpm turbo run lint typecheck test build` passed 13 of 13 tasks.
+- Spectral on `catalog.yaml`: 0 errors, 1 warning (`operation-description` on `/v1/catalog/ping`, pre-existing).
+- Mutation check: changing the open → closed tightening check in `CategoryTreeDiff` (line 69) so it can never fire turned `Ac_2_4_a_list_that_stops_accepting_other_values_is_tightening` red (1 of 75). Source restored with `git checkout`, tree clean.
+- No flaky tests observed. No E2E path was owed.
+
+## Direct verification
+- **Sample load (TAC-014-10):** against a fresh Postgres 17 container, `load-categories --source data/category-tree` on the converted 17-category sample printed APPLIED (17 categories, 11 leaves, 7 attributes, 19 links, 24 values, 2 images), exit 0. A second run printed UNCHANGED for every row, exit 0. The `SharedAttributeLists` migration applied cleanly on the way. Container removed afterwards.
+- **Diff review (anti-fake-green):** the test diff from 3e88864 to head has no new skips or todos, no deleted cases and no newly mocked behavior. Removed assertions are the old per-link `ValueIds`/`Kind` shapes, replaced by the shared-attribute equivalents (`CK_attributes_*`, `Position`, `AllowsCustomValue`). The only csproj change adds the ASP.NET shared framework reference needed by the AC-014-2.6 read-path test. No coverage configuration exists or changed.
+- **Written rules:** the port-layout split (one port per file) is enforced by `PortLayoutTests`, green.
+- **Pending environment:**
+  - **TAC-014-5 (load time)** and **TAC-014-6 (read latency)** were measured on 2026-11-26 on a v1-shaped synthetic source (14.3 s; p95 54 ms and 78 ms). They are not re-measured here: the v2 shape (shared attribute lists of up to 1,000 values, inherited reads) has no Tiki-size source until the owner's real v2 file lands. Both must be re-measured on that file, which the design and T14 already say. This is **not blocking**, but the user should treat it as owed before the real data is loaded. The inherited read adds one query for ancestors' links and a list of up to 1,000 values per open attribute, which is the case TAC-014-6 was written to catch.
+  - End-to-end checks deferred to FEAT-012 (AC-014-2.5, 2.7, 2.8 with real products; typed-text entry) and to FEAT-018 (AC-014-5.1, 5.2 on screen), by design §8.
+
+## Findings
+- **Rework:** none.
+- **Design defect:** none.
+- **Minor:**
+  1. Test names carry the AC id but no trait or comment (carried over from 2026-11-26, minor 1).
+  2. `tests/system` still needs `Parameters__postgres-password` exported by `scripts/cloud-setup.sh` (carried over, minor 4).
+  3. No automated test loads the committed `data/category-tree/` sample; TAC-014-10's "sample loads APPLIED then UNCHANGED" was verified by hand here. A one-test addition would make it mechanical.
+
+## RTM
+Test ref appended for FR-CAT-022 and FR-CAT-023, both with `(partial)` because their Plan ref also names FEAT-012. FR-CAT-019 already carries this report; its amended scope is covered by this section and no cell changed.
