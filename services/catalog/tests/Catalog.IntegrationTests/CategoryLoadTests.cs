@@ -7,7 +7,10 @@ using Catalog.Infrastructure.CategorySource;
 using Catalog.Infrastructure.Persistence;
 using HiveSpace.BuildingBlocks.Messaging;
 using Json.Schema;
+using Catalog.Infrastructure;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Xunit;
 
 namespace Catalog.IntegrationTests;
@@ -474,6 +477,42 @@ public sealed class CategoryLoadTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal(("Thương hiệu", false, 1), (brand.Name.Vi, brand.AllowsMultiple, brand.MaxValues));
         Assert.Null(await read.Db.AttributeValues.FindAsync([9999], Ct));
         Assert.Equal((17, 7, 24, 19), await RowCountsAsync(connection) is var c ? (c.Categories, c.Attributes, c.Values, c.Links) : default);
+    }
+
+    [Fact]
+    public async Task Ac_2_6_the_former_leaf_shows_no_attributes_and_its_new_child_inherits_them()
+    {
+        var (connection, rig) = await NewRigAsync();
+        await using var _ = rig;
+        await rig.LoadAsync("valid-v1");
+        var grown = CopyFixture("valid-v1", dir => EditJson(Path.Combine(dir, "categories.json"), root => root["categories"]!.AsArray().Add(new JsonObject
+        {
+            ["externalCategoryId"] = "1799",
+            ["externalParentCategoryId"] = "1795",
+            ["name"] = new JsonObject { ["vi"] = "Điện thoại 5G", ["en"] = "5G phones" },
+        })));
+
+        Assert.Equal(LoadOutcome.Applied, (await rig.LoadFromAsync(grown)).Outcome);
+
+        // Read through the service's own registration of the read port (the adapter is internal).
+        var builder = Host.CreateApplicationBuilder();
+        builder.Configuration["ConnectionStrings:catalogdb"] = connection;
+        builder.Configuration["ConnectionStrings:messaging"] = "Endpoint=sb://localhost;SharedAccessKeyName=unused;SharedAccessKey=dW51c2Vk;UseDevelopmentEmulator=true";
+        builder.AddCatalogInfrastructure();
+        using var host = builder.Build();
+        await using var scope = host.Services.CreateAsyncScope();
+        var store = scope.ServiceProvider.GetRequiredService<ICategoryReadStore>();
+
+        var former = (await store.GetDetailAsync(1795, Ct))!;
+        Assert.False(former.Category.IsLeaf);
+        Assert.Empty(former.Attributes);
+        var child = (await store.GetDetailAsync(1799, Ct))!;
+        Assert.True(child.Category.IsLeaf);
+        Assert.Equal([1001, 1002, 1003], child.Attributes.Select(a => a.Definition.Id));
+        Assert.All(child.Attributes, a => Assert.Equal(1795, a.Link.CategoryId));
+        Assert.Equal([5001, 5002, 5003, 5004], child.Attributes[0].Values.Select(v => v.Id));
+        Assert.Equal([1001, 1002, 1003], (await store.GetEffectiveAttributesAsync(1799, Ct)).Select(a => a.Definition.Id));
+        Assert.Empty(await store.GetEffectiveAttributesAsync(1795, Ct));
     }
 
     /// <summary>A copy of a fixture in a fresh temporary directory, changed by <paramref name="change"/>.</summary>
