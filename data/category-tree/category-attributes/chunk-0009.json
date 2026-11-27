@@ -1,0 +1,6189 @@
+{
+ "categories": [
+  {
+   "externalCategoryId": "67491",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2047",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67572",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67573",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67574",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67575",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67576",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67578",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67579",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67503",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67504",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67505",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67506",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67654",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67693",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67707",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67708",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67709",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67710",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67711",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67735",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67736",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67738",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67734",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67733",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67732",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "23922",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67758",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67759",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67760",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67761",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67603",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2037",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67604",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2037",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67617",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2037",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67618",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2037",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24144",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24146",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24148",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24150",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24154",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2039",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24156",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24160",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24162",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67594",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67595",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67596",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67597",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24130",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67587",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24134",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67588",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67589",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24132",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67666",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67668",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67669",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67670",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24196",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24198",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67657",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24238",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "24240",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67719",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67723",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67724",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "11785",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1693",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "11787",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1693",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "11789",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1693",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "11566",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "68599",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "68300",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1699",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "68307",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1699",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "68308",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1699",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "68309",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1699",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55910",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55912",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55914",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55916",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "599",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55918",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55926",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55928",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55332",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2622",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55334",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2622",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55340",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55342",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55344",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55346",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2647",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55348",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55350",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55360",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55362",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55370",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55372",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55374",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55376",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55378",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55380",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55382",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55384",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2647",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2622",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55386",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2622",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55308",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2647",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55310",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2647",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55312",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55318",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55320",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55322",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55324",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55270",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55272",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55274",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55276",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55278",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55280",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55288",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55290",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55292",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55294",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55296",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55298",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55300",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55302",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55186",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1799",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55188",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55190",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55192",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55194",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55196",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55198",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55200",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55204",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1965",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55206",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1965",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55214",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2650",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2653",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55216",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2650",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2653",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55218",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2650",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2653",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55220",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2650",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2653",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55222",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55224",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2650",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2653",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55230",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2619",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2624",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55234",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2650",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2653",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55236",
+   "attributes": [
+    {
+     "sourceAttributeId": "2613",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2649",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2650",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2653",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2647",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55540",
+   "attributes": [
+    {
+     "sourceAttributeId": "1729",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55542",
+   "attributes": [
+    {
+     "sourceAttributeId": "1729",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55478",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55480",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55482",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55484",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55486",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55488",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55492",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55494",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55496",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55498",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55500",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55502",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55504",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55506",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55512",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55514",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55516",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55518",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1823",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55520",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55524",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55526",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55528",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55530",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55532",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55534",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55536",
+   "attributes": [
+    {
+     "sourceAttributeId": "1793",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1821",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55604",
+   "attributes": [
+    {
+     "sourceAttributeId": "1789",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55606",
+   "attributes": [
+    {
+     "sourceAttributeId": "1789",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1719",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55608",
+   "attributes": [
+    {
+     "sourceAttributeId": "1789",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55610",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55612",
+   "attributes": [
+    {
+     "sourceAttributeId": "1789",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "55614",
+   "attributes": [
+    {
+     "sourceAttributeId": "1789",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1717",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1743",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "1589",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1791",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66939",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66940",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66941",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66942",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66943",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66944",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66945",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66946",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66947",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66948",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66949",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "66950",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67877",
+   "attributes": [
+    {
+     "sourceAttributeId": "498",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1300",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "66",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "540",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67878",
+   "attributes": [
+    {
+     "sourceAttributeId": "498",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1300",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "66",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "540",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67879",
+   "attributes": [
+    {
+     "sourceAttributeId": "498",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1300",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "66",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "540",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67880",
+   "attributes": [
+    {
+     "sourceAttributeId": "498",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1300",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "66",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "540",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67881",
+   "attributes": [
+    {
+     "sourceAttributeId": "498",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "1300",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "66",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "540",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67400",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "511",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67401",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "511",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67635",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67636",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67637",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67638",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67496",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2049",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2051",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67497",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2049",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2051",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67499",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2049",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2051",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67500",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "2049",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "2051",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67671",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67673",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67674",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67672",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67676",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67677",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67683",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67682",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67684",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67685",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67678",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67679",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67686",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67687",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67680",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67688",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67689",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67681",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67690",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67691",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67725",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67740",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67741",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67742",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67726",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67744",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67731",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67753",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67754",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67727",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67745",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67746",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67728",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67747",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67748",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67729",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67749",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67750",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67730",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67751",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67752",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "76",
+     "isRequired": false
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "586",
+     "isRequired": false
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67590",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67591",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67592",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  },
+  {
+   "externalCategoryId": "67593",
+   "attributes": [
+    {
+     "sourceAttributeId": "603",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "708",
+     "isRequired": true
+    },
+    {
+     "sourceAttributeId": "560",
+     "isRequired": true
+    }
+   ]
+  }
+ ]
+}
