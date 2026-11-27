@@ -35,6 +35,7 @@ public sealed class CategoryTreeDiffTests
         Assert.True(result.Changes!.IsEmpty);
         Assert.Equal(5, result.Counts.Categories.Unchanged);
         Assert.Equal(3, result.Counts.Attributes.Unchanged);
+        Assert.Equal(3, result.Counts.AttributeLinks.Unchanged);
         Assert.Equal(4, result.Counts.ListValues.Unchanged);
         Assert.Equal(new ImageCounts(0, 0, 0, 1), result.Counts.Images);
     }
@@ -44,9 +45,10 @@ public sealed class CategoryTreeDiffTests
     {
         var file = Tree(
             [C("1", null, "Điện thoại", "https://example.com/1.jpg"), C("10", "1", "Smartphone"), C("11", "1", "Tablet"), C("12", "1", "Mới"), C("2", null, "Nhà cửa"), C("20", "2", "Nồi")],
-            Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung"), V("1002", "Xiaomi")), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng"))),
-            Entry("12", A("103", "Size", true, "Dropdown", 1, V("1300", "S"))),
-            Entry("20", A("102", "Chất liệu", false, "Dropdown", 1)));
+            [D("100", "Thương hiệu", "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung"), V("1002", "Xiaomi")), Color(), Material(), D("103", "Size", "Dropdown", 1, V("1300", "S"))],
+            Entry("10", L("100", true), L("101")),
+            Entry("12", L("103", true)),
+            Entry("20", L("102")));
 
         var result = Diff(Baseline(), file);
 
@@ -54,8 +56,11 @@ public sealed class CategoryTreeDiffTests
         Assert.Equal(1, result.Counts.Categories.Added);
         Assert.Equal(1, result.Counts.Leaves.Added);
         Assert.Equal(1, result.Counts.Attributes.Added);
+        Assert.Equal(1, result.Counts.AttributeLinks.Added);
         Assert.Equal(2, result.Counts.ListValues.Added);
-        Assert.Equal([1002], result.Changes!.LinkUpdates.Single().ValueIds.Except([1000, 1001]));
+        var xiaomi = Assert.Single(result.Changes!.NewValues, v => v.Id == 1002);
+        Assert.Equal((100, 2), (xiaomi.AttributeId, xiaomi.Position));
+        Assert.Empty(result.Changes.ValueRepositions);
     }
 
     [Fact]
@@ -63,8 +68,9 @@ public sealed class CategoryTreeDiffTests
     {
         var file = Tree(
             [C("1", null, "Điện thoại & Tablet", "https://example.com/1.jpg"), C("10", "1", "Smartphone"), C("11", "1", "Tablet"), C("2", null, "Nhà cửa"), C("20", "2", "Nồi")],
-            Entry("10", A("100", "Hãng", true, "Dropdown", 1, V("1000", "Apple Inc"), V("1001", "Samsung")), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng"))),
-            Entry("20", A("102", "Chất liệu", false, "Dropdown", 1)));
+            [D("100", "Hãng", "Dropdown", 1, V("1000", "Apple Inc"), V("1001", "Samsung")), Color(), Material()],
+            Entry("10", L("100", true), L("101")),
+            Entry("20", L("102")));
 
         var result = Diff(Baseline(), file);
 
@@ -74,41 +80,45 @@ public sealed class CategoryTreeDiffTests
         Assert.Equal([100], changes.AttributeRenames.Select(r => r.Id));
         Assert.Equal([1000], changes.ValueRenames.Select(r => r.Id));
         Assert.Empty(changes.CategoryRepositions);
+        Assert.Empty(changes.AttributeUpdates);
         Assert.Empty(changes.LinkUpdates);
+        Assert.Empty(changes.ValueRepositions);
         Assert.Empty(changes.NewLinks);
         Assert.Equal((1, 1, 1), (result.Counts.Categories.Renamed, result.Counts.Attributes.Renamed, result.Counts.ListValues.Renamed));
     }
 
     [Fact]
-    public void Each_loosening_is_applied_on_its_own()
+    public void Ac_2_3_each_loosening_is_applied_on_its_own()
     {
-        TreeDiffResult Loosen(RawAttribute brand, RawAttribute color) => Diff(
-            Baseline(),
-            Tree(Baseline().Categories.ToArray(), Entry("10", brand, color), Entry("20", A("102", "Chất liệu", false, "Dropdown", 1))));
+        // Required → optional is set on the link; the other three on the attribute (D-11).
+        var optional = Diff(Baseline(), Tree(BaselineCategories(), [Brand(), Color(), Material()], Entry("10", L("100"), L("101")), Entry("20", L("102"))));
+        var multiple = Diff(Baseline(), WithAttributes(D("100", "Thương hiệu", "Checkbox", 3, V("1000", "Apple"), V("1001", "Samsung")), Color(), Material()));
+        var higher = Diff(Baseline(), WithAttributes(Brand(), D("101", "Màu", "Checkbox", 8, V("1100", "Đen"), V("1101", "Trắng")), Material()));
+        var opened = Diff(Baseline(), WithAttributes(Open(Brand()), Color(), Material()));
 
-        var optional = Loosen(A("100", "Thương hiệu", false, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung")), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng")));
-        var multiple = Loosen(A("100", "Thương hiệu", true, "Checkbox", 3, V("1000", "Apple"), V("1001", "Samsung")), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng")));
-        var higher = Loosen(A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung")), A("101", "Màu", false, "Checkbox", 8, V("1100", "Đen"), V("1101", "Trắng")));
-
-        foreach (var r in new[] { optional, multiple, higher })
+        Assert.False(optional.IsRefused);
+        Assert.Equal(1, optional.Counts.AttributeLinks.Loosened);
+        Assert.False(Assert.Single(optional.Changes!.LinkUpdates).IsRequired);
+        foreach (var r in new[] { multiple, higher, opened })
         {
             Assert.False(r.IsRefused);
             Assert.Equal(1, r.Counts.Attributes.Loosened);
-            Assert.Single(r.Changes!.LinkUpdates);
+            Assert.Single(r.Changes!.AttributeUpdates);
+            Assert.Empty(r.Changes.LinkUpdates);
         }
 
-        Assert.False(optional.Changes!.LinkUpdates.Single().IsRequired);
-        Assert.True(multiple.Changes!.LinkUpdates.Single().AllowsMultiple);
-        Assert.Equal(8, higher.Changes!.LinkUpdates.Single().MaxValues);
+        Assert.True(multiple.Changes!.AttributeUpdates.Single().AllowsMultiple);
+        Assert.Equal(8, higher.Changes!.AttributeUpdates.Single().MaxValues);
+        Assert.Equal((100, true), (opened.Changes!.AttributeUpdates.Single().Id, opened.Changes.AttributeUpdates.Single().AllowsCustomValue));
     }
 
     [Fact]
     public void Sibling_order_follows_the_file()
     {
-        var file = Tree(
-            [C("1", null, "Điện thoại", "https://example.com/1.jpg"), C("11", "1", "Tablet"), C("10", "1", "Smartphone"), C("2", null, "Nhà cửa"), C("20", "2", "Nồi")],
-            Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung")), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng"))),
-            Entry("20", A("102", "Chất liệu", false, "Dropdown", 1)));
+        var file = Baseline() with
+        {
+            Categories = [C("1", null, "Điện thoại", "https://example.com/1.jpg"), C("11", "1", "Tablet"), C("10", "1", "Smartphone"), C("2", null, "Nhà cửa"), C("20", "2", "Nồi")],
+        };
 
         var result = Diff(Baseline(), file);
 
@@ -118,12 +128,31 @@ public sealed class CategoryTreeDiffTests
     }
 
     [Fact]
+    public void Value_and_link_order_follow_the_file()
+    {
+        var file = Tree(
+            BaselineCategories(),
+            [D("100", "Thương hiệu", "Dropdown", 1, V("1002", "Xiaomi"), V("1000", "Apple"), V("1001", "Samsung")), Color(), Material()],
+            Entry("10", L("101"), L("100", true)),
+            Entry("20", L("102")));
+
+        var result = Diff(Baseline(), file);
+
+        Assert.False(result.IsRefused);
+        Assert.Equal([(1000, 1), (1001, 2)], result.Changes!.ValueRepositions);
+        Assert.Equal((0, 1), (result.Changes.NewValues.Single().Position, result.Counts.ListValues.Added));
+        Assert.Equal(2, result.Counts.ListValues.Reordered);
+        Assert.Equal(2, result.Counts.AttributeLinks.Reordered);
+    }
+
+    [Fact]
     public void Every_refusal_rule_is_listed_together()
     {
         var file = Tree(
             [C("1", null, "Điện thoại", "https://example.com/1.jpg"), C("10", "2", "Smartphone"), C("2", null, "Nhà cửa"), C("20", "2", "Nồi")],
-            Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple")), A("101", "Màu", true, "Dropdown", 1, V("1100", "Đen"), V("1101", "Trắng"))),
-            Entry("20", A("102", "Chất liệu", false, "Dropdown", 1, V("1200", "Gỗ"))));
+            [D("100", "Thương hiệu", "Dropdown", 1, V("1000", "Apple")), D("101", "Màu", "Dropdown", 1, V("1100", "Đen"), V("1101", "Trắng")), D("102", "Chất liệu", "Dropdown", 1, V("1200", "Gỗ"))],
+            Entry("10", L("100", true), L("101", true)),
+            Entry("20", L("102")));
 
         var codes = Codes(Diff(Baseline(), file));
 
@@ -136,18 +165,48 @@ public sealed class CategoryTreeDiffTests
     }
 
     [Fact]
-    public void An_omitted_attribute_is_a_problem()
+    public void An_omitted_link_is_a_problem()
     {
-        var file = Tree(Baseline().Categories.ToArray(), Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung"))), Entry("20", A("102", "Chất liệu", false, "Dropdown", 1)));
+        var file = Tree(BaselineCategories(), [Brand(), Color(), Material()], Entry("10", L("100", true)), Entry("20", L("102")));
 
-        Assert.Equal(["attribute.removed"], Codes(Diff(Baseline(), file)));
+        var problem = Assert.Single(Diff(Baseline(), file).Problems);
+        Assert.Equal(("attribute.removed", "101", 10), (problem.Code, problem.Key, problem.CategoryId));
+    }
+
+    [Fact]
+    public void Ac_2_4_an_omitted_attribute_definition_is_a_problem()
+    {
+        var file = Tree(BaselineCategories(), [Brand(), Material()], Entry("10", L("100", true)), Entry("20", L("102")));
+
+        var problems = Diff(Baseline(), file).Problems;
+
+        Assert.Equal(["attribute.removed", "attribute.removed"], problems.Select(p => p.Code));
+        Assert.Contains(problems, p => p.Key == "101" && p.CategoryId is null && p.Detail.Contains("attributes.json", StringComparison.Ordinal));
+        Assert.Contains(problems, p => p.Key == "101" && p.CategoryId == 10);
+    }
+
+    [Fact]
+    public void An_omitted_value_is_a_problem()
+    {
+        var problem = Assert.Single(Diff(Baseline(), WithAttributes(D("100", "Thương hiệu", "Dropdown", 1, V("1000", "Apple")), Color(), Material())).Problems);
+
+        Assert.Equal(("value.removed", "1001"), (problem.Code, problem.Key));
+    }
+
+    [Fact]
+    public void Optional_to_required_on_a_link_is_tightening()
+    {
+        var file = Tree(BaselineCategories(), [Brand(), Color(), Material()], Entry("10", L("100", true), L("101", true)), Entry("20", L("102")));
+
+        var problem = Assert.Single(Diff(Baseline(), file).Problems);
+        Assert.Equal(("attribute.tightened", 10, "optional → required"), (problem.Code, problem.CategoryId, problem.Detail));
     }
 
     [Fact]
     public void Changing_between_list_and_free_text_is_tightening()
     {
-        var toText = Tree(Baseline().Categories.ToArray(), Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng"))), Entry("20", A("102", "Chất liệu", false, "Dropdown", 1)));
-        var toList = Tree(Baseline().Categories.ToArray(), Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung")), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng"))), Entry("20", A("102", "Chất liệu", false, "Dropdown", 1, V("1200", "Gỗ"))));
+        var toText = WithAttributes(D("100", "Thương hiệu", "Dropdown", 1), Color(), Material());
+        var toList = WithAttributes(Brand(), Color(), D("102", "Chất liệu", "Dropdown", 1, V("1200", "Gỗ")));
 
         Assert.Equal(["attribute.tightened"], Codes(Diff(Baseline(), toText)));
         Assert.Equal(["attribute.tightened"], Codes(Diff(Baseline(), toList)));
@@ -156,19 +215,27 @@ public sealed class CategoryTreeDiffTests
     [Fact]
     public void Multiple_to_single_and_a_lower_maximum_are_tightening()
     {
-        RawCategoryTree With(RawAttribute color) => Tree(Baseline().Categories.ToArray(), Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung")), color), Entry("20", A("102", "Chất liệu", false, "Dropdown", 1)));
+        Assert.Equal(["attribute.tightened"], Codes(Diff(Baseline(), WithAttributes(Brand(), D("101", "Màu", "Dropdown", 1, V("1100", "Đen"), V("1101", "Trắng")), Material()))));
+        Assert.Equal(["attribute.tightened"], Codes(Diff(Baseline(), WithAttributes(Brand(), D("101", "Màu", "Checkbox", 3, V("1100", "Đen"), V("1101", "Trắng")), Material()))));
+    }
 
-        Assert.Equal(["attribute.tightened"], Codes(Diff(Baseline(), With(A("101", "Màu", false, "Dropdown", 1, V("1100", "Đen"), V("1101", "Trắng"))))));
-        Assert.Equal(["attribute.tightened"], Codes(Diff(Baseline(), With(A("101", "Màu", false, "Checkbox", 3, V("1100", "Đen"), V("1101", "Trắng"))))));
+    [Fact]
+    public void Ac_2_4_a_list_that_stops_accepting_other_values_is_tightening()
+    {
+        var open = WithAttributes(Open(Brand()), Color(), Material());
+
+        var problem = Assert.Single(Diff(open, Baseline()).Problems);
+
+        Assert.Equal(("attribute.tightened", "100", "accepts other values → does not"), (problem.Code, problem.Key, problem.Detail));
     }
 
     [Fact]
     public void A_child_under_a_category_with_products_is_refused_and_otherwise_makes_it_a_non_leaf()
     {
-        var file = Tree(
-            [C("1", null, "Điện thoại", "https://example.com/1.jpg"), C("10", "1", "Smartphone"), C("11", "1", "Tablet"), C("2", null, "Nhà cửa"), C("20", "2", "Nồi"), C("200", "20", "Nồi cơm")],
-            Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung")), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng"))),
-            Entry("20", A("102", "Chất liệu", false, "Dropdown", 1)));
+        var file = Baseline() with
+        {
+            Categories = [.. BaselineCategories(), C("200", "20", "Nồi cơm")],
+        };
 
         var refused = Diff(Baseline(), file, 20);
         var accepted = Diff(Baseline(), file);
@@ -180,16 +247,76 @@ public sealed class CategoryTreeDiffTests
     }
 
     [Fact]
-    public void A_new_required_attribute_on_a_category_with_products_is_refused_but_optional_is_fine()
+    public void Ac_2_7_a_new_required_attribute_on_a_category_with_products_is_refused_but_optional_is_fine()
     {
         RawCategoryTree With(bool required) => Tree(
-            Baseline().Categories.ToArray(),
-            Entry("10", A("100", "Thương hiệu", true, "Dropdown", 1, V("1000", "Apple"), V("1001", "Samsung")), A("101", "Màu", false, "Checkbox", 5, V("1100", "Đen"), V("1101", "Trắng"))),
-            Entry("20", A("102", "Chất liệu", false, "Dropdown", 1), A("103", "Xuất xứ", required, "Dropdown", 1, V("1300", "Việt Nam"))));
+            BaselineCategories(),
+            [Brand(), Color(), Material(), D("103", "Xuất xứ", "Dropdown", 1, V("1300", "Việt Nam"))],
+            Entry("10", L("100", true), L("101")),
+            Entry("20", L("102"), L("103", required)));
 
         Assert.Equal(["attribute.required_on_used_category"], Codes(Diff(Baseline(), With(true), 20)));
         Assert.False(Diff(Baseline(), With(false), 20).IsRefused);
         Assert.False(Diff(Baseline(), With(true)).IsRefused);
+    }
+
+    // Root 1 → parent 2 (links A 100 required, B 101) → middle 3 (no links) → leaf 4 (no links), and leaf 5 under 2.
+    private static RawCategory[] InheritCategories() =>
+        [C("1", null, "Gốc"), C("2", "1", "Cha"), C("3", "2", "Giữa"), C("4", "3", "Lá"), C("5", "2", "Lá khác")];
+
+    private static RawAttributeDefinition[] InheritAttributes() =>
+        [Brand(), Color(), D("102", "Chất liệu", "Dropdown", 1), D("103", "Xuất xứ", "Dropdown", 1, V("1300", "Việt Nam"))];
+
+    private static RawCategoryTree Inherit(params RawCategoryAttributes[] entries) => Tree(InheritCategories(), InheritAttributes(), entries);
+
+    private static RawCategoryTree InheritBaseline() => Inherit(Entry("2", L("100", true), L("101")));
+
+    [Fact]
+    public void Ac_2_7_a_new_required_attribute_on_a_parent_a_used_leaf_inherits_is_refused_but_optional_is_fine()
+    {
+        var required = Inherit(Entry("2", L("100", true), L("101"), L("103", true)));
+        var optional = Inherit(Entry("2", L("100", true), L("101"), L("103")));
+
+        var problem = Assert.Single(Diff(InheritBaseline(), required, 4).Problems);
+        Assert.Equal(("attribute.required_on_used_category", "103", 4), (problem.Code, problem.Key, problem.CategoryId));
+        Assert.Contains("inherited from category 2", problem.Detail, StringComparison.Ordinal);
+        Assert.False(Diff(InheritBaseline(), optional, 4).IsRefused);
+    }
+
+    [Fact]
+    public void Ac_2_8_own_links_that_leave_out_an_inherited_attribute_are_refused()
+    {
+        var ownSubset = Inherit(Entry("2", L("100", true), L("101")), Entry("4", L("100", true)));
+
+        var problem = Assert.Single(Diff(InheritBaseline(), ownSubset, 4).Problems);
+
+        Assert.Equal(("attribute.inherited_dropped", "101", 4), (problem.Code, problem.Key, problem.CategoryId));
+        Assert.False(Diff(InheritBaseline(), ownSubset).IsRefused);
+    }
+
+    [Fact]
+    public void Ac_2_8_links_on_a_nearer_ancestor_that_leave_out_an_inherited_attribute_are_refused()
+    {
+        var nearer = Inherit(Entry("2", L("100", true), L("101")), Entry("3", L("100", true)));
+
+        var problem = Assert.Single(Diff(InheritBaseline(), nearer, 4).Problems);
+
+        Assert.Equal(("attribute.inherited_dropped", "101", 4), (problem.Code, problem.Key, problem.CategoryId));
+        Assert.Contains("from category 3 instead of 2", problem.Detail, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public void Ac_2_9_own_links_with_every_inherited_attribute_are_applied_unless_one_more_is_required()
+    {
+        var superset = Inherit(Entry("2", L("100", true), L("101")), Entry("4", L("100", true), L("101"), L("103")));
+        var supersetRequired = Inherit(Entry("2", L("100", true), L("101")), Entry("4", L("100", true), L("101"), L("103", true)));
+
+        var applied = Diff(InheritBaseline(), superset, 4);
+
+        Assert.False(applied.IsRefused);
+        Assert.Equal(3, applied.Changes!.NewLinks.Count(l => l.CategoryId == 4));
+        var problem = Assert.Single(Diff(InheritBaseline(), supersetRequired, 4).Problems);
+        Assert.Equal(("attribute.required_on_used_category", "103", 4), (problem.Code, problem.Key, problem.CategoryId));
     }
 
     [Fact]

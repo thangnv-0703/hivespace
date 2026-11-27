@@ -40,7 +40,8 @@ public sealed class CategoryTreeSource
     {
         var problems = new List<Problem>();
         var categories = BuildCategories(raw.Categories, problems);
-        var (attributes, values, links) = BuildAttributes(raw.AttributeEntries, categories.Select(c => c.Id).ToHashSet(), problems);
+        var (attributes, values, definedKeys) = BuildDefinitions(raw.Attributes, problems);
+        var links = BuildLinks(raw.AttributeEntries, categories.Select(c => c.Id).ToHashSet(), definedKeys, problems);
         return problems.Count > 0
             ? new SourceBuildResult(null, problems)
             : new SourceBuildResult(new CategoryTreeSource(categories, attributes, values, links), problems);
@@ -180,11 +181,117 @@ public sealed class CategoryTreeSource
         }
     }
 
-    private static (List<SourceAttribute>, List<SourceValue>, List<SourceLink>) BuildAttributes(
-        IReadOnlyList<RawCategoryAttributes> entries, HashSet<int> categoryIds, List<Problem> problems)
+    /// <summary>
+    /// Builds each attribute of <c>attributes.json</c> once, with its list settings and values in file order (D-11, D-13).
+    /// Returns every attribute key the file defines, even one with a problem, so its links are not also reported as unknown.
+    /// </summary>
+    private static (List<SourceAttribute>, List<SourceValue>, HashSet<int>) BuildDefinitions(IReadOnlyList<RawAttributeDefinition> raw, List<Problem> problems)
     {
-        var attributes = new Dictionary<int, SourceAttribute>();
-        var values = new Dictionary<int, SourceValue>();
+        var attributes = new List<SourceAttribute>();
+        var values = new List<SourceValue>();
+        var definedKeys = new HashSet<int>();
+        var valueOwner = new Dictionary<int, int>();
+
+        foreach (var a in raw)
+        {
+            var key = a.Key ?? string.Empty;
+            if (!TryKey(a.Key, out var attributeId))
+            {
+                problems.Add(new Problem("attribute.key_invalid", "attribute", key, null, "the key is not a whole number from 1 to 2147483647"));
+                continue;
+            }
+
+            if (!definedKeys.Add(attributeId))
+            {
+                problems.Add(new Problem("attribute.duplicate_key", "attribute", key, null, "the key appears more than once in attributes.json"));
+                continue;
+            }
+
+            var ok = true;
+            var name = CleanName(a.Name, "attribute", key, null, MaxAttributeName, problems);
+            ok &= name is not null;
+
+            var attributeValues = new List<SourceValue>();
+            var valueNames = (Vi: new HashSet<string>(StringComparer.OrdinalIgnoreCase), En: new HashSet<string>(StringComparer.OrdinalIgnoreCase));
+            foreach (var v in a.Values)
+            {
+                var valueKey = v.Key ?? string.Empty;
+                if (!TryKey(v.Key, out var valueId))
+                {
+                    problems.Add(new Problem("value.key_invalid", "value", valueKey, null, $"the key (of attribute {key}) is not a whole number from 1 to 2147483647"));
+                    ok = false;
+                    continue;
+                }
+
+                if (attributeValues.Any(x => x.Id == valueId))
+                {
+                    problems.Add(new Problem("value.duplicate_key", "value", valueKey, null, $"the key appears twice in the list of attribute {key}"));
+                    ok = false;
+                    continue;
+                }
+
+                if (valueOwner.TryGetValue(valueId, out var owner))
+                {
+                    problems.Add(new Problem("value.other_attribute", "value", valueKey, null, $"the key of attribute {key} is also used under attribute {owner}"));
+                    ok = false;
+                    continue;
+                }
+
+                valueOwner[valueId] = attributeId;
+                var valueName = CleanName(v.Name, "value", valueKey, null, MaxValueName, problems);
+                if (valueName is null)
+                {
+                    ok = false;
+                    continue;
+                }
+
+                if (!valueNames.Vi.Add(valueName.Vi) || !valueNames.En.Add(valueName.En))
+                {
+                    problems.Add(new Problem("value.duplicate_name", "value", valueKey, null, $"another value of attribute {key} has the same name (\"{valueName.Vi}\" / \"{valueName.En}\")"));
+                    ok = false;
+                    continue;
+                }
+
+                attributeValues.Add(new SourceValue(valueId, attributeId, attributeValues.Count, valueName));
+            }
+
+            // No values means free text: inputType, maxValueCount and allowsCustomValue are then ignored (BR-014-8).
+            AttributeKind kind;
+            bool allowsMultiple;
+            int maxValues;
+            if (a.Values.Count == 0)
+            {
+                (kind, allowsMultiple, maxValues) = (AttributeKind.Text, false, 1);
+            }
+            else if (a.InputType == "Dropdown")
+            {
+                (kind, allowsMultiple, maxValues) = (AttributeKind.List, false, 1);
+            }
+            else if (a.InputType == "Checkbox" && a.MaxValueCount >= 2)
+            {
+                (kind, allowsMultiple, maxValues) = (AttributeKind.List, true, a.MaxValueCount);
+            }
+            else
+            {
+                problems.Add(new Problem("attribute.invalid_selection", "attribute", key, null, $"inputType \"{a.InputType}\" with maxValueCount {a.MaxValueCount} is not Dropdown, or Checkbox with a maximum of at least 2"));
+                continue;
+            }
+
+            if (ok)
+            {
+                var allowsCustomValue = kind == AttributeKind.List && a.AllowsCustomValue;
+                attributes.Add(new SourceAttribute(attributeId, name!, kind, allowsMultiple, maxValues, allowsCustomValue, [.. attributeValues.Select(x => x.Id)]));
+                values.AddRange(attributeValues);
+            }
+        }
+
+        return (attributes, values, definedKeys);
+    }
+
+    /// <summary>Builds each category's links in file order; a link only names an attribute of <c>attributes.json</c>.</summary>
+    private static List<SourceLink> BuildLinks(
+        IReadOnlyList<RawCategoryAttributes> entries, HashSet<int> categoryIds, HashSet<int> definedKeys, List<Problem> problems)
+    {
         var links = new List<SourceLink>();
         var seenCategories = new HashSet<int>();
 
@@ -211,135 +318,31 @@ public sealed class CategoryTreeSource
 
             var seenAttributes = new HashSet<int>();
             var position = 0;
-            foreach (var a in entry.Attributes)
+            foreach (var link in entry.Links)
             {
-                var link = BuildLink(a, categoryId, position, attributes, values, seenAttributes, problems);
-                if (link is not null)
+                var key = link.Key ?? string.Empty;
+                if (!TryKey(link.Key, out var attributeId))
                 {
-                    links.Add(link);
-                    position++;
-                }
-            }
-        }
-
-        return ([.. attributes.Values], [.. values.Values], links);
-    }
-
-    private static SourceLink? BuildLink(
-        RawAttribute a, int categoryId, int position, Dictionary<int, SourceAttribute> attributes, Dictionary<int, SourceValue> values,
-        HashSet<int> seenAttributes, List<Problem> problems)
-    {
-        var key = a.Key ?? string.Empty;
-        if (!TryKey(a.Key, out var attributeId))
-        {
-            problems.Add(new Problem("attribute.key_invalid", "attribute", key, categoryId, "the key is not a whole number from 1 to 2147483647"));
-            return null;
-        }
-
-        var ok = true;
-        if (!seenAttributes.Add(attributeId))
-        {
-            problems.Add(new Problem("attribute.duplicate_in_category", "attribute", key, categoryId, "the attribute appears more than once in the category"));
-            ok = false;
-        }
-
-        var name = CleanName(a.Name, "attribute", key, categoryId, MaxAttributeName, problems);
-        if (name is null)
-        {
-            ok = false;
-        }
-        else if (attributes.TryGetValue(attributeId, out var existing))
-        {
-            if (existing.Name != name)
-            {
-                problems.Add(new Problem("attribute.conflicting_name", "attribute", key, categoryId, $"the name differs from the one used in another category (\"{existing.Name.Vi}\" / \"{existing.Name.En}\")"));
-                ok = false;
-            }
-        }
-        else
-        {
-            attributes[attributeId] = new SourceAttribute(attributeId, name);
-        }
-
-        var valueIds = new List<int>();
-        var valueNames = (Vi: new HashSet<string>(StringComparer.OrdinalIgnoreCase), En: new HashSet<string>(StringComparer.OrdinalIgnoreCase));
-        foreach (var v in a.Values)
-        {
-            var valueKey = v.Key ?? string.Empty;
-            if (!TryKey(v.Key, out var valueId))
-            {
-                problems.Add(new Problem("value.key_invalid", "value", valueKey, categoryId, $"the key (of attribute {key}) is not a whole number from 1 to 2147483647"));
-                ok = false;
-                continue;
-            }
-
-            if (valueIds.Contains(valueId))
-            {
-                problems.Add(new Problem("value.duplicate_key", "value", valueKey, categoryId, $"the key appears twice in the list of attribute {key}"));
-                ok = false;
-                continue;
-            }
-
-            var valueName = CleanName(v.Name, "value", valueKey, categoryId, MaxValueName, problems);
-            if (valueName is null)
-            {
-                ok = false;
-                continue;
-            }
-
-            if (values.TryGetValue(valueId, out var known))
-            {
-                if (known.AttributeId != attributeId)
-                {
-                    problems.Add(new Problem("value.other_attribute", "value", valueKey, categoryId, $"the key is also used under attribute {known.AttributeId}"));
-                    ok = false;
+                    problems.Add(new Problem("attribute.key_invalid", "attribute", key, categoryId, "the key is not a whole number from 1 to 2147483647"));
                     continue;
                 }
 
-                if (known.Name != valueName)
+                if (!definedKeys.Contains(attributeId))
                 {
-                    problems.Add(new Problem("value.conflicting_name", "value", valueKey, categoryId, $"the name differs from the one used in another category (\"{known.Name.Vi}\" / \"{known.Name.En}\")"));
-                    ok = false;
+                    problems.Add(new Problem("attributes.unknown", "attribute", key, categoryId, "the link names an attribute that is not in attributes.json"));
                     continue;
                 }
+
+                if (!seenAttributes.Add(attributeId))
+                {
+                    problems.Add(new Problem("attribute.duplicate_in_category", "attribute", key, categoryId, "the attribute appears more than once in the category"));
+                    continue;
+                }
+
+                links.Add(new SourceLink(categoryId, attributeId, position++, link.IsRequired));
             }
-            else
-            {
-                values[valueId] = new SourceValue(valueId, attributeId, valueName);
-            }
-
-            if (!valueNames.Vi.Add(valueName.Vi) || !valueNames.En.Add(valueName.En))
-            {
-                problems.Add(new Problem("value.duplicate_name", "value", valueKey, categoryId, $"another value of attribute {key} has the same name (\"{valueName.Vi}\" / \"{valueName.En}\")"));
-                ok = false;
-                continue;
-            }
-
-            valueIds.Add(valueId);
         }
 
-        // No values means free text, and inputType and maxValueCount are ignored (BR-014-8).
-        AttributeKind kind;
-        bool allowsMultiple;
-        int maxValues;
-        if (a.Values.Count == 0)
-        {
-            (kind, allowsMultiple, maxValues) = (AttributeKind.Text, false, 1);
-        }
-        else if (a.InputType == "Dropdown")
-        {
-            (kind, allowsMultiple, maxValues) = (AttributeKind.List, false, 1);
-        }
-        else if (a.InputType == "Checkbox" && a.MaxValueCount >= 2)
-        {
-            (kind, allowsMultiple, maxValues) = (AttributeKind.List, true, a.MaxValueCount);
-        }
-        else
-        {
-            problems.Add(new Problem("attribute.invalid_selection", "attribute", key, categoryId, $"inputType \"{a.InputType}\" with maxValueCount {a.MaxValueCount} is not Dropdown, or Checkbox with a maximum of at least 2"));
-            return null;
-        }
-
-        return ok ? new SourceLink(categoryId, attributeId, position, a.IsRequired, kind, allowsMultiple, maxValues, valueIds) : null;
+        return links;
     }
 }

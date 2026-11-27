@@ -44,20 +44,23 @@ public sealed class CategoryTreeSourceTests
     [Fact]
     public void Missing_names_are_listed_with_kind_and_owner()
     {
+        // A name is given once, in attributes.json (D-13), so an attribute's problem has no category and a value's names its attribute.
         var raw = Tree(
             [new RawCategory("1", null, new RawName("Gốc", null), null), C("10", "1", "Con")],
-            Entry("10", new RawAttribute("100", new RawName(null, "Brand"), false, "Dropdown", 1, [V("1000", "A")]), A("101", "Màu", false, "Dropdown", 1, new RawValue("1100", new RawName("Đen", "  ")))));
+            [new RawAttributeDefinition("100", new RawName(null, "Brand"), "Dropdown", 1, false, [V("1000", "A")]), D("101", "Màu", "Dropdown", 1, new RawValue("1100", new RawName("Đen", "  ")))],
+            Entry("10", L("100"), L("101")));
 
         var problems = CategoryTreeSource.Build(raw).Problems;
 
         Assert.Equal(["name.missing", "name.missing", "name.missing"], problems.Select(p => p.Code));
         Assert.Equal(["category", "attribute", "value"], problems.Select(p => p.Kind));
-        Assert.All(problems.Skip(1), p => Assert.Equal(10, p.CategoryId));
+        Assert.Equal(["1", "100", "1100"], problems.Select(p => p.Key));
+        Assert.Equal(["en is missing", "vi is missing", "en is missing"], problems.Select(p => p.Detail));
     }
 
     [Fact]
     public void Same_vi_and_en_names_are_fine() =>
-        Assert.Empty(CategoryTreeSource.Build(Tree([C("1", null, "Gốc"), C("10", "1", "Con")], Entry("10", A("100", "Brand", false, "Dropdown", 1, V("1000", "Samsung"))))).Problems);
+        Assert.Empty(CategoryTreeSource.Build(Tree([C("1", null, "Gốc"), C("10", "1", "Con")], [D("100", "Brand", "Dropdown", 1, V("1000", "Samsung"))], Entry("10", L("100")))).Problems);
 
     [Fact]
     public void Names_longer_than_the_column_are_listed() =>
@@ -69,57 +72,97 @@ public sealed class CategoryTreeSourceTests
         Assert.Equal(["category.duplicate_key"], Codes(Tree([C("1", null, "A"), C("1", null, "B")])));
         Assert.Equal(["category.parent_unknown"], Codes(Tree([C("1", "9", "A")])));
         Assert.Contains("category.cycle", Codes(Tree([C("1", "2", "A"), C("2", "1", "B"), C("3", null, "C")])));
-        Assert.Equal(["attributes.category_unknown"], Codes(Tree([C("1", null, "A")], Entry("5", A("100", "x", false, "Dropdown", 1)))));
-        Assert.Equal(["attributes.category_duplicate"], Codes(Tree([C("1", null, "A")], Entry("1"), Entry("1"))));
+        Assert.Equal(["attributes.category_unknown"], Codes(Tree([C("1", null, "A")], [D("100", "x", "Dropdown", 1)], Entry("5", L("100")))));
+        Assert.Equal(["attributes.category_duplicate"], Codes(Tree([C("1", null, "A")], [], Entry("1"), Entry("1"))));
     }
 
     [Fact]
     public void Attribute_and_value_problems_are_all_listed()
     {
-        Assert.Equal(["attribute.duplicate_in_category"], Codes(Tree([C("1", null, "A")], Entry("1", A("100", "x", false, "Dropdown", 1), A("100", "x", false, "Dropdown", 1)))));
-        Assert.Equal(
-            ["attribute.conflicting_name"],
-            Codes(Tree([C("1", null, "A"), C("2", null, "B")], Entry("1", A("100", "x", false, "Dropdown", 1)), Entry("2", A("100", "y", false, "Dropdown", 1)))));
-        Assert.Equal(["attribute.invalid_selection"], Codes(Tree([C("1", null, "A")], Entry("1", A("100", "x", false, "Radio", 1, V("1", "a"))))));
-        Assert.Equal(["attribute.invalid_selection"], Codes(Tree([C("1", null, "A")], Entry("1", A("100", "x", false, "Checkbox", 1, V("1", "a"))))));
-        Assert.Equal(["value.duplicate_key"], Codes(Tree([C("1", null, "A")], Entry("1", A("100", "x", false, "Dropdown", 1, V("1", "a"), V("1", "b"))))));
-        Assert.Equal(
-            ["value.conflicting_name"],
-            Codes(Tree([C("1", null, "A"), C("2", null, "B")], Entry("1", A("100", "x", false, "Dropdown", 1, V("1", "a"))), Entry("2", A("100", "x", false, "Dropdown", 1, V("1", "b"))))));
-        Assert.Equal(
-            ["value.other_attribute"],
-            Codes(Tree([C("1", null, "A")], Entry("1", A("100", "x", false, "Dropdown", 1, V("1", "a")), A("101", "y", false, "Dropdown", 1, V("1", "a"))))));
+        Assert.Equal(["attribute.duplicate_in_category"], Codes(Tree([C("1", null, "A")], [D("100", "x", "Dropdown", 1)], Entry("1", L("100"), L("100")))));
+        Assert.Equal(["attribute.invalid_selection"], Codes(Tree([C("1", null, "A")], [D("100", "x", "Radio", 1, V("1", "a"))])));
+        Assert.Equal(["attribute.invalid_selection"], Codes(Tree([C("1", null, "A")], [D("100", "x", "Checkbox", 1, V("1", "a"))])));
+        Assert.Equal(["value.duplicate_key"], Codes(Tree([C("1", null, "A")], [D("100", "x", "Dropdown", 1, V("1", "a"), V("1", "b"))])));
+        Assert.Equal(["value.other_attribute"], Codes(Tree([C("1", null, "A")], [D("100", "x", "Dropdown", 1, V("1", "a")), D("101", "y", "Dropdown", 1, V("1", "a"))])));
+        Assert.Equal(["attribute.key_invalid"], Codes(Tree([C("1", null, "A")], [D("x", "x", "Dropdown", 1)])));
+        Assert.Equal(["value.key_invalid"], Codes(Tree([C("1", null, "A")], [D("100", "x", "Dropdown", 1, V("0", "a"))])));
+    }
+
+    [Fact]
+    public void Tac_10_an_attribute_defined_twice_is_a_duplicate_key()
+    {
+        var problem = Assert.Single(CategoryTreeSource.Build(Tree([C("1", null, "A")], [D("100", "x", "Dropdown", 1), D("100", "x", "Dropdown", 1)])).Problems);
+
+        Assert.Equal(("attribute.duplicate_key", "100", null), (problem.Code, problem.Key, problem.CategoryId));
+    }
+
+    [Fact]
+    public void Tac_10_a_link_to_an_attribute_that_is_not_defined_is_unknown_and_names_the_category()
+    {
+        var problem = Assert.Single(CategoryTreeSource.Build(Tree([C("1", null, "A")], [D("100", "x", "Dropdown", 1)], Entry("1", L("100"), L("999")))).Problems);
+
+        Assert.Equal(("attributes.unknown", "999", 1), (problem.Code, problem.Key, problem.CategoryId));
+    }
+
+    [Fact]
+    public void A_link_to_a_definition_with_a_problem_is_not_also_unknown() =>
+        Assert.Equal(["name.missing", "name.missing"], Codes(Tree([C("1", null, "A")], [new RawAttributeDefinition("100", new RawName(null, null), "Dropdown", 1, false, [])], Entry("1", L("100")))));
+
+    [Fact]
+    public void An_attribute_linked_to_no_category_is_kept()
+    {
+        var source = Build(Tree([C("1", null, "A")], [D("100", "x", "Dropdown", 1, V("1", "a"))]));
+
+        Assert.Equal(100, Assert.Single(source.Attributes).Id);
+        Assert.Empty(source.Links);
+    }
+
+    [Fact]
+    public void Links_take_their_position_and_required_flag_from_the_category_entry()
+    {
+        var links = Build(Baseline()).Links;
+
+        Assert.Equal([(10, 100, 0, true), (10, 101, 1, false), (20, 102, 0, false)], links.Select(l => (l.CategoryId, l.AttributeId, l.Position, l.IsRequired)));
     }
 
     [Fact]
     public void Two_values_equal_after_cleaning_and_ignoring_case_are_a_problem()
     {
-        var raw = Tree([C("1", null, "A")], Entry("1", A("100", "Màu", false, "Dropdown", 1, V("1", "Đỏ"), V("2", " đỏ​"))));
+        var raw = Tree([C("1", null, "A")], [D("100", "Màu", "Dropdown", 1, V("1", "Đỏ"), V("2", " đỏ\u200b"))]);
 
         Assert.Equal(["value.duplicate_name"], Codes(raw));
     }
 
     [Fact]
-    public void Attribute_without_values_is_free_text_whatever_its_input_type()
+    public void Ac_4_3_attribute_without_values_is_free_text_whatever_its_input_type_or_marker()
     {
-        var source = Build(Tree([C("1", null, "A")], Entry("1", A("100", "x", false, "Whatever", 9))));
+        var source = Build(Tree([C("1", null, "A")], [Open(D("100", "x", "Whatever", 9))], Entry("1", L("100"))));
 
-        var link = source.Links.Single();
-        Assert.Equal(AttributeKind.Text, link.Kind);
-        Assert.False(link.AllowsMultiple);
-        Assert.Equal(1, link.MaxValues);
+        var attribute = source.Attributes.Single();
+        Assert.Equal((AttributeKind.Text, false, 1, false), (attribute.Kind, attribute.AllowsMultiple, attribute.MaxValues, attribute.AllowsCustomValue));
+        Assert.Empty(attribute.ValueIds);
     }
 
     [Fact]
     public void Dropdown_is_single_and_checkbox_is_multiple_with_its_maximum()
     {
-        var links = Build(Baseline()).Links;
+        var source = Build(Baseline());
 
-        var brand = links.Single(l => l.AttributeId == 100);
+        var brand = source.Attributes.Single(a => a.Id == 100);
         Assert.Equal((AttributeKind.List, false, 1), (brand.Kind, brand.AllowsMultiple, brand.MaxValues));
-        var color = links.Single(l => l.AttributeId == 101);
+        var color = source.Attributes.Single(a => a.Id == 101);
         Assert.Equal((AttributeKind.List, true, 5), (color.Kind, color.AllowsMultiple, color.MaxValues));
         Assert.Equal([1100, 1101], color.ValueIds);
+        Assert.Equal([0, 1], source.Values.Where(v => v.AttributeId == 101).Select(v => v.Position));
+    }
+
+    [Fact]
+    public void An_open_list_keeps_its_marker_and_its_values_in_file_order()
+    {
+        var brand = Build(Tree([C("1", null, "A")], [Open(D("100", "Thương hiệu", "Dropdown", 1, V("1001", "Samsung"), V("1000", "Apple")))])).Attributes.Single();
+
+        Assert.True(brand.AllowsCustomValue);
+        Assert.Equal([1001, 1000], brand.ValueIds);
     }
 
     [Fact]

@@ -82,18 +82,35 @@ public sealed class EfCategoryTreeStore(CatalogDbContext db) : ICategoryTreeStor
                 _categories[id].SetImage(imageUrl);
             }
 
+            foreach (var u in changes.AttributeUpdates)
+            {
+                _attributes[u.Id].Loosen(u.AllowsMultiple, u.MaxValues, u.AllowsCustomValue);
+            }
+
             foreach (var u in changes.LinkUpdates)
             {
-                // Transitional (T10): list settings are stored on the attribute; T12 applies the amended change set.
                 var link = _links[(u.CategoryId, u.AttributeId)];
                 link.Reposition(u.Position);
                 if (link.IsRequired && !u.IsRequired)
                 {
                     link.MakeOptional();
                 }
+            }
 
-                var attribute = _attributes[u.AttributeId];
-                attribute.Loosen(u.AllowsMultiple, u.MaxValues, attribute.AllowsCustomValue);
+            // Positions are unique within an attribute's list and checked per statement, so values that move are first
+            // parked on distinct negative positions; they and the new values then take their final places below.
+            if (changes.ValueRepositions.Count > 0)
+            {
+                foreach (var (id, position) in changes.ValueRepositions)
+                {
+                    _values[id].Reposition(-1 - position);
+                }
+
+                await db.SaveChangesAsync(cancellationToken).ConfigureAwait(false);
+                foreach (var (id, position) in changes.ValueRepositions)
+                {
+                    _values[id].Reposition(position);
+                }
             }
 
             db.Attributes.AddRange(changes.NewAttributes);

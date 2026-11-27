@@ -23,6 +23,7 @@ public static class LoadReportPrinter
             Row(output, "categories", c.Categories);
             Row(output, "leaves", c.Leaves);
             Row(output, "attributes", c.Attributes);
+            Row(output, "attribute links", c.AttributeLinks);
             Row(output, "list values", c.ListValues);
             output.WriteLine($"images (top level): {c.Images.Added} added, {c.Images.Changed} changed, {c.Images.Removed} removed, {c.Images.Unchanged} unchanged");
         }

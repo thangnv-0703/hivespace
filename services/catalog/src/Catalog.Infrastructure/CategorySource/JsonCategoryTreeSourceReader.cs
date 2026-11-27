@@ -27,17 +27,18 @@ public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
         await ReadFileAsync(categoriesFile, "categories.json", problems, cancellationToken, root => ReadCategories(root, "categories.json", categories, problems)).ConfigureAwait(false);
 
         var entries = new List<RawCategoryAttributes>();
+        var definitions = new Dictionary<string, RawAttributeDefinition>();
         var attributeDir = Path.Combine(sourcePath, "category-attributes");
         if (Directory.Exists(attributeDir))
         {
             foreach (var file in Directory.EnumerateFiles(attributeDir, "*.json").OrderBy(f => f, StringComparer.Ordinal))
             {
                 var name = $"category-attributes/{Path.GetFileName(file)}";
-                await ReadFileAsync(file, name, problems, cancellationToken, root => ReadAttributeEntries(root, name, entries, problems)).ConfigureAwait(false);
+                await ReadFileAsync(file, name, problems, cancellationToken, root => ReadAttributeEntries(root, name, entries, definitions, problems)).ConfigureAwait(false);
             }
         }
 
-        return new SourceReadResult(problems.Count > 0 ? null : new RawCategoryTree(categories, entries), problems);
+        return new SourceReadResult(problems.Count > 0 ? null : new RawCategoryTree(categories, [.. definitions.Values], entries), problems);
     }
 
     private static async Task ReadFileAsync(string path, string name, List<Problem> problems, CancellationToken cancellationToken, Action<JsonElement> read)
@@ -92,19 +93,27 @@ public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
         }
     }
 
-    private static void ReadAttributeEntries(JsonElement list, string file, List<RawCategoryAttributes> into, List<Problem> problems)
+    // Transitional (T11): the v1 files repeat each attribute per category; the first definition of a key is kept and the
+    // rest become links. T12 reads attributes.json and link-only files instead (D-13).
+    private static void ReadAttributeEntries(
+        JsonElement list, string file, List<RawCategoryAttributes> into, Dictionary<string, RawAttributeDefinition> definitions, List<Problem> problems)
     {
         var index = 0;
         foreach (var entry in list.EnumerateArray())
         {
             var where = $"{file} item {index++}";
-            var attributes = new List<RawAttribute>();
+            var links = new List<RawLink>();
             if (entry.TryGetProperty("attributes", out var attrs) && attrs.ValueKind == JsonValueKind.Array)
             {
                 var a = 0;
                 foreach (var attr in attrs.EnumerateArray())
                 {
-                    attributes.Add(ReadAttribute(attr, $"{where} attribute {a++}", problems));
+                    var (definition, link) = ReadAttribute(attr, $"{where} attribute {a++}", problems);
+                    links.Add(link);
+                    if (definition.Key is { } key)
+                    {
+                        definitions.TryAdd(key, definition);
+                    }
                 }
             }
             else if (entry.TryGetProperty("attributes", out var other) && other.ValueKind != JsonValueKind.Null)
@@ -112,11 +121,11 @@ public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
                 problems.Add(new Problem("file.malformed", "file", where, null, "\"attributes\" must be an array"));
             }
 
-            into.Add(new RawCategoryAttributes(Key(entry, "externalCategoryId", where, problems), attributes));
+            into.Add(new RawCategoryAttributes(Key(entry, "externalCategoryId", where, problems), links));
         }
     }
 
-    private static RawAttribute ReadAttribute(JsonElement attr, string where, List<Problem> problems)
+    private static (RawAttributeDefinition, RawLink) ReadAttribute(JsonElement attr, string where, List<Problem> problems)
     {
         var values = new List<RawValue>();
         if (attr.TryGetProperty("values", out var list) && list.ValueKind == JsonValueKind.Array)
@@ -145,8 +154,8 @@ public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
             problems.Add(new Problem("file.malformed", "file", where, null, "\"maxValueCount\" must be a whole number"));
         }
 
-        return new RawAttribute(
-            Key(attr, "sourceAttributeId", where, problems), Name(attr, where, problems), required, Text(attr, "inputType", where, problems), max, values);
+        var key = Key(attr, "sourceAttributeId", where, problems);
+        return (new RawAttributeDefinition(key, Name(attr, where, problems), Text(attr, "inputType", where, problems), max, false, values), new RawLink(key, required));
     }
 
     private static RawName Name(JsonElement item, string where, List<Problem> problems)
