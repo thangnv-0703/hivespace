@@ -1,6 +1,6 @@
 # FEAT-014 review fixes: feature side (main repo)
 
-> Status: Plan, not applied · Date: 2026-11-27
+> Status: Applied 2026-11-27 in `19e9f2e` (FEAT-014 spec signed off 2026-11-27; FEAT-012 stays Draft) · Date: 2026-11-27
 > Fixes the gaps found in the review of `d5d1958` (open lists and inheritance, SRS 0.20). Decisions made with the owner on 2026-11-27.
 > Crawler side: `references/hivespace.crawler/PLAN-feat014-crawler-gaps.md` (G1–G8, and its §7 review). **That work is blocked until steps 1–3 here land** (crawler review item 1).
 > Scope: documents only. No code changes, and T9 (`53f4e18`) stands. T10–T14 stay pending.
