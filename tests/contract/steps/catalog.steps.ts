@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
-import { Given, Then, When } from '@cucumber/cucumber'
+import { BeforeStep, Given, Then, When } from '@cucumber/cucumber'
 import type { ContractWorld } from '../support/world.ts'
 
 // Steps for contracts/features/catalog/categories.feature. State is seeded by SQL from the valid-v1 fixture of the
@@ -13,7 +13,7 @@ const fixture = path.resolve(
 
 interface Name { vi: string; en: string }
 interface Summary { id: number; parentId: number | null; name: Name; isLeaf: boolean; position: number; imageUrl: string | null }
-interface Attribute { id: number; name: Name; required: boolean; kind: string; selection: string | null; maxValues: number | null; values: { id: number; name: Name }[] }
+interface Attribute { id: number; name: Name; required: boolean; kind: string; selection: string | null; maxValues: number | null; allowsCustomValue: boolean; values: { id: number; name: Name }[] }
 
 const readJson = (file: string) => JSON.parse(readFileSync(file, 'utf-8'))
 
@@ -46,26 +46,45 @@ Given('a loaded category tree', async function (this: ContractWorld) {
     inserted.add(c.externalCategoryId)
   }
 
-  const attributes = new Map<string, Name>()
-  const values = new Map<string, { attribute: string; name: Name }>()
-  const links: unknown[][] = []
-  const dir = path.join(fixture, 'category-attributes')
-  for (const file of readdirSync(dir).sort()) {
-    for (const entry of readJson(path.join(dir, file)).categories as { externalCategoryId: string; attributes: any[] }[]) {
-      entry.attributes.forEach((a, index) => {
-        attributes.set(a.sourceAttributeId, a.name)
-        const list = a.values.length > 0
-        for (const v of a.values) values.set(v.sourceValueId, { attribute: a.sourceAttributeId, name: v.name })
-        const multiple = list && a.inputType === 'Checkbox'
-        links.push([entry.externalCategoryId, a.sourceAttributeId, index, a.isRequired, list ? 'list' : 'text', multiple, multiple ? a.maxValueCount : 1, a.values.map((v: any) => Number(v.sourceValueId))])
-      })
+  // v2 layout (D-13): list settings and values once per attribute in attributes.json, links only in the category files.
+  const attributes = readJson(path.join(fixture, 'attributes.json')).attributes as {
+    sourceAttributeId: string; name: Name; inputType?: string; maxValueCount?: number; allowsCustomValue?: boolean
+    values: { sourceValueId: string; name: Name }[]
+  }[]
+  for (const a of attributes) {
+    const list = a.values.length > 0
+    const multiple = list && a.inputType === 'Checkbox'
+    await db.query(
+      'insert into attributes ("Id","NameVi","NameEn","Kind","AllowsMultiple","MaxValues","AllowsCustomValue") values ($1,$2,$3,$4,$5,$6,$7)',
+      [a.sourceAttributeId, a.name.vi, a.name.en, list ? 'list' : 'text', multiple, multiple ? a.maxValueCount : 1, list && a.allowsCustomValue === true],
+    )
+    for (const [position, v] of a.values.entries()) {
+      await db.query('insert into attribute_values ("Id","AttributeId","Position","NameVi","NameEn") values ($1,$2,$3,$4,$5)', [v.sourceValueId, a.sourceAttributeId, position, v.name.vi, v.name.en])
     }
   }
-  for (const [id, name] of attributes) await db.query('insert into attributes ("Id","NameVi","NameEn") values ($1,$2,$3)', [id, name.vi, name.en])
-  for (const [id, v] of values) await db.query('insert into attribute_values ("Id","AttributeId","NameVi","NameEn") values ($1,$2,$3,$4)', [id, v.attribute, v.name.vi, v.name.en])
-  for (const l of links) {
-    await db.query('insert into category_attributes ("CategoryId","AttributeId","Position","IsRequired","Kind","AllowsMultiple","MaxValues","ValueIds") values ($1,$2,$3,$4,$5,$6,$7,$8)', l)
+
+  const dir = path.join(fixture, 'category-attributes')
+  for (const file of readdirSync(dir).sort()) {
+    for (const entry of readJson(path.join(dir, file)).categories as { externalCategoryId: string; attributes: { sourceAttributeId: string; isRequired: boolean }[] }[]) {
+      for (const [position, l] of entry.attributes.entries()) {
+        await db.query('insert into category_attributes ("CategoryId","AttributeId","Position","IsRequired") values ($1,$2,$3,$4)', [entry.externalCategoryId, l.sourceAttributeId, position, l.isRequired])
+      }
+    }
   }
+})
+
+// "the attribute … accepts other values" seeds the setting as a Given and checks it as a Then (same wording in the feature),
+// so the step reads its Gherkin type: Context for Given (and its Ands), Outcome for Then.
+let stepType: string | undefined
+BeforeStep(function ({ pickleStep }) {
+  stepType = pickleStep.type
+})
+
+Given('category {int} has the required attribute {string}', async function (this: ContractWorld, category: number, id: string) {
+  await this.service.db.query(
+    'insert into category_attributes ("CategoryId","AttributeId","Position","IsRequired") select $1, $2, coalesce(max("Position") + 1, 0), true from category_attributes where "CategoryId" = $1',
+    [category, id],
+  )
 })
 
 When('a client requests the root categories', async function (this: ContractWorld) {
@@ -160,6 +179,23 @@ Then('the value {string} of attribute {string} is named {string} in both languag
   const v = attribute(this, id).values.find((x) => String(x.id) === valueId)
   assert.ok(v, `value ${valueId} is not in the attribute`)
   assert.deepEqual(v.name, { vi: name, en: name })
+})
+
+Then('the attribute {string} accepts other values', async function (this: ContractWorld, id: string) {
+  if (stepType === 'Context') {
+    const updated = await this.service.db.query('update attributes set "AllowsCustomValue" = true where "Id" = $1 and "Kind" = \'list\'', [id])
+    assert.equal(updated.rowCount, 1, `attribute ${id} is not a seeded list`)
+    return
+  }
+  assert.equal(attribute(this, id).allowsCustomValue, true)
+})
+
+Then('the attribute {string} does not accept other values', function (this: ContractWorld, id: string) {
+  assert.equal(attribute(this, id).allowsCustomValue, false)
+})
+
+Then('the category attributes are {string}', function (this: ContractWorld, ids: string) {
+  assert.deepEqual((this.body.attributes as Attribute[]).map((a) => String(a.id)), ids.split(','))
 })
 
 Then('the category has no attributes', function (this: ContractWorld) {

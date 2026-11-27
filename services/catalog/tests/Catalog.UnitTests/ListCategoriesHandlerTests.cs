@@ -61,6 +61,8 @@ public sealed class ListCategoriesHandlerTests
             Task.FromResult<IReadOnlyList<Category>?>(parentId is null || categories.Any(c => c.Id == parentId) ? categories : null);
 
         public Task<CategoryDetailData?> GetDetailAsync(int id, CancellationToken cancellationToken) => Task.FromResult<CategoryDetailData?>(null);
+
+        public Task<IReadOnlyList<AttributeData>> GetEffectiveAttributesAsync(int categoryId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<AttributeData>>([]);
     }
 
     private sealed class FakeInventory(string? probe) : IInventoryClient

@@ -30,7 +30,7 @@ public sealed class GetCategoryHandlerTests
 
         Assert.Equal([1], detail.Path.Select(p => p.Id));
         var attribute = Assert.Single(detail.Attributes);
-        Assert.Equal(("list", "multiple", 3, true), (attribute.Kind, attribute.Selection, attribute.MaxValues, attribute.Required));
+        Assert.Equal(("list", "multiple", 3, true, false), (attribute.Kind, attribute.Selection, attribute.MaxValues, attribute.Required, attribute.AllowsCustomValue));
         Assert.Equal([2, 1], attribute.Values.Select(v => v.Id));
         Assert.Equal(("Samsung", "Samsung"), (attribute.Values[1].Name.Vi, attribute.Values[1].Name.En));
     }
@@ -43,8 +43,36 @@ public sealed class GetCategoryHandlerTests
 
         var attribute = Assert.Single((await Get(data)).Value!.Attributes);
 
-        Assert.Equal(("text", null, null), (attribute.Kind, attribute.Selection, attribute.MaxValues));
+        Assert.Equal(("text", null, null, false), (attribute.Kind, attribute.Selection, attribute.MaxValues, attribute.AllowsCustomValue));
         Assert.Empty(attribute.Values);
+    }
+
+    [Fact]
+    public async Task Ac_4_6_an_open_list_says_it_accepts_other_values_and_keeps_its_values_in_order()
+    {
+        var link = new CategoryAttribute(10, 100, 0, true);
+        var brand = new AttributeDefinition(100, new LocalizedName("Thương hiệu", "Brand"), AttributeKind.List, false, 1, true);
+        var data = new CategoryDetailData(Leaf, [Root], [new AttributeData(link, brand, [new AttributeValue(3, 100, 0, new LocalizedName("Apple", "Apple")), new AttributeValue(1, 100, 1, new LocalizedName("Sony", "Sony"))])]);
+
+        var attribute = Assert.Single((await Get(data)).Value!.Attributes);
+
+        Assert.Equal(("list", "single", 1, true), (attribute.Kind, attribute.Selection, attribute.MaxValues, attribute.AllowsCustomValue));
+        Assert.Equal([3, 1], attribute.Values.Select(v => v.Id));
+    }
+
+    [Fact]
+    public async Task Ac_4_7_an_inherited_attribute_carries_the_ancestor_links_settings()
+    {
+        // The store hands over the parent's link (CategoryId 1) as the leaf's effective attribute (D-12).
+        var parentLink = new CategoryAttribute(1, 100, 0, true);
+        var color = new AttributeDefinition(100, new LocalizedName("Màu", "Color"), AttributeKind.List, true, 5, true);
+        var data = new CategoryDetailData(Leaf, [Root], [new AttributeData(parentLink, color, [new AttributeValue(2, 100, 0, new LocalizedName("Đỏ", "Red"))])]);
+
+        var detail = (await Get(data)).Value!;
+
+        Assert.Equal(10, detail.Id);
+        var attribute = Assert.Single(detail.Attributes);
+        Assert.Equal((100, true, "multiple", 5, true), (attribute.Id, attribute.Required, attribute.Selection, attribute.MaxValues, attribute.AllowsCustomValue));
     }
 
     [Fact]
@@ -62,5 +90,8 @@ public sealed class GetCategoryHandlerTests
         public Task<IReadOnlyList<Category>?> ListChildrenAsync(int? parentId, CancellationToken cancellationToken) => Task.FromResult<IReadOnlyList<Category>?>(null);
 
         public Task<CategoryDetailData?> GetDetailAsync(int id, CancellationToken cancellationToken) => Task.FromResult(data);
+
+        public Task<IReadOnlyList<AttributeData>> GetEffectiveAttributesAsync(int categoryId, CancellationToken cancellationToken) =>
+            Task.FromResult(data?.Attributes ?? []);
     }
 }
