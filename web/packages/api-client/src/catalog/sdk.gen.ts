@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ListCategoriesData, ListCategoriesErrors, ListCategoriesResponses, PublishPingData, PublishPingErrors, PublishPingResponses } from './types.gen';
+import type { GetCategoryData, GetCategoryErrors, GetCategoryResponses, ListCategoriesData, ListCategoriesErrors, ListCategoriesResponses, PublishPingData, PublishPingErrors, PublishPingResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,9 +19,18 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
- * List top-level categories (skeleton round trip through gateway, Catalog and Postgres).
+ * List the root categories, or the children of one category (one level per request).
+ *
+ * Without `parentId` the items are the root categories; with it, that category's children (`[]` for a leaf). Ordered by `position`.
  */
 export const listCategories = <ThrowOnError extends boolean = false>(options?: Options<ListCategoriesData, ThrowOnError>): RequestResult<ListCategoriesResponses, ListCategoriesErrors, ThrowOnError> => (options?.client ?? client).get<ListCategoriesResponses, ListCategoriesErrors, ThrowOnError>({ url: '/v1/categories', ...options });
+
+/**
+ * Get one category with its path and, for a leaf, its effective attributes and their values.
+ *
+ * Public read. Ids are the source integer keys. A non-leaf returns no attributes.
+ */
+export const getCategory = <ThrowOnError extends boolean = false>(options: Options<GetCategoryData, ThrowOnError>): RequestResult<GetCategoryResponses, GetCategoryErrors, ThrowOnError> => (options.client ?? client).get<GetCategoryResponses, GetCategoryErrors, ThrowOnError>({ url: '/v1/categories/{id}', ...options });
 
 /**
  * Publish a Ping event through the outbox (skeleton event path).

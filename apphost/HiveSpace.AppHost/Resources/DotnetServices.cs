@@ -62,6 +62,15 @@ internal static class DotnetServicesExtensions
             .WaitFor(catalogDb)
             .WaitFor(infra.Messaging);
 
+        // The operator's category load (FEAT-014, D-3): started by hand from the dashboard, report in its console log.
+        // It waits for catalog so migrations ran, takes no messaging reference (the running catalog relays the event)
+        // and stays out of the deployed profile.
+        builder.AddProject<Projects.Catalog_Api>("catalog-load-categories", launchProfileName: null)
+            .WithArgs("load-categories", "--source", Path.GetFullPath(Path.Combine(builder.AppHostDirectory, "..", "..", "data", "category-tree")))
+            .WithReference(catalogDb)
+            .WaitFor(catalog)
+            .WithExplicitStart();
+
         var identityDb = infra.Postgres.AddDatabase("identitydb");
         var identitySecrets = DevSecrets.LoadIdentitySecrets(builder.AppHostDirectory);
         var identity = builder.AddProject<Projects.Identity_Api>("identity")

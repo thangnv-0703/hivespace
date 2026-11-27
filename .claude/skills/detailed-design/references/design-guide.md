@@ -95,6 +95,8 @@ new noun the domain vocabulary doesn't have — conceptual, escalate.
 - **Convention inheritance is mandatory**: read how existing endpoints shape
   envelopes, name fields, paginate, and report errors — and match it. A feature
   that introduces a second convention is a defect even if internally clean.
+  If the surveyed code breaks a written rule (repo-structure, dev-standards,
+  ADRs), the rule is the convention to inherit: record the mismatch in §2.
 - **Errors are designed, not defaulted**: every UC exception flow and every
   validation rule maps to a specific error response. The generic 500 is what's
   left *after* design, not instead of it.

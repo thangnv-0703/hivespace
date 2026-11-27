@@ -111,6 +111,10 @@ response-time bound timed against the local stack — recorded as indicative,
 environment-caveated; a hard perf NFR needing real infrastructure is
 recorded as *pending environment*, never silently skipped). Screens
 spot-checked against their manifest states and conformance claims.
+**Written rules** too: the files the feature added or moved are checked
+against `docs/repo-structure.md` and `docs/dev-standards.md` (when present),
+especially rules marked *Review*. A break is a rework finding, even when the
+design asked for it (then it is also a design defect).
 
 ### Phase 6 — Verdict, report, and routing
 

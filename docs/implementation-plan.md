@@ -1,11 +1,11 @@
 # Implementation Plan: HiveSpace (MVP)
 
-> Status: Draft · Last updated: 2026-11-17
-> Inputs: [srs.md](srs.md) v0.16 · [use-cases.md](use-cases.md) · [architecture.md](architecture.md) (with `adr/0001..0021`) · [ux-foundations.md](ux-foundations.md) — all four found. Also read: [dev-standards.md](dev-standards.md), [repo-structure.md](repo-structure.md), [rtm.md](rtm.md).
+> Status: Draft · Last updated: 2026-11-25 (FEAT-014 split: category tree moved before FEAT-012, seed became FEAT-039)
+> Inputs: [srs.md](srs.md) v0.18 · [use-cases.md](use-cases.md) · [architecture.md](architecture.md) (with `adr/0001..0021`) · [ux-foundations.md](ux-foundations.md) — all four found. Also read: [dev-standards.md](dev-standards.md), [repo-structure.md](repo-structure.md), [rtm.md](rtm.md).
 
 ## 1. Overview
 
-HiveSpace is a multi-seller marketplace (gateway/BFF, 9 services, 1 Azure Function, 2 Vue SPAs) built by one person in about 390 hours (CON-1). This plan cuts it into **38 vertical slices (FEAT-001..038)** across 12 epics, after a walking skeleton.
+HiveSpace is a multi-seller marketplace (gateway/BFF, 9 services, 1 Azure Function, 2 Vue SPAs) built by one person in about 390 hours (CON-1). This plan cuts it into **39 vertical slices (FEAT-001..039)** across 12 epics, after a walking skeleton.
 
 **What ordered the work** (user decision, 2026-11-17):
 1. **Unblock downstream first.** Identity, shop and catalog come right after the skeleton, because nearly every other slice needs a signed-in user, a shop and products with stock. The risky core (atomic reservation, checkout saga, idempotent payment) follows straight after, still in the first half.
@@ -66,9 +66,10 @@ Priority shows the highest SRS priority the slice carries. "p" after an ID means
 | :- | :------ | :-- | :-- | :-- | :------ | :----------------- | :--- |
 | FEAT-012 | Create a product with variants and stock | Must | FR-CAT-001, FR-CAT-002, FR-CAT-004, FR-CAT-005, FR-SHOP-011, FR-INV-001, FR-CUR-003 p | UC-005 | SCR-SEL-004 | Catalog `POST /v1/seller/products`; events `ProductChanged`, `VariantCreated` → Inventory | Product, variant, attribute values, stock row |
 | FEAT-013 | Manage products and stock | Must | FR-CAT-006..010, FR-INV-010, FR-INV-011 | UC-006 | SCR-SEL-003, SCR-SEL-004 | Catalog seller endpoints; gRPC Catalog → Inventory `SetOnHand` | Product, variant, stock movement |
-| FEAT-014 | Category tree and catalog seed | Must | FR-CAT-003, FR-CAT-016, FR-CAT-017, FR-LOC-007 p | UC-020 | — (operator) | Catalog seed command, `GET /v1/categories`; event `CategoryTreeChanged` | Category (vi/en), seeded shops, products, stock |
+| FEAT-014 | Category tree with attributes | Must | FR-CAT-003, FR-CAT-019, FR-CAT-020, FR-LOC-007 p | UC-005 (step 1) | — (operator; the tree is seeded, no admin UI) | Catalog category seed, `GET /v1/categories`; event `CategoryTreeChanged` | Category (vi/en), category attributes (required flag, list or free text) |
 | FEAT-015 | Product detail page | Must | FR-CAT-012..015 | UC-009 | SCR-STF-003 | Catalog `GET /v1/products/{id}`; gRPC Catalog → Inventory availability | read only |
 | FEAT-016 | AI listing draft | Could | FR-LAS-001..003 | UC-023 | SCR-SEL-004 | Search-AI `ILlmProvider` | — |
+| FEAT-039 | Catalog seed | Must | FR-CAT-016, FR-CAT-017 | UC-020 | — (operator) | Catalog seed command (products through FEAT-012's create path, stock to Inventory) | Seeded shops, products, variants, stock |
 
 ### E4 Inventory — Inventory (Go)
 
@@ -137,23 +138,23 @@ Priority shows the highest SRS priority the slice carries. "p" after an ID means
 | FEAT-037 | Demo release: deployed hero flow, perf runs, demo video | Must | (NFRs only: NFR-DEM-001..003, NFR-USE-001, NFR-PORT-002, NFR-MNT-004, NFR-COST-001, NFR-PERF-006, NFR-SCAL-002) | hero flow UCs | all hero-flow screens | IaC, `azd`, budget alert | seed in Neon |
 | FEAT-038 | Large-scale data generator | Could | FR-GEN-001..003 | — | — (operator) | Python tool, local only | Synthetic data |
 
-**Non-functional requirements carried by slices** (the rest are in §6): NFR-SEC-002..004 → FEAT-001; NFR-SEC-015 → FEAT-003; NFR-SEC-014 → FEAT-004; NFR-SEC-005, NFR-SEC-009 → FEAT-005; NFR-SEC-016 → FEAT-006; NFR-SEC-008 → FEAT-010; NFR-LEG-002 → FEAT-014; NFR-PERF-001 → FEAT-015; NFR-SCAL-001, NFR-REL-001, NFR-PERF-005, NFR-OBS-003 → FEAT-017; NFR-PERF-002 → FEAT-018; NFR-SEC-010, NFR-COST-002, NFR-PERF-003 → FEAT-019; NFR-PERF-004, NFR-OBS-001, NFR-MNT-007 → FEAT-022; NFR-REL-002 → FEAT-023; NFR-REL-003, NFR-SEC-011 → FEAT-029; NFR-REL-004, NFR-COST-004 p → FEAT-032; NFR-SEC-013, NFR-MNT-010, NFR-PERF-007 → FEAT-035; NFR-SCAL-003 → FEAT-038.
+**Non-functional requirements carried by slices** (the rest are in §6): NFR-SEC-002..004 → FEAT-001; NFR-SEC-015 → FEAT-003; NFR-SEC-014 → FEAT-004; NFR-SEC-005, NFR-SEC-009 → FEAT-005; NFR-SEC-016 → FEAT-006; NFR-SEC-008 → FEAT-010; NFR-LEG-002 → FEAT-039; NFR-PERF-001 → FEAT-015; NFR-SCAL-001, NFR-REL-001, NFR-PERF-005, NFR-OBS-003 → FEAT-017; NFR-PERF-002 → FEAT-018; NFR-SEC-010, NFR-COST-002, NFR-PERF-003 → FEAT-019; NFR-PERF-004, NFR-OBS-001, NFR-MNT-007 → FEAT-022; NFR-REL-002 → FEAT-023; NFR-REL-003, NFR-SEC-011 → FEAT-029; NFR-REL-004, NFR-COST-004 p → FEAT-032; NFR-SEC-013, NFR-MNT-010, NFR-PERF-007 → FEAT-035; NFR-SCAL-003 → FEAT-038.
 
 ## 4. Build Sequence
 
-**Reasoning.** Dependency sets the order inside "unblock downstream": everything needs a user (FEAT-001), sellers need a shop (FEAT-009, FEAT-010 for FR-SHOP-011), buyers need products and stock (FEAT-012..015) and a way to find them (FEAT-018). Risk then pulls the hardest proofs forward as soon as their inputs exist: the reservation (FEAT-017) is built and load-tested before the cart and checkout that call it, and the saga's failure injection (FEAT-023) follows COD checkout directly, before any more order features build on it. Must before Should before Could breaks remaining ties. FEAT-001 deliberately includes the first real cross-stack event (Identity → broker → Python Notification → Mailpit), so the event pattern is proven in phase 1.
+**Reasoning.** Dependency sets the order inside "unblock downstream": everything needs a user (FEAT-001), sellers need a shop (FEAT-009, FEAT-010 for FR-SHOP-011), products need a category tree (FEAT-014 before FEAT-012, FR-CAT-003), buyers need products and stock (FEAT-012, FEAT-013, FEAT-039 seed, FEAT-015) and a way to find them (FEAT-018). Risk then pulls the hardest proofs forward as soon as their inputs exist: the reservation (FEAT-017) is built and load-tested before the cart and checkout that call it, and the saga's failure injection (FEAT-023) follows COD checkout directly, before any more order features build on it. Must before Should before Could breaks remaining ties. FEAT-001 deliberately includes the first real cross-stack event (Identity → broker → Python Notification → Mailpit), so the event pattern is proven in phase 1.
 
 | Phase | Increment (demoable) | Slices in order |
 | :-- | :-- | :-- |
 | 0 | Skeleton runs locally, in CI and once on Azure | Walking skeleton + §6 foundations |
-| 1 | A seller registers, sets up a shop and lists products; a visitor finds and views them | FEAT-001, FEAT-002, FEAT-009, FEAT-010, FEAT-012, FEAT-013, FEAT-014, FEAT-015, FEAT-018, FEAT-011 |
+| 1 | A seller registers, sets up a shop and lists products; a visitor finds and views them | FEAT-001, FEAT-002, FEAT-009, FEAT-010, FEAT-014, FEAT-012, FEAT-013, FEAT-039, FEAT-015, FEAT-018, FEAT-011 |
 | 2 | A buyer checks out COD from several shops; oversell and failure-injection proofs committed | FEAT-017, FEAT-021, FEAT-008, FEAT-022, FEAT-023, FEAT-024 |
 | 3 | Full order lifecycle with online payment and emails | FEAT-025, FEAT-026, FEAT-027, FEAT-029, FEAT-032 |
 | 4 | All Musts: reviews, profile security, images, Google, NL search; demo released | FEAT-033, FEAT-003, FEAT-035, FEAT-036, FEAT-004, FEAT-019, FEAT-020, FEAT-037 |
 | 5 | Should extras | FEAT-030, FEAT-005, FEAT-006 |
 | 6 | Could, in the PRD's cut order (last first) | FEAT-034, FEAT-016, FEAT-028, FEAT-038, FEAT-031, FEAT-007 |
 
-Notes: FEAT-008 (Should) sits in phase 2 because FR-CHK-002 needs an address. FEAT-019 sits late because OQ-4 (AI runtime) is due before week 10; its provider interface and the price parser can start earlier if OQ-4 closes sooner. If phase 4 runs short, cut FEAT-035/036 first (R-1).
+Notes: FEAT-008 (Should) sits in phase 2 because FR-CHK-002 needs an address. FEAT-019 sits late because OQ-4 (AI runtime) is due before week 10; its provider interface and the price parser can start earlier if OQ-4 closes sooner. If phase 4 runs short, cut FEAT-035/036 first (R-1). FEAT-014 was split on 2026-11-25 (FEAT-012 feature spec, Q1): the category tree with its attributes stays FEAT-014 and comes before FEAT-012, because a product needs a leaf category; the seed (FR-CAT-016/017) became FEAT-039, after FEAT-013, because it loads products and stock.
 
 ```mermaid
 graph LR
@@ -171,7 +172,7 @@ graph LR
     f011["FEAT-011 Shop page"]
     f012["FEAT-012 Create product"]
     f013["FEAT-013 Manage products"]
-    f014["FEAT-014 Categories and seed"]
+    f014["FEAT-014 Category tree"]
     f015["FEAT-015 Product page"]
     f016["FEAT-016 AI listing (C)"]
     f017["FEAT-017 Reservation + k6"]
@@ -196,6 +197,7 @@ graph LR
     f036["FEAT-036 Shop and product images"]
     f037["FEAT-037 Demo release"]
     f038["FEAT-038 Data generator (C)"]
+    f039["FEAT-039 Catalog seed"]
 
     sk --> f001
     f001 --> f002
@@ -209,7 +211,9 @@ graph LR
     f009 --> f010
     f010 --> f012
     f012 --> f013
-    f012 --> f014
+    f014 --> f012
+    f012 --> f039
+    f039 --> f018
     f012 --> f015
     f012 --> f016
     f012 --> f017
@@ -314,7 +318,7 @@ Stand these up with the skeleton or in the slice that first needs them. Requirem
 | # | Risk or assumption | Effect on the plan | Trigger to re-order |
 | :-- | :-- | :-- | :-- |
 | P-1 | Must scope exceeds 390 hours (CON-1, R-1) | Phases 5–6 are likely cut; phase 4 may lose FEAT-035/036 | After phase 2, compare hours spent with the budget and apply the R-1 cut order |
-| P-2 | **OQ-1** seed data source and **NFR-LEG-002** licence are open | Blocks FEAT-014 | Not decided by the start of phase 1 → seed with a small hand-made set and finish FEAT-014 later |
+| P-2 | **OQ-1** seed data source and **NFR-LEG-002** licence are open | Blocks FEAT-039 (not FEAT-014: the category tree is platform-owned and hand-written) | Not decided by the start of phase 1 → seed with a small hand-made set and finish FEAT-039 later |
 | P-3 | **OQ-4** AI runtime and **OQ-15** "hit" definition are open | Blocks FEAT-019 and FEAT-020 | Close before week 10, or move FEAT-019 later and demo keyword search |
 | P-4 | **OQ-32** Google Cloud project and **OQ-29** Resend domain/limits | Block FEAT-004 and real email in FEAT-037 | Mailpit covers local work; set these up before phase 4 |
 | P-5 | **OQ-13** timeouts (24 h link, 15 min hold and payment window, 10 s step) are taken as proposed | FEAT-001, FEAT-017, FEAT-022, FEAT-029 use them as config | Values change → config only (FR-INV-012) |

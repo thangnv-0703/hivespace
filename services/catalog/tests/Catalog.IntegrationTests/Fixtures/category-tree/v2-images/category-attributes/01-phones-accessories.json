@@ -1,0 +1,56 @@
+{
+  "categories": [
+    {
+      "externalCategoryId": "1795",
+      "attributes": [
+        {
+          "sourceAttributeId": "1001",
+          "isRequired": true
+        },
+        {
+          "sourceAttributeId": "1002",
+          "isRequired": false
+        },
+        {
+          "sourceAttributeId": "1003",
+          "isRequired": false
+        }
+      ]
+    },
+    {
+      "externalCategoryId": "1794",
+      "attributes": [
+        {
+          "sourceAttributeId": "1001",
+          "isRequired": true
+        },
+        {
+          "sourceAttributeId": "1002",
+          "isRequired": false
+        }
+      ]
+    },
+    {
+      "externalCategoryId": "8062",
+      "attributes": [
+        {
+          "sourceAttributeId": "1003",
+          "isRequired": false
+        },
+        {
+          "sourceAttributeId": "1005",
+          "isRequired": false
+        }
+      ]
+    },
+    {
+      "externalCategoryId": "8063",
+      "attributes": [
+        {
+          "sourceAttributeId": "1006",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}

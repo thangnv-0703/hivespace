@@ -1,18 +1,18 @@
 using Catalog.Application.Abstractions;
-using Catalog.Domain.Categories;
+using Catalog.Infrastructure.Persistence;
 using HiveSpace.BuildingBlocks.Messaging;
-using Microsoft.EntityFrameworkCore;
 
-namespace Catalog.Infrastructure.Persistence;
-
-internal sealed class CategoryReadStore(CatalogDbContext db) : ICategoryReadStore
-{
-    public async Task<IReadOnlyList<Category>> ListAsync(CancellationToken cancellationToken) =>
-        await db.Categories.AsNoTracking().OrderBy(c => c.Slug).ToListAsync(cancellationToken).ConfigureAwait(false);
-}
+namespace Catalog.Infrastructure.Messaging;
 
 internal sealed class EfEventOutbox(CatalogDbContext db) : IEventOutbox
 {
+    public Guid Stage<T>(string eventType, int version, string correlationId, T data)
+    {
+        var envelope = EventEnvelope.Create(eventType, version, "catalog", correlationId, data);
+        db.Set<OutboxMessage>().Add(OutboxMessage.From(envelope));
+        return envelope.EventId;
+    }
+
     public async Task<Guid> WriteAsync<T>(string eventType, int version, string correlationId, T data, CancellationToken cancellationToken)
     {
         var envelope = EventEnvelope.Create(eventType, version, "catalog", correlationId, data);

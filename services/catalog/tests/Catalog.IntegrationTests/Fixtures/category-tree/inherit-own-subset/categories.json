@@ -1,0 +1,40 @@
+{
+  "categories": [
+    {
+      "externalCategoryId": "1815",
+      "externalParentCategoryId": null,
+      "name": {
+        "vi": "Thiết Bị Số - Phụ Kiện Số",
+        "en": "Digital Devices & Accessories"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "7075",
+      "externalParentCategoryId": "1815",
+      "name": {
+        "vi": "Loa",
+        "en": "Speakers"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "7076",
+      "externalParentCategoryId": "7075",
+      "name": {
+        "vi": "Loa bluetooth",
+        "en": "Bluetooth speakers"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "7077",
+      "externalParentCategoryId": "7075",
+      "name": {
+        "vi": "Loa vi tính",
+        "en": "Computer speakers"
+      },
+      "imageUrl": null
+    }
+  ]
+}

@@ -62,10 +62,15 @@ New service: generate it from `templates/` (see `templates/README.md`); never co
 
 **Branches in cloud sessions.** The session starts on a scratch `claude/*` branch; `scripts/cloud-use-feature-branch.sh` (SessionStart hook) switches it to the `feat/NNN-<slug>` branch it was cut from. Commit and push (plain `git push`) only on that feature branch. Never create or push a `claude/*` branch and never open a PR from one; `scripts/guard-no-claude-push.sh` blocks it. If the script printed a WARNING and you are still on `claude/*`, run `git checkout -B feat/NNN-<slug> origin/feat/NNN-<slug>` for the feature you were asked to work on before committing.
 
+## Written rules and existing code
+
+Before adding files, read the rules for that stack in `docs/repo-structure.md` §4 and `docs/dev-standards.md` §8. For conventions and layout, a written rule wins over older code that breaks it: follow the rule in new code and report the mismatch; do not extend the old pattern. For what exists today (contracts, schema, behaviour), the code is the reference.
+
 ## Boundary rules (enforced by tooling — do not work around them)
 
 - No service references another service's code or database; data crosses by gRPC or events only.
 - .NET rich services: `Api → Application → Domain`, `Infrastructure → Application`; Domain has no framework or vendor reference (NetArchTest in each service's tests).
+- .NET rich services: one port per file under `Application/Abstractions/`; no catch-all `Ports.cs` or `Adapters.cs` (`PortLayoutTests`).
 - Go: `internal/domain` imports nothing from `internal/`; only `internal/store` imports a driver; only `transport/grpc`, `clients/` and `cmd/` import generated stubs (depguard, `.golangci.yml`).
 - Python: features do not import each other; vendor SDKs only under `providers/` (import-linter, each `pyproject.toml`).
 - Web: features import each other only through `index.ts`; only `api.ts` imports the API client; apps never import each other (Sheriff).

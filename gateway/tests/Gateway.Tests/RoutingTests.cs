@@ -32,4 +32,18 @@ public sealed class RoutingTests : IClassFixture<GatewayTestHost>
         Assert.Equal(string.Empty, echoed.GetProperty("authorization").GetString());
         Assert.Equal("corr-123", echoed.GetProperty("correlationId").GetString());
     }
+
+    [Theory]
+    [InlineData("/v1/categories?parentId=1789")]
+    [InlineData("/v1/categories/1795")]
+    public async Task Category_reads_reach_the_catalog_cluster_anonymously(string path)
+    {
+        using var client = _host.NewClient();
+
+        using var response = await client.GetAsync(path, TestContext.Current.CancellationToken);
+
+        response.EnsureSuccessStatusCode();
+        var echoed = await response.Content.ReadFromJsonAsync<JsonElement>(TestContext.Current.CancellationToken);
+        Assert.Equal(string.Empty, echoed.GetProperty("userId").GetString());
+    }
 }

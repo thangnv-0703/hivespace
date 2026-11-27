@@ -1,0 +1,76 @@
+{
+  "attributes": [
+    {
+      "sourceAttributeId": "1001",
+      "name": {
+        "vi": "Thương hiệu",
+        "en": "Brand"
+      },
+      "inputType": "Dropdown",
+      "maxValueCount": 1,
+      "values": [
+        {
+          "sourceValueId": "5001",
+          "name": {
+            "vi": "JBL",
+            "en": "JBL"
+          }
+        },
+        {
+          "sourceValueId": "5002",
+          "name": {
+            "vi": "Sony",
+            "en": "Sony"
+          }
+        },
+        {
+          "sourceValueId": "5003",
+          "name": {
+            "vi": "Marshall",
+            "en": "Marshall"
+          }
+        }
+      ]
+    },
+    {
+      "sourceAttributeId": "1010",
+      "name": {
+        "vi": "Kết nối",
+        "en": "Connectivity"
+      },
+      "inputType": "Checkbox",
+      "maxValueCount": 3,
+      "values": [
+        {
+          "sourceValueId": "5101",
+          "name": {
+            "vi": "Bluetooth",
+            "en": "Bluetooth"
+          }
+        },
+        {
+          "sourceValueId": "5102",
+          "name": {
+            "vi": "USB",
+            "en": "USB"
+          }
+        },
+        {
+          "sourceValueId": "5103",
+          "name": {
+            "vi": "AUX",
+            "en": "AUX"
+          }
+        }
+      ]
+    },
+    {
+      "sourceAttributeId": "1011",
+      "name": {
+        "vi": "Công suất",
+        "en": "Power output"
+      },
+      "values": []
+    }
+  ]
+}

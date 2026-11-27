@@ -209,7 +209,7 @@ graph LR
 - **Description:** A seller lists a product with variants, attributes, images and stock.
 - **Preconditions:** The user is a seller with pickup address and bank details saved.
 - **Postconditions (success):** The product is active and visible in browse and search within 60 s.
-- **Traces to:** FR-CAT-001, FR-CAT-002, FR-CAT-003, FR-CAT-004, FR-CAT-005, FR-CAT-007, FR-CAT-011, FR-CAT-018, FR-SHOP-011, FR-NLS-007, FR-ROLE-003, FR-MEDIA-003, FR-MEDIA-004, FR-CUR-001, FR-CUR-002, FR-CUR-003, FR-LOC-007
+- **Traces to:** FR-CAT-001, FR-CAT-002, FR-CAT-003, FR-CAT-004, FR-CAT-005, FR-CAT-007, FR-CAT-020, FR-CAT-022, FR-CAT-023, FR-CAT-011, FR-CAT-018, FR-SHOP-011, FR-NLS-007, FR-ROLE-003, FR-MEDIA-003, FR-MEDIA-004, FR-CUR-001, FR-CUR-002, FR-CUR-003, FR-LOC-007
 
 **Main success scenario**
 1. Seller picks a leaf category.
@@ -222,7 +222,7 @@ graph LR
 - 2a. Seller uses an AI draft (UC-023).
 
 **Exception flows**
-- 4a. Invalid data (price ≤ 0, duplicate variant combination, negative stock): system rejects with field errors.
+- 4a. Invalid data (price ≤ 0, duplicate variant combination, negative stock, a value outside the product limits of FR-CAT-005): system rejects with field errors.
 - 4b. Shop setup incomplete: system rejects and states what is missing.
 
 ### UC-006: Edit a product and its stock
@@ -253,7 +253,7 @@ graph LR
 - **Description:** A user finds products by category, keyword, filters and sort order.
 - **Preconditions:** None.
 - **Postconditions (success):** A paged list of matching active products is shown.
-- **Traces to:** FR-SRCH-001, FR-SRCH-002, FR-SRCH-003, FR-SRCH-004, FR-SRCH-005, FR-SRCH-006, FR-SRCH-007, FR-SRCH-008, FR-SRCH-009, FR-SRCH-010, FR-SRCH-011, FR-LOC-007
+- **Traces to:** FR-SRCH-001, FR-SRCH-002, FR-SRCH-003, FR-SRCH-004, FR-SRCH-005, FR-SRCH-006, FR-SRCH-007, FR-SRCH-008, FR-SRCH-009, FR-SRCH-010, FR-SRCH-011, FR-LOC-007, FR-CAT-021
 
 **Main success scenario**
 1. User enters a keyword or opens a category.
@@ -525,7 +525,7 @@ graph LR
 - **Description:** The operator loads the starting dataset with one command.
 - **Preconditions:** Environment is running.
 - **Postconditions (success):** At least 200 products with sellers, variants, stock and embeddings exist.
-- **Traces to:** FR-CAT-016, FR-CAT-017, FR-NLS-008, NFR-LEG-002, NFR-REL-007
+- **Traces to:** FR-CAT-016, FR-CAT-017, FR-CAT-019, FR-CAT-022, FR-CAT-023, FR-NLS-008, NFR-LEG-002, NFR-REL-007
 
 **Main success scenario**
 1. Operator runs the seed command.

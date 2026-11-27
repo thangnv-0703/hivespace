@@ -1,0 +1,157 @@
+{
+  "categories": [
+    {
+      "externalCategoryId": "1789",
+      "externalParentCategoryId": null,
+      "name": {
+        "vi": "Điện Thoại - Máy Tính Bảng",
+        "en": "Phones and Tablets"
+      },
+      "imageUrl": "https://example.com/sample-images/categories/phones-tablets.jpg"
+    },
+    {
+      "externalCategoryId": "1795",
+      "externalParentCategoryId": "1789",
+      "name": {
+        "vi": "Điện thoại Smartphone",
+        "en": "Smartphones"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "1794",
+      "externalParentCategoryId": "1789",
+      "name": {
+        "vi": "Máy tính bảng",
+        "en": "Tablets"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "8062",
+      "externalParentCategoryId": "8061",
+      "name": {
+        "vi": "Ốp lưng điện thoại",
+        "en": "Phone cases"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "8061",
+      "externalParentCategoryId": "1789",
+      "name": {
+        "vi": "Phụ kiện điện thoại",
+        "en": "Phone accessories"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "8063",
+      "externalParentCategoryId": "8061",
+      "name": {
+        "vi": "Cáp sạc",
+        "en": "Charging cables"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "8322",
+      "externalParentCategoryId": null,
+      "name": {
+        "vi": "Nhà Cửa - Đời Sống",
+        "en": "Home & Living"
+      },
+      "imageUrl": "https://example.com/sample-images/categories/home-living.jpg"
+    },
+    {
+      "externalCategoryId": "2349",
+      "externalParentCategoryId": "8322",
+      "name": {
+        "vi": "Đồ dùng nhà bếp",
+        "en": "Kitchenware"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "2350",
+      "externalParentCategoryId": "2349",
+      "name": {
+        "vi": "Nồi - Chảo",
+        "en": "Pots & Pans"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "2351",
+      "externalParentCategoryId": "2349",
+      "name": {
+        "vi": "Dao - Kéo",
+        "en": "Knives & Scissors"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "1883",
+      "externalParentCategoryId": "8322",
+      "name": {
+        "vi": "Nội thất",
+        "en": "Furniture"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "1686",
+      "externalParentCategoryId": null,
+      "name": {
+        "vi": "Thời Trang Nam",
+        "en": "Men's Fashion"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "915",
+      "externalParentCategoryId": "1686",
+      "name": {
+        "vi": "Áo thun nam",
+        "en": "Men's T-shirts"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "917",
+      "externalParentCategoryId": "1686",
+      "name": {
+        "vi": "Quần jean nam",
+        "en": "Men's jeans"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "918",
+      "externalParentCategoryId": "1686",
+      "name": {
+        "vi": "Giày nam",
+        "en": "Men's shoes"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "919",
+      "externalParentCategoryId": "918",
+      "name": {
+        "vi": "Giày thể thao nam",
+        "en": "Men's sneakers"
+      },
+      "imageUrl": null
+    },
+    {
+      "externalCategoryId": "920",
+      "externalParentCategoryId": "918",
+      "name": {
+        "vi": "Dép nam",
+        "en": "Men's sandals"
+      },
+      "imageUrl": null
+    }
+  ]
+}

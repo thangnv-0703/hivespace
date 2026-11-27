@@ -44,6 +44,9 @@ green here fails louder there.
 - Contracts as implemented match technical-design §3 — spot-check request/
   response/error shapes against the document; any deviation is a recorded
   small-divergence or a filed escalation, never silent.
+- Written rules: check every file the feature added or moved against
+  `docs/repo-structure.md` and `docs/dev-standards.md`, including the rules
+  marked *Review*, which no tool will catch.
 - UI: screens match their manifest sources; **no raw values where tokens
   exist** (grep the feature's UI diff for hex/px literals that design.md
   tokenizes); state supplements implemented.

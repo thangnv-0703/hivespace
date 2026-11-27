@@ -21,7 +21,7 @@ describe('storefront shell', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({
-          items: [{ id: '01930000-0000-7000-8000-000000000001', slug: 'thoi-trang', name: { vi: 'Thời trang', en: 'Fashion' } }],
+          items: [{ id: 1789, parentId: null, name: { vi: 'Thời trang', en: 'Fashion' }, isLeaf: false, position: 0, imageUrl: null }],
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),
@@ -38,7 +38,7 @@ describe('storefront shell', () => {
     vi.spyOn(globalThis, 'fetch').mockResolvedValue(
       new Response(
         JSON.stringify({
-          items: [{ id: '01930000-0000-7000-8000-000000000001', slug: 'thoi-trang', name: { vi: 'Thời trang', en: 'Fashion' } }],
+          items: [{ id: 1789, parentId: null, name: { vi: 'Thời trang', en: 'Fashion' }, isLeaf: false, position: 0, imageUrl: null }],
         }),
         { status: 200, headers: { 'Content-Type': 'application/json' } },
       ),

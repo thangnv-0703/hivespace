@@ -1,0 +1,17 @@
+{
+  "categories": [
+    {
+      "externalCategoryId": "7075",
+      "attributes": [
+        {
+          "sourceAttributeId": "1001",
+          "isRequired": true
+        },
+        {
+          "sourceAttributeId": "1010",
+          "isRequired": false
+        }
+      ]
+    }
+  ]
+}
