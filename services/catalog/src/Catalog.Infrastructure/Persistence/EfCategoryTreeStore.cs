@@ -84,10 +84,16 @@ public sealed class EfCategoryTreeStore(CatalogDbContext db) : ICategoryTreeStor
 
             foreach (var u in changes.LinkUpdates)
             {
+                // Transitional (T10): list settings are stored on the attribute; T12 applies the amended change set.
                 var link = _links[(u.CategoryId, u.AttributeId)];
                 link.Reposition(u.Position);
-                link.Loosen(u.IsRequired, u.AllowsMultiple, u.MaxValues);
-                link.SetValueIds(u.ValueIds);
+                if (link.IsRequired && !u.IsRequired)
+                {
+                    link.MakeOptional();
+                }
+
+                var attribute = _attributes[u.AttributeId];
+                attribute.Loosen(u.AllowsMultiple, u.MaxValues, attribute.AllowsCustomValue);
             }
 
             db.Attributes.AddRange(changes.NewAttributes);

@@ -33,9 +33,18 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
             e.HasIndex(c => new { c.ParentId, c.Position });
         });
 
+        // List settings live on the attribute, shared by every category that links it (D-11).
         modelBuilder.Entity<AttributeDefinition>(e =>
         {
-            e.ToTable("attributes");
+            e.ToTable("attributes", t =>
+            {
+                t.HasCheckConstraint("CK_attributes_Kind", "\"Kind\" IN ('list', 'text')");
+                t.HasCheckConstraint(
+                    "CK_attributes_MaxValues",
+                    "(\"Kind\" = 'text' AND \"MaxValues\" = 1 AND NOT \"AllowsMultiple\") OR " +
+                    "(\"Kind\" = 'list' AND ((\"AllowsMultiple\" AND \"MaxValues\" >= 2) OR (NOT \"AllowsMultiple\" AND \"MaxValues\" = 1)))");
+                t.HasCheckConstraint("CK_attributes_AllowsCustomValue", "NOT \"AllowsCustomValue\" OR \"Kind\" = 'list'");
+            });
             e.HasKey(a => a.Id);
             e.Property(a => a.Id).ValueGeneratedNever();
             e.ComplexProperty(a => a.Name, n =>
@@ -43,6 +52,9 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
                 n.Property(x => x.Vi).HasColumnName("NameVi").HasMaxLength(200);
                 n.Property(x => x.En).HasColumnName("NameEn").HasMaxLength(200);
             });
+            e.Property(a => a.Kind).HasMaxLength(8).HasConversion(new ValueConverter<AttributeKind, string>(
+                k => k == AttributeKind.List ? "list" : "text",
+                s => s == "list" ? AttributeKind.List : AttributeKind.Text));
         });
 
         modelBuilder.Entity<AttributeValue>(e =>
@@ -56,24 +68,13 @@ public sealed class CatalogDbContext(DbContextOptions<CatalogDbContext> options)
                 n.Property(x => x.En).HasColumnName("NameEn").HasMaxLength(300);
             });
             e.HasOne<AttributeDefinition>().WithMany().HasForeignKey(v => v.AttributeId).OnDelete(DeleteBehavior.Restrict);
-            e.HasIndex(v => v.AttributeId);
+            e.HasIndex(v => new { v.AttributeId, v.Position }).IsUnique();
         });
 
         modelBuilder.Entity<CategoryAttribute>(e =>
         {
-            e.ToTable("category_attributes", t =>
-            {
-                t.HasCheckConstraint("CK_category_attributes_Kind", "\"Kind\" IN ('list', 'text')");
-                t.HasCheckConstraint(
-                    "CK_category_attributes_MaxValues",
-                    "(\"Kind\" = 'text' AND \"MaxValues\" = 1 AND NOT \"AllowsMultiple\") OR " +
-                    "(\"Kind\" = 'list' AND ((\"AllowsMultiple\" AND \"MaxValues\" >= 2) OR (NOT \"AllowsMultiple\" AND \"MaxValues\" = 1)))");
-            });
+            e.ToTable("category_attributes");
             e.HasKey(l => new { l.CategoryId, l.AttributeId });
-            e.Property(l => l.Kind).HasMaxLength(8).HasConversion(new ValueConverter<AttributeKind, string>(
-                k => k == AttributeKind.List ? "list" : "text",
-                s => s == "list" ? AttributeKind.List : AttributeKind.Text));
-            e.Property(l => l.ValueIds).HasColumnType("integer[]").HasDefaultValueSql("'{}'");
             e.HasOne<Category>().WithMany().HasForeignKey(l => l.CategoryId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<AttributeDefinition>().WithMany().HasForeignKey(l => l.AttributeId).OnDelete(DeleteBehavior.Restrict);
             e.HasIndex(l => l.AttributeId);

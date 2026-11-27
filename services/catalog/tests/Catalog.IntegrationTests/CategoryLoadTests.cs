@@ -88,12 +88,14 @@ public sealed class CategoryLoadTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal(1, categories[8063].Position);
         Assert.False(categories[1789].IsLeaf);
         Assert.True(categories[1795].IsLeaf);
-        var color = await read.Db.CategoryAttributes.AsNoTracking().SingleAsync(l => l.CategoryId == 1795 && l.AttributeId == 1003, Ct);
+        Assert.True(await read.Db.CategoryAttributes.AnyAsync(l => l.CategoryId == 1795 && l.AttributeId == 1003, Ct));
+        var color = await read.Db.Attributes.AsNoTracking().SingleAsync(a => a.Id == 1003, Ct);
         Assert.Equal((AttributeKind.List, true, 3), (color.Kind, color.AllowsMultiple, color.MaxValues));
-        Assert.Equal([5201, 5202, 5203, 5204], color.ValueIds);
-        var material = await read.Db.CategoryAttributes.AsNoTracking().SingleAsync(l => l.CategoryId == 8062 && l.AttributeId == 1005, Ct);
+        Assert.Equal([5201, 5202, 5203, 5204], await read.Db.AttributeValues.Where(v => v.AttributeId == 1003).OrderBy(v => v.Position).Select(v => v.Id).ToListAsync(Ct));
+        Assert.True(await read.Db.CategoryAttributes.AnyAsync(l => l.CategoryId == 8062 && l.AttributeId == 1005, Ct));
+        var material = await read.Db.Attributes.AsNoTracking().SingleAsync(a => a.Id == 1005, Ct);
         Assert.Equal(AttributeKind.Text, material.Kind);
-        Assert.Empty(material.ValueIds);
+        Assert.False(await read.Db.AttributeValues.AnyAsync(v => v.AttributeId == 1005, Ct));
         Assert.Equal(1, await OutboxCountAsync(connection));
     }
 
@@ -237,7 +239,7 @@ public sealed class CategoryLoadTests(PostgresFixture postgres) : IClassFixture<
         Assert.True(report.Counts.Attributes.Loosened > 0);
         await using var read = new Rig(connection);
         Assert.False((await read.Db.CategoryAttributes.AsNoTracking().SingleAsync(l => l.CategoryId == 1795 && l.AttributeId == 1001, Ct)).IsRequired);
-        var storage = await read.Db.CategoryAttributes.AsNoTracking().SingleAsync(l => l.CategoryId == 1795 && l.AttributeId == 1002, Ct);
+        var storage = await read.Db.Attributes.AsNoTracking().SingleAsync(a => a.Id == 1002, Ct);
         Assert.Equal((true, 3), (storage.AllowsMultiple, storage.MaxValues));
     }
 

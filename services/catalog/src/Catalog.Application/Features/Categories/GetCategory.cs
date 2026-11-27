@@ -36,14 +36,14 @@ public sealed class GetCategoryHandler(ICategoryReadStore store)
 
     private static CategoryAttributeDto Map(AttributeData a)
     {
-        var isList = a.Link.Kind == AttributeKind.List;
+        var isList = a.Definition.Kind == AttributeKind.List;
         return new CategoryAttributeDto(
             a.Definition.Id,
             LocalizedText.From(a.Definition.Name),
             a.Link.IsRequired,
             isList ? "list" : "text",
-            isList ? (a.Link.AllowsMultiple ? "multiple" : "single") : null,
-            isList ? a.Link.MaxValues : null,
+            isList ? (a.Definition.AllowsMultiple ? "multiple" : "single") : null,
+            isList ? a.Definition.MaxValues : null,
             [.. a.Values.Select(v => new AttributeValueDto(v.Id, LocalizedText.From(v.Name)))]);
     }
 }

@@ -21,10 +21,10 @@ public sealed class GetCategoryHandlerTests
     [Fact]
     public async Task A_list_attribute_returns_its_selection_maximum_and_ordered_values()
     {
-        var link = new CategoryAttribute(10, 100, 0, true, AttributeKind.List, true, 3, [2, 1]);
+        var link = new CategoryAttribute(10, 100, 0, true);
         var data = new CategoryDetailData(
             Leaf, [Root],
-            [new AttributeData(link, new AttributeDefinition(100, new LocalizedName("Màu", "Color")), [new AttributeValue(2, 100, new LocalizedName("Đỏ", "Red")), new AttributeValue(1, 100, new LocalizedName("Samsung", "Samsung"))])]);
+            [new AttributeData(link, new AttributeDefinition(100, new LocalizedName("Màu", "Color"), AttributeKind.List, true, 3, false), [new AttributeValue(2, 100, 0, new LocalizedName("Đỏ", "Red")), new AttributeValue(1, 100, 1, new LocalizedName("Samsung", "Samsung"))])]);
 
         var detail = (await Get(data)).Value!;
 
@@ -38,8 +38,8 @@ public sealed class GetCategoryHandlerTests
     [Fact]
     public async Task A_text_attribute_has_no_selection_maximum_or_values()
     {
-        var link = new CategoryAttribute(10, 101, 0, false, AttributeKind.Text, false, 1, []);
-        var data = new CategoryDetailData(Leaf, [Root], [new AttributeData(link, new AttributeDefinition(101, new LocalizedName("Chất liệu", "Material")), [])]);
+        var link = new CategoryAttribute(10, 101, 0, false);
+        var data = new CategoryDetailData(Leaf, [Root], [new AttributeData(link, new AttributeDefinition(101, new LocalizedName("Chất liệu", "Material"), AttributeKind.Text, false, 1, false), [])]);
 
         var attribute = Assert.Single((await Get(data)).Value!.Attributes);
 

@@ -44,10 +44,9 @@ internal sealed class CategoryReadStore(CatalogDbContext db) : ICategoryReadStor
             var attributeIds = links.Select(l => l.AttributeId).ToList();
             var definitions = await db.Attributes.AsNoTracking().Where(a => attributeIds.Contains(a.Id))
                 .ToDictionaryAsync(a => a.Id, cancellationToken).ConfigureAwait(false);
-            var valueIds = links.SelectMany(l => l.ValueIds).Distinct().ToList();
-            var values = await db.AttributeValues.AsNoTracking().Where(v => valueIds.Contains(v.Id))
-                .ToDictionaryAsync(v => v.Id, cancellationToken).ConfigureAwait(false);
-            attributes = [.. links.Select(l => new AttributeData(l, definitions[l.AttributeId], [.. l.ValueIds.Select(v => values[v])]))];
+            var values = (await db.AttributeValues.AsNoTracking().Where(v => attributeIds.Contains(v.AttributeId)).OrderBy(v => v.Position)
+                .ToListAsync(cancellationToken).ConfigureAwait(false)).ToLookup(v => v.AttributeId);
+            attributes = [.. links.Select(l => new AttributeData(l, definitions[l.AttributeId], [.. values[l.AttributeId]]))];
         }
 
         return new CategoryDetailData(category, path, attributes);

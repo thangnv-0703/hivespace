@@ -2,7 +2,7 @@ using Catalog.Domain.Categories;
 
 namespace Catalog.Application.Abstractions;
 
-/// <summary>An attribute of a leaf with its definition and its category's ordered value list.</summary>
+/// <summary>An attribute of a leaf: its link, its definition with the list settings, and its values ordered by position.</summary>
 public sealed record AttributeData(CategoryAttribute Link, AttributeDefinition Definition, IReadOnlyList<AttributeValue> Values);
 
 /// <summary>A category with its path from the root (parent last) and, for a leaf, its attributes in file order.</summary>

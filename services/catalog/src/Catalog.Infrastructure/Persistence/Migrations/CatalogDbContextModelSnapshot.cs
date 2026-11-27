@@ -28,6 +28,20 @@ namespace Catalog.Infrastructure.Persistence.Migrations
                     b.Property<int>("Id")
                         .HasColumnType("integer");
 
+                    b.Property<bool>("AllowsCustomValue")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("AllowsMultiple")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(8)
+                        .HasColumnType("character varying(8)");
+
+                    b.Property<int>("MaxValues")
+                        .HasColumnType("integer");
+
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Name", "Catalog.Domain.Categories.AttributeDefinition.Name#LocalizedName", b1 =>
                         {
                             b1.IsRequired();
@@ -47,7 +61,14 @@ namespace Catalog.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("attributes", (string)null);
+                    b.ToTable("attributes", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_attributes_AllowsCustomValue", "NOT \"AllowsCustomValue\" OR \"Kind\" = 'list'");
+
+                            t.HasCheckConstraint("CK_attributes_Kind", "\"Kind\" IN ('list', 'text')");
+
+                            t.HasCheckConstraint("CK_attributes_MaxValues", "(\"Kind\" = 'text' AND \"MaxValues\" = 1 AND NOT \"AllowsMultiple\") OR (\"Kind\" = 'list' AND ((\"AllowsMultiple\" AND \"MaxValues\" >= 2) OR (NOT \"AllowsMultiple\" AND \"MaxValues\" = 1)))");
+                        });
                 });
 
             modelBuilder.Entity("Catalog.Domain.Categories.AttributeValue", b =>
@@ -56,6 +77,9 @@ namespace Catalog.Infrastructure.Persistence.Migrations
                         .HasColumnType("integer");
 
                     b.Property<int>("AttributeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Position")
                         .HasColumnType("integer");
 
                     b.ComplexProperty(typeof(Dictionary<string, object>), "Name", "Catalog.Domain.Categories.AttributeValue.Name#LocalizedName", b1 =>
@@ -77,7 +101,8 @@ namespace Catalog.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
-                    b.HasIndex("AttributeId");
+                    b.HasIndex("AttributeId", "Position")
+                        .IsUnique();
 
                     b.ToTable("attribute_values", (string)null);
                 });
@@ -135,39 +160,17 @@ namespace Catalog.Infrastructure.Persistence.Migrations
                     b.Property<int>("AttributeId")
                         .HasColumnType("integer");
 
-                    b.Property<bool>("AllowsMultiple")
-                        .HasColumnType("boolean");
-
                     b.Property<bool>("IsRequired")
                         .HasColumnType("boolean");
 
-                    b.Property<string>("Kind")
-                        .IsRequired()
-                        .HasMaxLength(8)
-                        .HasColumnType("character varying(8)");
-
-                    b.Property<int>("MaxValues")
-                        .HasColumnType("integer");
-
                     b.Property<int>("Position")
                         .HasColumnType("integer");
-
-                    b.PrimitiveCollection<List<int>>("ValueIds")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer[]")
-                        .HasDefaultValueSql("'{}'");
 
                     b.HasKey("CategoryId", "AttributeId");
 
                     b.HasIndex("AttributeId");
 
-                    b.ToTable("category_attributes", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_category_attributes_Kind", "\"Kind\" IN ('list', 'text')");
-
-                            t.HasCheckConstraint("CK_category_attributes_MaxValues", "(\"Kind\" = 'text' AND \"MaxValues\" = 1 AND NOT \"AllowsMultiple\") OR (\"Kind\" = 'list' AND ((\"AllowsMultiple\" AND \"MaxValues\" >= 2) OR (NOT \"AllowsMultiple\" AND \"MaxValues\" = 1)))");
-                        });
+                    b.ToTable("category_attributes", (string)null);
                 });
 
             modelBuilder.Entity("HiveSpace.BuildingBlocks.Messaging.InboxMessage", b =>

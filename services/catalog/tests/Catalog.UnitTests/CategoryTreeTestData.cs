@@ -39,11 +39,16 @@ internal static class CategoryTreeTestData
     }
 
     /// <summary>The stored tree as a previous load of <paramref name="source"/> would have left it.</summary>
-    public static CurrentTree Stored(CategoryTreeSource source) => new(
-        [.. source.Categories.Select(c => new Category(c.Id, c.ParentId, c.Position, c.Name, c.IsLeaf, c.ImageUrl))],
-        [.. source.Attributes.Select(a => new AttributeDefinition(a.Id, a.Name))],
-        [.. source.Values.Select(v => new AttributeValue(v.Id, v.AttributeId, v.Name))],
-        [.. source.Links.Select(l => new CategoryAttribute(l.CategoryId, l.AttributeId, l.Position, l.IsRequired, l.Kind, l.AllowsMultiple, l.MaxValues, l.ValueIds))]);
+    public static CurrentTree Stored(CategoryTreeSource source)
+    {
+        var first = source.Links.GroupBy(l => l.AttributeId).ToDictionary(g => g.Key, g => g.First());
+        var order = source.Links.GroupBy(l => l.AttributeId).ToDictionary(g => g.Key, g => g.SelectMany(l => l.ValueIds).Distinct().ToList());
+        return new(
+            [.. source.Categories.Select(c => new Category(c.Id, c.ParentId, c.Position, c.Name, c.IsLeaf, c.ImageUrl))],
+            [.. source.Attributes.Select(a => new AttributeDefinition(a.Id, a.Name, first[a.Id].Kind, first[a.Id].AllowsMultiple, first[a.Id].MaxValues, false))],
+            [.. source.Values.Select(v => new AttributeValue(v.Id, v.AttributeId, order[v.AttributeId].IndexOf(v.Id), v.Name))],
+            [.. source.Links.Select(l => new CategoryAttribute(l.CategoryId, l.AttributeId, l.Position, l.IsRequired))]);
+    }
 
     public static IReadOnlySet<int> NoProducts { get; } = new HashSet<int>();
 }

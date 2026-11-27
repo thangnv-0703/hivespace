@@ -15,7 +15,9 @@ public static class CategoryTreeDiff
         var srcCats = source.Categories.ToDictionary(c => c.Id);
         var srcLinks = source.Links.ToDictionary(l => (l.CategoryId, l.AttributeId));
 
-        var problems = FindProblems(curCats, curLinks, srcCats, srcLinks, categoriesWithProducts);
+        var curAttrs = current.Attributes.ToDictionary(a => a.Id);
+        var curValueIds = current.Values.GroupBy(v => v.AttributeId).ToDictionary(g => g.Key, g => g.OrderBy(v => v.Position).Select(v => v.Id).ToList());
+        var problems = FindProblems(curCats, curLinks, curAttrs, curValueIds, srcCats, srcLinks, categoriesWithProducts);
         return problems.Count > 0
             ? new TreeDiffResult(problems, null, LoadCounts.Empty)
             : Build(current, source, curCats, curLinks);
@@ -25,6 +27,7 @@ public static class CategoryTreeDiff
 
     private static List<Problem> FindProblems(
         Dictionary<int, Category> curCats, Dictionary<(int, int), CategoryAttribute> curLinks,
+        Dictionary<int, AttributeDefinition> curAttrs, Dictionary<int, List<int>> curValueIds,
         Dictionary<int, SourceCategory> srcCats, Dictionary<(int, int), SourceLink> srcLinks, IReadOnlySet<int> used)
     {
         var problems = new List<Problem>();
@@ -53,9 +56,11 @@ public static class CategoryTreeDiff
                 continue;
             }
 
-            if (cur.Kind != src.Kind)
+            // Transitional (T10): the list settings are now stored on the attribute; T11 moves these checks to attribute level.
+            var attr = curAttrs[cur.AttributeId];
+            if (attr.Kind != src.Kind)
             {
-                problems.Add(new Problem("attribute.tightened", "attribute", Id(cur.AttributeId), cur.CategoryId, cur.Kind == AttributeKind.List ? "list → free text" : "free text → list"));
+                problems.Add(new Problem("attribute.tightened", "attribute", Id(cur.AttributeId), cur.CategoryId, attr.Kind == AttributeKind.List ? "list → free text" : "free text → list"));
                 continue;
             }
 
@@ -64,16 +69,16 @@ public static class CategoryTreeDiff
                 problems.Add(new Problem("attribute.tightened", "attribute", Id(cur.AttributeId), cur.CategoryId, "optional → required"));
             }
 
-            if (cur.AllowsMultiple && !src.AllowsMultiple)
+            if (attr.AllowsMultiple && !src.AllowsMultiple)
             {
                 problems.Add(new Problem("attribute.tightened", "attribute", Id(cur.AttributeId), cur.CategoryId, "multiple → single"));
             }
-            else if (cur.AllowsMultiple && src.MaxValues < cur.MaxValues)
+            else if (attr.AllowsMultiple && src.MaxValues < attr.MaxValues)
             {
-                problems.Add(new Problem("attribute.tightened", "attribute", Id(cur.AttributeId), cur.CategoryId, $"maximum {cur.MaxValues} → {src.MaxValues}"));
+                problems.Add(new Problem("attribute.tightened", "attribute", Id(cur.AttributeId), cur.CategoryId, $"maximum {attr.MaxValues} → {src.MaxValues}"));
             }
 
-            foreach (var valueId in cur.ValueIds.Except(src.ValueIds))
+            foreach (var valueId in curValueIds.GetValueOrDefault(cur.AttributeId, []).Except(src.ValueIds))
             {
                 problems.Add(new Problem("value.removed", "value", Id(valueId), cur.CategoryId, $"the value of attribute {cur.AttributeId} is stored but not in the file's list"));
             }
@@ -92,6 +97,7 @@ public static class CategoryTreeDiff
     {
         var curAttrs = current.Attributes.ToDictionary(a => a.Id);
         var curValues = current.Values.ToDictionary(v => v.Id);
+        var curValueIds = current.Values.GroupBy(v => v.AttributeId).ToDictionary(g => g.Key, g => g.OrderBy(v => v.Position).Select(v => v.Id).ToList());
 
         var newCategories = new List<(int Depth, Category Category)>();
         var categoryRenames = new List<NameChange>();
@@ -158,13 +164,19 @@ public static class CategoryTreeDiff
             }
         }
 
+        // Transitional (T10): settings come from the attribute's first link and a value's position from the order in which the
+        // links list it; T11 builds attributes and values from attributes.json.
+        var firstLink = source.Links.GroupBy(l => l.AttributeId).ToDictionary(g => g.Key, g => g.First());
+        var valueOrder = source.Links.GroupBy(l => l.AttributeId)
+            .ToDictionary(g => g.Key, g => g.SelectMany(l => l.ValueIds).Distinct().ToList());
         var newAttributes = new List<AttributeDefinition>();
         var attributeRenames = new List<NameChange>();
         foreach (var a in source.Attributes)
         {
             if (!curAttrs.TryGetValue(a.Id, out var cur))
             {
-                newAttributes.Add(new AttributeDefinition(a.Id, a.Name));
+                var l = firstLink[a.Id];
+                newAttributes.Add(new AttributeDefinition(a.Id, a.Name, l.Kind, l.AllowsMultiple, l.MaxValues, false));
             }
             else if (cur.Name != a.Name)
             {
@@ -178,7 +190,7 @@ public static class CategoryTreeDiff
         {
             if (!curValues.TryGetValue(v.Id, out var cur))
             {
-                newValues.Add(new AttributeValue(v.Id, v.AttributeId, v.Name));
+                newValues.Add(new AttributeValue(v.Id, v.AttributeId, valueOrder[v.AttributeId].IndexOf(v.Id), v.Name));
             }
             else if (cur.Name != v.Name)
             {
@@ -198,15 +210,17 @@ public static class CategoryTreeDiff
             pairsTotal += l.ValueIds.Count;
             if (!curLinks.TryGetValue((l.CategoryId, l.AttributeId), out var cur))
             {
-                newLinks.Add(new CategoryAttribute(l.CategoryId, l.AttributeId, l.Position, l.IsRequired, l.Kind, l.AllowsMultiple, l.MaxValues, l.ValueIds));
+                newLinks.Add(new CategoryAttribute(l.CategoryId, l.AttributeId, l.Position, l.IsRequired));
                 linksAdded++;
                 pairsAdded += l.ValueIds.Count;
                 continue;
             }
 
-            var loosened = (cur.IsRequired && !l.IsRequired) || (!cur.AllowsMultiple && l.AllowsMultiple) || l.MaxValues > cur.MaxValues;
+            var attr = curAttrs[l.AttributeId];
+            var stored = curValueIds.GetValueOrDefault(l.AttributeId, []);
+            var loosened = (cur.IsRequired && !l.IsRequired) || (!attr.AllowsMultiple && l.AllowsMultiple) || l.MaxValues > attr.MaxValues;
             var reordered = cur.Position != l.Position;
-            var valuesChanged = !cur.ValueIds.SequenceEqual(l.ValueIds);
+            var valuesChanged = !stored.SequenceEqual(l.ValueIds);
             if (loosened || reordered || valuesChanged)
             {
                 linkUpdates.Add(new LinkUpdate(l.CategoryId, l.AttributeId, l.Position, l.IsRequired, l.AllowsMultiple, l.MaxValues, l.ValueIds));
@@ -218,7 +232,7 @@ public static class CategoryTreeDiff
 
             for (var i = 0; i < l.ValueIds.Count; i++)
             {
-                var index = cur.ValueIds.IndexOf(l.ValueIds[i]);
+                var index = stored.IndexOf(l.ValueIds[i]);
                 if (index < 0)
                 {
                     pairsAdded++;
