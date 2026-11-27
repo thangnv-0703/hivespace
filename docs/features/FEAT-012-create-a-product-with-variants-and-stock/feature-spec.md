@@ -3,7 +3,7 @@
 > Feature from: docs/implementation-plan.md · Epic: E3 Catalog
 > Implements: FR-CAT-001, FR-CAT-002, FR-CAT-004, FR-CAT-005, FR-CAT-020, FR-CAT-022, FR-CAT-023 (applied to products), FR-SHOP-011, FR-INV-001, FR-CUR-003 (product prices) · Uses: FR-CAT-003 (category tree, from FEAT-014), FR-ROLE-003, FR-ROLE-004, FR-LOC-004, FR-LOC-007, FR-CUR-002 · Realizes: UC-005 (main 1, 2, 3, 4; exc 4a, 4b) · Screens: SCR-SEL-004 (create mode)
 > Status: Draft
-> Date: 2026-11-26 (reopened for FEAT-014's open lists and attribute inheritance)
+> Date: 2026-11-27 (reopened for FEAT-014's open lists and attribute inheritance; review fix Q13)
 
 ## 1. Summary
 A seller whose shop is set up (FEAT-010) can list a product: they pick a category, fill in the title, description and the category's attributes, and describe what they sell as one or more variants, each with its own price in dong and its own stock. The product is live as soon as it is created. This is the first step that puts goods on the marketplace; without it buyers have nothing to find, put in a cart or order.
@@ -20,15 +20,16 @@ Acceptance criteria:
 - **AC-012-1.3** Given the category picker, when the seller chooses a category, then only leaf categories can be selected, and category and attribute names show in the seller's language (vi or en).
 - **AC-012-1.4** Given a category with attributes, when the seller fills the form, then each attribute is a pick-from-list or a free-text field as the category defines; a list attribute takes one value, or several up to its maximum, as the category defines; required attributes must be filled and optional ones may stay blank.
 - **AC-012-1.5** Given the seller submits without a required attribute, then the product is not created and that attribute is named as missing.
+- **AC-012-1.6** Given a signed-in user without the Seller role, when they try to create a product, then they are refused as not allowed and nothing is created.
+- **AC-012-1.7** Given a seller, when they create a product, then it always belongs to their own shop; they cannot create a product in another seller's shop.
+- **AC-012-1.8** Given a shop that already has a product titled "Áo thun cotton", when the seller creates another product with the same title, then it is created (titles need not be unique).
 - **AC-012-1.9** Given a list attribute that allows at most 5 values, when the seller submits 6, then the product is not created and the attribute is named with its maximum of 5.
 - **AC-012-1.10** Given a list attribute that does not accept other values, when the seller submits a value that is not in its list, then the product is not created and that attribute is named.
 - **AC-012-1.11** Given a list attribute that accepts other values, when the seller picks a value from its list or types their own text, then the product is created and its page shows the typed text as written.
 - **AC-012-1.12** Given a list attribute that accepts other values, when the seller types text equal to a list value ignoring case and surrounding spaces (for example "samsung " for "Samsung"), then the product holds that list value.
 - **AC-012-1.13** Given a list attribute that accepts other values, when the seller types more than 100 characters or only spaces, then the product is not created and that attribute is named.
 - **AC-012-1.14** Given a leaf with no attributes of its own under a category that has attributes, when the seller fills the form, then the form shows the nearest such ancestor's attributes, with their required/optional rules.
-- **AC-012-1.6** Given a signed-in user without the Seller role, when they try to create a product, then they are refused as not allowed and nothing is created.
-- **AC-012-1.7** Given a seller, when they create a product, then it always belongs to their own shop; they cannot create a product in another seller's shop.
-- **AC-012-1.8** Given a shop that already has a product titled "Áo thun cotton", when the seller creates another product with the same title, then it is created (titles need not be unique).
+- **AC-012-1.15** Given a list attribute that accepts other values and allows at most 5, when the seller submits 3 list values and 2 typed values, then the product is created; when they submit 3 list values and 3 typed values, then the product is not created and the attribute is named with its maximum of 5; a typed value equal to a picked one, ignoring case, counts once.
 
 ### US-012-2: Describe what I sell as variants with price and stock
 As a seller, I want to describe my product's options (such as colour and size) and give each combination its own price and stock, so that buyers can pick exactly what they want and I don't sell what I don't have.
@@ -74,7 +75,7 @@ Acceptance criteria:
 | BR-012-4 | A product has either no options (exactly one variant) or 1–2 options named by the seller; every combination of the option values is a variant with its own price and stock. | FR-CAT-002 / Q3, Q7 |
 | BR-012-5 | Values within one option must differ, ignoring case; two equal values make a duplicate variant combination. | FR-CAT-005 / Q7 |
 | BR-012-6 | Every price is in VND, the only enabled currency, and is kept with its currency. | FR-CUR-001, FR-CUR-003 |
-| BR-012-7 | Each product has exactly one leaf category from the platform's category tree; required attributes of that category must be filled, optional ones may be blank. A list attribute takes one value, or several up to its maximum, as the category defines, and only values from its list unless it accepts other values; then the seller may also type their own text (cleaned of control characters and surrounding spaces, 1–100 characters; text equal to a list value ignoring case counts as that value). A leaf with no attributes of its own uses its nearest ancestor's. | FR-CAT-003, FR-CAT-004, FR-CAT-020, FR-CAT-022, FR-CAT-023 / Q8, Q10, Q11, Q12 |
+| BR-012-7 | Each product has exactly one leaf category from the platform's category tree; required attributes of that category must be filled, optional ones may be blank. A list attribute takes one value, or several up to its maximum, as the category defines, and only values from its list unless it accepts other values; then the seller may also type their own text (cleaned of control characters and surrounding spaces, 1–100 characters; text equal to a list value ignoring case counts as that value). On a list that accepts other values and allows several, the seller may combine list values and typed text; together they count toward the maximum, and entries equal ignoring case count once. A leaf with no attributes of its own uses its nearest ancestor's. | FR-CAT-003, FR-CAT-004, FR-CAT-020, FR-CAT-022, FR-CAT-023 / Q8, Q10, Q11, Q12, Q13 |
 | BR-012-8 | Product titles need not be unique, within a shop or across shops. | Q6 |
 | BR-012-9 | Seller-entered text (title, description, option names and values, free-text attribute values, text typed into a list that accepts other values) is shown as written, not translated; category and attribute names show in vi or en. | FR-LOC-007 |
 | BR-012-10 | A new variant's available stock equals the stock the seller entered; nothing is reserved yet. | FR-INV-001 |
@@ -104,6 +105,7 @@ Acceptance criteria:
 | Q10 | Agent | FEAT-014 added FR-CAT-020 (a list attribute may allow several values, up to a maximum). Amend BR-012-7 and AC-012-1.4 to match? | Yes, amend FEAT-012. | 2026-11-25 | BR-012-7, AC-012-1.4; added AC-012-1.9, AC-012-1.10; status back to Draft |
 | Q11 | Agent | FEAT-014's amendment added FR-CAT-022 (open lists: a list attribute may accept the seller's own text) and FR-CAT-023 (a leaf with no attributes uses its nearest ancestor's). Reopen and amend FEAT-012? | Reopen and amend: typed text is cleaned, capped, shown as written, and text equal to a list value counts as that value. | 2026-11-26 | BR-012-7, BR-012-9; AC-012-1.10; added AC-012-1.11–1.14; status back to Draft |
 | Q12 | Agent | Longest text a seller may type into an open-list attribute? | 100 characters. | 2026-11-26 | BR-012-7; AC-012-1.13 |
+| Q13 | Agent | FEAT-014 Q39: on a list that accepts other values and allows several, may the seller mix picked and typed values? | Yes; together they count toward the maximum; entries equal ignoring case count once. | 2026-11-27 | BR-012-7; added AC-012-1.15 |
 
 Open, deferred: none.
 

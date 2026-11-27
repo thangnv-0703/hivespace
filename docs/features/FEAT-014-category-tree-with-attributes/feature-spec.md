@@ -3,8 +3,8 @@
 > Feature from: docs/implementation-plan.md · Epic: E3 Catalog
 > Implements: FR-CAT-003, FR-CAT-019, FR-CAT-020, FR-CAT-022, FR-CAT-023 (definitions; FEAT-012 applies them to products), FR-LOC-007 (categories, attribute names and values), FR-CAT-021 (top-level category images: the data; FEAT-018 shows them on the home page) · Uses: FR-CAT-004 (definition of required attributes), FR-LOC-008 · Realizes: UC-005 (step 1, what the seller picks from), UC-020 (loading categories), UC-007 (the home page category bar's images) · Screens: none of its own (operator command); the tree is shown in SCR-SEL-004 by FEAT-012 and in SCR-STF-001/002 by FEAT-018
 > Status: Agreed
-> Signed off: 2026-11-26
-> Date: 2026-11-26 (reopened a second time for open lists and attribute inheritance; see amendment-plan.md)
+> Signed off: 2026-11-27
+> Date: 2026-11-27 (second amendment, open lists and inheritance, plus review fixes Q38–Q41; see amendment-plan.md and review-fix-plan.md)
 
 ## 1. Summary
 The operator loads HiveSpace's category tree, with each category's attributes, from a file they prepare. The file is adapted from Tiki's seller category taxonomy and carries Vietnamese and English names, and an image for top-level categories. Long lists such as brand can also accept a seller's own text, and a leaf with no attributes of its own uses its parent's. Every product must sit in exactly one leaf of this tree (FEAT-012), browse and search walk it (FEAT-018), and AI search matches its attribute values (FEAT-019). Later loads can add, rename and loosen, but never break products that already use the tree.
@@ -77,7 +77,7 @@ Acceptance criteria:
 | BR-014-1 | The category tree is exactly what the operator's file contains. The owner prepares the file: no Tiki-only groups (TikiNow, Dori Dori, Tiki Outlet, Logistic, Operation Service and similar), no "Tiki" in names, only attributes that describe the product (no warehouse, delivery area, warranty, gift or dangerous-goods fields). Loading does not filter. The file keeps Tiki's required/optional setting per category. | Q10, Q11, Q15, Q31, Q34 |
 | BR-014-2 | A category without children is a leaf; a product goes in exactly one leaf. | FR-CAT-003 |
 | BR-014-3 | Categories, attributes and list values keep the order of the file, the same in vi and en. | Q4 |
-| BR-014-4 | Every category, attribute and list value has a vi and an en name. A brand or proper name may use the same text in both. English names may be machine-translated and are corrected later by renaming. | FR-LOC-007, FR-CAT-019 / Q6, Q16 |
+| BR-014-4 | Every category, attribute and list value has a vi and an en name. A brand or proper name may use the same text in both. English names may be machine-translated and are corrected later by renaming. | FR-LOC-007, FR-CAT-019 / Q6, Q16, Q41 |
 | BR-014-5 | Each category, attribute and list value has a stable key in the file; the same key on a later load means the same thing. | FR-CAT-019 |
 | BR-014-6 | A load may add categories, attributes and list values, change names, loosen an attribute (required → optional, single → multiple, a higher maximum, a list that starts accepting other values), and add, change or remove a top-level category's image. | FR-CAT-019, FR-CAT-021 / Q3, Q18, Q22, Q28 |
 | BR-014-7 | A load is refused as a whole, naming each problem, if it would: remove or move a category; give a category with products a child; remove an attribute or a list value; tighten an attribute (optional → required, multiple → single, a lower maximum, list ↔ free text, a list that stops accepting other values); add a required attribute to a category with products, including through inheritance (BR-014-10); give a leaf with products attributes of its own that leave out any it inherited; leave a vi or en name missing. | FR-CAT-019 / Q3, Q6, Q8, Q18, Q28, Q33 |
@@ -87,7 +87,7 @@ Acceptance criteria:
 | BR-014-11 | Names and values are cleaned of invisible control characters and surrounding spaces; two values in one list that are then equal, ignoring case, are a problem that refuses the load. | Q9 data review (12,951 values had control characters) |
 | BR-014-12 | The tree is adapted from Tiki's seller category taxonomy, and top-level categories use Tiki's category images, linked from Tiki as the file gives them. The owner has checked and accepts both for this project. | NFR-LEG-002 / Q13, Q20, Q23 |
 | BR-014-13 | Only top-level categories show an image. A top-level category without an image shows a placeholder image; images on deeper categories are not shown. | FR-CAT-021 / Q19, Q21 |
-| BR-014-14 | For a list that accepts other values, the file offers at most 1,000 options: the owner picks the 1,000 most used in Tiki's products and writes them A–Z. Only the file adds options; text a seller types never becomes an option. | FR-CAT-022 / Q26, Q27, Q29 |
+| BR-014-14 | For a list that accepts other values, the first file offers up to 1,000 options, sorted A–Z by vi name (accents ignored). For brand, they are the brands found on the most crawled Tiki products; a brand among Tiki's crawled options keeps its Tiki id, and any other brand gets an owner id from 100,000,000 up. For the other lists, they are Tiki's crawled options. Later loads may add options. Only the file adds options; text a seller types never becomes an option. | FR-CAT-022 / Q26, Q27, Q29, Q38, Q40 |
 
 ## 4. Out of scope
 - **The category picker and attribute form** for sellers — FEAT-012 (SCR-SEL-004).
@@ -140,6 +140,10 @@ Acceptance criteria:
 | Q35 | Agent | File preparation (B1 filter lists, B2 English names by Claude Haiku, accepted as is) stays the owner's work outside the product? | Confirmed. | 2026-11-26 | BR-014-1, BR-014-4 unchanged; §4 |
 | Q36 | Agent | Add FR-CAT-022, FR-CAT-023 and extend FR-CAT-019 as SRS 0.20? | Apply. | 2026-11-26 | SRS 0.20 (§6) |
 | Q37 | Agent | FEAT-012's spec is Agreed and allows only list values; reopen and amend it? | Reopen and amend. | 2026-11-26 | FEAT-012 back to Draft (its Q11, Q12) |
+| Q38 | User | Review of `d5d1958`: the crawl's 1,000 brand options are a slice of Tiki's 132,628, and only 24 are used by the 15,976 crawled products. Which options does brand offer, and is 1,000 a hard limit? | The 1,000 brands found on the most crawled products (today the 24 used crawled brands plus the top 976 bundle brands, about 96% of products), sorted A–Z by vi name with accents ignored; the other open lists keep Tiki's crawled options. The 1,000 limit applies to the first file only; later loads may add options. | 2026-11-27 | BR-014-14 (refines Q26) |
+| Q39 | User | On a list that accepts other values and allows several (author, compatible device: up to 5), can a seller type several values, and do they count toward the maximum? | Mix picked and typed values freely; together they count toward the maximum; entries equal ignoring case count once. | 2026-11-27 | FEAT-012 BR-012-7, AC-012-1.15; SRS 0.21 |
+| Q40 | Agent | Brands not among Tiki's crawled options have no Tiki id. Fetch Tiki's full brand list for their ids, or give them owner ids? | Owner ids from 100,000,000 up, fixed for good; no full fetch. | 2026-11-27 | BR-014-14 |
+| Q41 | Agent | Should proper-name lists be machine-translated? | No: brand, author, compatible device, publisher, distributor and supplier keep the same text in vi and en; colour/pattern, size and the lists that are not open are translated. | 2026-11-27 | BR-014-4 (already allows it) |
 
 Open, deferred: none. The final file (with en, open-list marks and inherited attributes left on parents) is pending from the owner.
 
@@ -158,14 +162,16 @@ Open, deferred: none. The final file (with en, open-list marks and inherited att
 | FR-CAT-019 | Modified | Refusals add "give a leaf that has products its own attributes that leave out any attribute it inherited"; notes add "a list that starts accepting other values" to loosen and "a list that stops accepting other values" to tighten. | 0.20 |
 | UC-005, UC-020 | Traces | Both add FR-CAT-022 and FR-CAT-023. | 0.20 |
 | RTM | New rows | FR-CAT-022 → FEAT-014, FEAT-012; FR-CAT-023 → FEAT-014, FEAT-012. | — |
+| FR-CAT-022 | Notes modified | Notes add: picked and typed values together count toward a multi-value list's maximum; the first category file offers up to 1,000 options per such list, and later loads may add more. | 0.21 |
 
 Impact: FR-CAT-019 modified. `technical-design.md` and `tasks.md` (FEAT-014) and FEAT-012's spec reference it; FEAT-012's spec is reopened. FEAT-018's category filters should follow FR-CAT-023 when it is designed.
 
 ## 7. For detailed design
 - **Category images:** the file's `imageUrl` on top-level categories (Q19–Q23); how the image link reaches the home page, how the placeholder is supplied, and what the design changes (it previously ignored `imageUrl`).
-- **Input format:** the shape of `categories.json` and `category-attributes/chunk-*.json` in `references/hivespace.crawler/crawler-state/tiki-v2` (category key, parent key, name, path; attribute key, name, required, single/multi with maximum, values with key and name), extended by the owner with en names. Design the load around it and agree the exact en fields with the owner.
+- **Input format:** *(replaced by the v2 layout, technical-design §3.4 and D-13: `categories.json`, `attributes.json` with each list defined once, and link-only `category-attributes/*.json`.)*
 - **Open lists (amendment):** how the file marks a list that accepts other values (`allowsCustomValue` proposed), how the contract shows it, and how option lists defined once per attribute are shared across categories (a shared attributes file proposed, to avoid 1.4 GB of repeats); new file problems such as an unknown or duplicate attribute key.
 - **Inheritance (amendment):** how a leaf's effective attributes are worked out from its nearest ancestor (FR-CAT-023, BR-014-10), how the attribute read and the load checks (AC-014-2.7–2.9) use them, and what happens to the attributes of a leaf that gains children.
 - How the tree is exposed to FEAT-012's picker with ~4,000 leaves (search in the picker is a FEAT-012 UI concern) and how other services learn about tree changes.
 - How a load is made all-or-nothing, and how its report is shown to the operator.
+- **FEAT-039:** the product seed maps a bundle product's brand text to an option id through the crawler's `owner-ids.json`, or by cleaned name the way the export does (Q40).
 - **FEAT-012 impact:** done in FEAT-012's spec (BR-012-7, AC-012-1.10–1.14), which is back to Draft and needs its own new sign-off.

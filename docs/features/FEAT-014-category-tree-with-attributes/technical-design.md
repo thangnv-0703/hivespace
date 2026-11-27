@@ -1,11 +1,11 @@
 # Technical Design: FEAT-014 — Category tree with attributes
 
 > Feature from: docs/implementation-plan.md · Epic: E3 Catalog
-> Business spec: [feature-spec.md](feature-spec.md) (Agreed 2026-11-26, second amendment: open lists and inheritance)
+> Business spec: [feature-spec.md](feature-spec.md) (Agreed 2026-11-27: second amendment, open lists and inheritance, with review fixes Q38–Q41)
 > Implements: FR-CAT-003, FR-CAT-019, FR-CAT-020, FR-CAT-022, FR-CAT-023 (definitions; FEAT-012 applies them to products), FR-LOC-007 (categories, attribute names and values), FR-CAT-021 (top-level category images: data and contract; FEAT-018 shows them); supports FR-CAT-004 (required flag), FR-LOC-008, NFR-LEG-002
 > Realizes: UC-020 (main 1–2 for categories, alt 1a), UC-005 (step 1–2: what the seller picks from), UC-007 (the images the home page category bar shows) · Screens: none (operator command); consumed by SCR-SEL-004 (FEAT-012) and SCR-STF-001/002 (FEAT-018)
 > Depends on: walking skeleton (Catalog service, outbox, `GET /v1/categories`, storefront `CategoryBar`)
-> Status: Draft · Date: 2026-11-26 (amended for SRS 0.20: §1, §2, §3.1, §3.4, §3.5, §4, §5, §6, D-11..D-13, §8; tasks T9–T14)
+> Status: Draft · Date: 2026-11-27 (review notes for SRS 0.21: §2, §3.4, §8). 2026-11-26 (amended for SRS 0.20: §1, §2, §3.1, §3.4, §3.5, §4, §5, §6, D-11..D-13, §8; tasks T9–T14)
 > Diagram: [design-flow.html](design-flow.html) (interactive flow diagram, html-flow-diagram)
 
 ## 1. Intent
@@ -41,6 +41,7 @@ Surveyed on 2026-11-25 on `feat/014-category-tree-with-attributes` at `9c49542` 
   - `CategoryTreeDiff` checks tightening and value removal per link. `CategoryReadStore.GetDetailAsync` returns links only for `IsLeaf` categories (D-5).
   - The ports were just split one per file (`PortLayoutTests`, uncommitted on this branch). New ports follow that rule.
   - The re-crawl (`crawler-state/tiki-v2`) shows names and option lists identical across categories; only `isRequired` differs per category. Every attribute's settings can therefore live on the attribute.
+  - Review 2026-11-27: 2 of the 8 open lists are multi-select up to 5 (498 author, 653 compatible device). The crawled 1,000 options per open list are in Tiki's order, not A–Z, and only 24 crawled brands are used by the 15,976 crawled products (feature-spec Q38).
 - **Divergences recorded:** (1) ADR-0018 leaves Catalog's store open; the user chose PostgreSQL on 2026-11-25 (D-1, §8). (2) dev-standards §2 and repo-structure put seeds under `tools/seed/`; the tree loader lives in Catalog instead (D-3). (3) `data/` at the repo root is not in repo-structure.md (§8). (4) UC-020 has no exception flow for a refused load; FR-CAT-019 and the spec define it (§8).
 
 ## 3. API contracts
@@ -116,6 +117,8 @@ Fields the loader ignores: `path`, `productSetId`, `imageUrl` below the top leve
 - No `values` → free text. `inputType`, `maxValueCount` and `allowsCustomValue` are then ignored, and the stored `AllowsCustomValue` is false (BR-014-8).
 - `allowsCustomValue: true` on a list → an open list (FR-CAT-022). The owner marks the 8 long lists first (BR-014-8).
 - An attribute defined but linked to no category is stored all the same; the removal rules then apply to it (BR-014-7).
+- An option id of 100,000,000 or more is an owner id: a brand that is not among Tiki's crawled options (D-9, BR-014-14, feature-spec Q40). The loader treats it like any other key.
+- The loader does not limit how many options a list has. The 1,000 limit is a rule for preparing the first file (BR-014-14, Q38), so later loads may grow a list.
 
 **Report** (stdout; problems also go to the log):
 ```
@@ -493,16 +496,20 @@ Technical criteria:
     - list values by `attribute_values.AttributeId`;
     - `AllowsMultiple` and `MaxValues` from `attributes`;
     - typed text only where `AllowsCustomValue` (FR-CAT-022, D-11), following FEAT-012's BR-012-7: cleaned, 1–100 characters, and matched to a list value ignoring case.
+    - on a multi-value open list, picked and typed values count together toward `MaxValues`, after merging entries equal ignoring case (feature-spec Q39, FEAT-012 AC-012-1.15).
   - Until then, AC-014-2.5, 2.7 and 2.8 are proved at unit level with a fake usage set; their end-to-end check moves with FEAT-012.
 - **FEAT-018 obligations:**
   - Subscribe to `CategoryTreeChanged`.
   - Read the tree through a Catalog read path it designs (gRPC per ADR-0019).
   - Read it once on start, because a subscription created after the first load misses that event (same issue FEAT-010 §8 noted).
 - **The owner's final file is pending** (feature-spec §5). Implementation uses test fixtures and a Tiki-size conversion for TAC-014-5. `data/category-tree/` holds `SOURCE.md` and the format README until the file arrives. A reminder for the owner: a leaf that gains children keeps its attributes in the file (D-5), and lists must not drop values once loaded.
+- **First real load:** reset the local Catalog database (or load from empty) before loading the crawler's real file. The sample's categories 919, 920, 2349, 2350, 2351, 8062 and 8063 are not in the crawl, so loading the real file over the sample is refused as `category.removed`.
+- **FEAT-039 obligation:** the product seed maps a bundle product's brand text to an option id through the crawler's `owner-ids.json`, or by cleaned name the way the export does (feature-spec Q40).
 - **Repository layout:** `data/category-tree/` at the repo root is new. Suggest repo-structure.md add `data/` ("operator data files committed with the code").
 - **Requirements:** UC-020 has no exception flow for a refused load. Suggest the requirements owner add "2a. The file breaks a loading rule: nothing changes and each problem is listed (FR-CAT-019)". Not blocking.
 - **Value list size:**
-  - Open lists keep up to 1,000 values (BR-014-14), and a leaf may have several such lists (brand, colour, size). The worst-case `getCategory` response is therefore a few hundred KB.
+  - The first file offers up to 1,000 values per open list (BR-014-14): brand's are ranked by use on the crawled products, and the other 7 are Tiki's crawled options. A leaf may have several such lists (brand, colour, size), so the worst-case `getCategory` response is a few hundred KB.
+  - Later loads may grow a list past 1,000, so re-measure TAC-014-6 after any big addition.
   - TAC-014-6 must be re-measured with the v2 file (acceptance report, minor finding 3).
   - If it fails, the fix is a technical choice for FEAT-012's picker (for example a per-attribute value search) and needs no business change.
 - **FEAT-018 (filters):** category filters should use the effective attributes (FR-CAT-023). Note this for its design.
