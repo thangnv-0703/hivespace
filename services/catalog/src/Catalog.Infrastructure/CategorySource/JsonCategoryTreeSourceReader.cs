@@ -6,8 +6,9 @@ using Catalog.Domain.Categories;
 namespace Catalog.Infrastructure.CategorySource;
 
 /// <summary>
-/// Reads <c>categories.json</c> and <c>category-attributes/*.json</c> (design §3.4). Reports unreadable or malformed
-/// files with file, line and position; fields the loader does not read are ignored.
+/// Reads the v2 layout (design §3.4, D-13): <c>categories.json</c>, <c>attributes.json</c> (each attribute once, with its list
+/// settings and values) and link-only <c>category-attributes/*.json</c>. Reports unreadable or malformed files with file,
+/// line and position; fields the loader does not read are ignored, so a link cannot redefine a list.
 /// </summary>
 public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
 {
@@ -24,32 +25,40 @@ public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
         }
 
         var categories = new List<RawCategory>();
-        await ReadFileAsync(categoriesFile, "categories.json", problems, cancellationToken, root => ReadCategories(root, "categories.json", categories, problems)).ConfigureAwait(false);
+        await ReadFileAsync(categoriesFile, "categories.json", "categories", problems, cancellationToken, root => ReadCategories(root, "categories.json", categories, problems)).ConfigureAwait(false);
+
+        // No attributes.json means no attributes; any link then names an unknown attribute.
+        var attributes = new List<RawAttributeDefinition>();
+        var attributesFile = Path.Combine(sourcePath, "attributes.json");
+        if (File.Exists(attributesFile))
+        {
+            await ReadFileAsync(attributesFile, "attributes.json", "attributes", problems, cancellationToken, root => ReadDefinitions(root, "attributes.json", attributes, problems)).ConfigureAwait(false);
+        }
 
         var entries = new List<RawCategoryAttributes>();
-        var definitions = new Dictionary<string, RawAttributeDefinition>();
         var attributeDir = Path.Combine(sourcePath, "category-attributes");
         if (Directory.Exists(attributeDir))
         {
             foreach (var file in Directory.EnumerateFiles(attributeDir, "*.json").OrderBy(f => f, StringComparer.Ordinal))
             {
                 var name = $"category-attributes/{Path.GetFileName(file)}";
-                await ReadFileAsync(file, name, problems, cancellationToken, root => ReadAttributeEntries(root, name, entries, definitions, problems)).ConfigureAwait(false);
+                await ReadFileAsync(file, name, "categories", problems, cancellationToken, root => ReadLinkEntries(root, name, entries, problems)).ConfigureAwait(false);
             }
         }
 
-        return new SourceReadResult(problems.Count > 0 ? null : new RawCategoryTree(categories, [.. definitions.Values], entries), problems);
+        return new SourceReadResult(problems.Count > 0 ? null : new RawCategoryTree(categories, attributes, entries), problems);
     }
 
-    private static async Task ReadFileAsync(string path, string name, List<Problem> problems, CancellationToken cancellationToken, Action<JsonElement> read)
+    private static async Task ReadFileAsync(
+        string path, string name, string listProperty, List<Problem> problems, CancellationToken cancellationToken, Action<JsonElement> read)
     {
         try
         {
             await using var stream = File.OpenRead(path);
             using var document = await JsonDocument.ParseAsync(stream, Options, cancellationToken).ConfigureAwait(false);
-            if (document.RootElement.ValueKind != JsonValueKind.Object || !document.RootElement.TryGetProperty("categories", out var list) || list.ValueKind != JsonValueKind.Array)
+            if (document.RootElement.ValueKind != JsonValueKind.Object || !document.RootElement.TryGetProperty(listProperty, out var list) || list.ValueKind != JsonValueKind.Array)
             {
-                problems.Add(new Problem("file.malformed", "file", name, null, "the file must be an object with a \"categories\" array"));
+                problems.Add(new Problem("file.malformed", "file", name, null, $"the file must be an object with a \"{listProperty}\" array"));
                 return;
             }
 
@@ -93,10 +102,40 @@ public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
         }
     }
 
-    // Transitional (T11): the v1 files repeat each attribute per category; the first definition of a key is kept and the
-    // rest become links. T12 reads attributes.json and link-only files instead (D-13).
-    private static void ReadAttributeEntries(
-        JsonElement list, string file, List<RawCategoryAttributes> into, Dictionary<string, RawAttributeDefinition> definitions, List<Problem> problems)
+    private static void ReadDefinitions(JsonElement list, string file, List<RawAttributeDefinition> into, List<Problem> problems)
+    {
+        var index = 0;
+        foreach (var attr in list.EnumerateArray())
+        {
+            var where = $"{file} item {index++}";
+            var values = new List<RawValue>();
+            if (attr.TryGetProperty("values", out var valueList) && valueList.ValueKind == JsonValueKind.Array)
+            {
+                var v = 0;
+                foreach (var value in valueList.EnumerateArray())
+                {
+                    var valueWhere = $"{where} value {v++}";
+                    values.Add(new RawValue(Key(value, "sourceValueId", valueWhere, problems), Name(value, valueWhere, problems)));
+                }
+            }
+            else if (valueList.ValueKind is not (JsonValueKind.Undefined or JsonValueKind.Null))
+            {
+                problems.Add(new Problem("file.malformed", "file", where, null, "\"values\" must be an array"));
+            }
+
+            var max = 0;
+            if (attr.TryGetProperty("maxValueCount", out var m) && m.ValueKind != JsonValueKind.Null && !(m.ValueKind == JsonValueKind.Number && m.TryGetInt32(out max)))
+            {
+                problems.Add(new Problem("file.malformed", "file", where, null, "\"maxValueCount\" must be a whole number"));
+            }
+
+            into.Add(new RawAttributeDefinition(
+                Key(attr, "sourceAttributeId", where, problems), Name(attr, where, problems), Text(attr, "inputType", where, problems), max,
+                Flag(attr, "allowsCustomValue", where, problems), values));
+        }
+    }
+
+    private static void ReadLinkEntries(JsonElement list, string file, List<RawCategoryAttributes> into, List<Problem> problems)
     {
         var index = 0;
         foreach (var entry in list.EnumerateArray())
@@ -106,17 +145,14 @@ public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
             if (entry.TryGetProperty("attributes", out var attrs) && attrs.ValueKind == JsonValueKind.Array)
             {
                 var a = 0;
-                foreach (var attr in attrs.EnumerateArray())
+                foreach (var link in attrs.EnumerateArray())
                 {
-                    var (definition, link) = ReadAttribute(attr, $"{where} attribute {a++}", problems);
-                    links.Add(link);
-                    if (definition.Key is { } key)
-                    {
-                        definitions.TryAdd(key, definition);
-                    }
+                    // Only the key and the required flag are read; name, values or inputType on a link are ignored (D-13).
+                    var linkWhere = $"{where} attribute {a++}";
+                    links.Add(new RawLink(Key(link, "sourceAttributeId", linkWhere, problems), Flag(link, "isRequired", linkWhere, problems)));
                 }
             }
-            else if (entry.TryGetProperty("attributes", out var other) && other.ValueKind != JsonValueKind.Null)
+            else if (attrs.ValueKind is not (JsonValueKind.Undefined or JsonValueKind.Null))
             {
                 problems.Add(new Problem("file.malformed", "file", where, null, "\"attributes\" must be an array"));
             }
@@ -125,37 +161,20 @@ public sealed class JsonCategoryTreeSourceReader : ICategoryTreeSourceReader
         }
     }
 
-    private static (RawAttributeDefinition, RawLink) ReadAttribute(JsonElement attr, string where, List<Problem> problems)
+    /// <summary>An optional boolean; absent or null is false.</summary>
+    private static bool Flag(JsonElement item, string property, string where, List<Problem> problems)
     {
-        var values = new List<RawValue>();
-        if (attr.TryGetProperty("values", out var list) && list.ValueKind == JsonValueKind.Array)
+        if (!item.TryGetProperty(property, out var value))
         {
-            var v = 0;
-            foreach (var value in list.EnumerateArray())
-            {
-                var valueWhere = $"{where} value {v++}";
-                values.Add(new RawValue(Key(value, "sourceValueId", valueWhere, problems), Name(value, valueWhere, problems)));
-            }
-        }
-        else if (list.ValueKind != JsonValueKind.Undefined && list.ValueKind != JsonValueKind.Null)
-        {
-            problems.Add(new Problem("file.malformed", "file", where, null, "\"values\" must be an array"));
+            return false;
         }
 
-        var required = attr.TryGetProperty("isRequired", out var r) && r.ValueKind is JsonValueKind.True;
-        if (attr.TryGetProperty("isRequired", out var rr) && rr.ValueKind is not (JsonValueKind.True or JsonValueKind.False or JsonValueKind.Null))
+        if (value.ValueKind is not (JsonValueKind.True or JsonValueKind.False or JsonValueKind.Null))
         {
-            problems.Add(new Problem("file.malformed", "file", where, null, "\"isRequired\" must be true or false"));
+            problems.Add(new Problem("file.malformed", "file", where, null, $"\"{property}\" must be true or false"));
         }
 
-        var max = 0;
-        if (attr.TryGetProperty("maxValueCount", out var m) && m.ValueKind != JsonValueKind.Null && !(m.ValueKind == JsonValueKind.Number && m.TryGetInt32(out max)))
-        {
-            problems.Add(new Problem("file.malformed", "file", where, null, "\"maxValueCount\" must be a whole number"));
-        }
-
-        var key = Key(attr, "sourceAttributeId", where, problems);
-        return (new RawAttributeDefinition(key, Name(attr, where, problems), Text(attr, "inputType", where, problems), max, false, values), new RawLink(key, required));
+        return value.ValueKind == JsonValueKind.True;
     }
 
     private static RawName Name(JsonElement item, string where, List<Problem> problems)

@@ -5,7 +5,7 @@ namespace Catalog.Application.Abstractions;
 /// <summary>What the file reader found: the raw tree, or the problems that stopped it (design §3.5, first block).</summary>
 public sealed record SourceReadResult(RawCategoryTree? Tree, IReadOnlyList<Problem> Problems);
 
-/// <summary>Reads the load directory (categories.json and category-attributes/*.json).</summary>
+/// <summary>Reads the load directory (categories.json, attributes.json and category-attributes/*.json; v2 layout, D-13).</summary>
 public interface ICategoryTreeSourceReader
 {
     Task<SourceReadResult> ReadAsync(string sourcePath, CancellationToken cancellationToken);

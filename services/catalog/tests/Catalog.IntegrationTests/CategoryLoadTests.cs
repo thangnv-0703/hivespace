@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Catalog.Application.Abstractions;
 using Catalog.Application.Features.Categories;
 using Catalog.Domain.Categories;
@@ -22,7 +23,9 @@ public sealed class CategoryLoadTests(PostgresFixture postgres) : IClassFixture<
     {
         public CatalogDbContext Db { get; } = new(new DbContextOptionsBuilder<CatalogDbContext>().UseNpgsql(connection).Options);
 
-        public Task<LoadReport> LoadAsync(string fixture)
+        public Task<LoadReport> LoadAsync(string fixture) => LoadFromAsync(Fixture(fixture));
+
+        public Task<LoadReport> LoadFromAsync(string sourcePath)
         {
             ICategoryTreeStore store = new EfCategoryTreeStore(Db);
             if (wrapStore is not null)
@@ -31,7 +34,7 @@ public sealed class CategoryLoadTests(PostgresFixture postgres) : IClassFixture<
             }
 
             var handler = new LoadCategoryTreeHandler(new JsonCategoryTreeSourceReader(), store, new EmptyCategoryUsage(), new TestOutbox(Db), TimeProvider.System);
-            return handler.HandleAsync(Fixture(fixture), Ct);
+            return handler.HandleAsync(sourcePath, Ct);
         }
 
         public ValueTask DisposeAsync() => Db.DisposeAsync();
@@ -323,6 +326,180 @@ public sealed class CategoryLoadTests(PostgresFixture postgres) : IClassFixture<
         Assert.Equal(1, await OutboxCountAsync(connection));
         Assert.Equal(17, (await RowCountsAsync(connection)).Categories);
     }
+
+    [Fact]
+    public async Task Ac_2_3_opening_a_list_is_stored()
+    {
+        var (connection, rig) = await NewRigAsync();
+        await using var _ = rig;
+        await rig.LoadAsync("valid-v1");
+
+        var report = await rig.LoadAsync("v2-open-list");
+
+        Assert.Equal(LoadOutcome.Applied, report.Outcome);
+        Assert.Equal(1, report.Counts.Attributes.Loosened);
+        await using var read = new Rig(connection);
+        Assert.True((await read.Db.Attributes.AsNoTracking().SingleAsync(a => a.Id == 1001, Ct)).AllowsCustomValue);
+        Assert.Equal(2, await OutboxCountAsync(connection));
+    }
+
+    [Fact]
+    public async Task Ac_2_4_closing_a_list_is_refused_and_nothing_changes()
+    {
+        var (connection, rig) = await NewRigAsync();
+        await using var _ = rig;
+        await rig.LoadAsync("v2-open-list");
+        var before = await RowCountsAsync(connection);
+
+        var report = await rig.LoadAsync("v2-close-list");
+
+        Assert.Equal(LoadOutcome.Refused, report.Outcome);
+        var problem = Assert.Single(report.Problems);
+        Assert.Equal(("attribute.tightened", "1001", "accepts other values → does not"), (problem.Code, problem.Key, problem.Detail));
+        await using var read = new Rig(connection);
+        Assert.True((await read.Db.Attributes.AsNoTracking().SingleAsync(a => a.Id == 1001, Ct)).AllowsCustomValue);
+        Assert.Equal(before, await RowCountsAsync(connection));
+        Assert.Equal(1, await OutboxCountAsync(connection));
+    }
+
+    [Fact]
+    public async Task Ac_2_9_a_leaf_that_inherits_can_get_own_links_with_every_inherited_attribute()
+    {
+        var (connection, rig) = await NewRigAsync();
+        await using var _ = rig;
+        await rig.LoadAsync("inherit");
+
+        var report = await rig.LoadAsync("inherit-own-superset");
+
+        Assert.Equal(LoadOutcome.Applied, report.Outcome);
+        Assert.Equal(3, report.Counts.AttributeLinks.Added);
+        await using var read = new Rig(connection);
+        Assert.Equal([1001, 1010, 1011], await read.Db.CategoryAttributes.Where(l => l.CategoryId == 7076).OrderBy(l => l.Position).Select(l => l.AttributeId).ToListAsync(Ct));
+        Assert.False(await read.Db.CategoryAttributes.AnyAsync(l => l.CategoryId == 7077, Ct));
+    }
+
+    [Fact]
+    public async Task A_leaf_without_products_may_get_own_links_that_leave_out_an_inherited_attribute()
+    {
+        // With products this is attribute.inherited_dropped (AC-014-2.8, unit-tested); FEAT-012 brings products.
+        var (_, rig) = await NewRigAsync();
+        await using var _r = rig;
+        await rig.LoadAsync("inherit");
+
+        Assert.Equal(LoadOutcome.Applied, (await rig.LoadAsync("inherit-own-subset")).Outcome);
+    }
+
+    [Fact]
+    public async Task Values_that_swap_positions_are_stored_in_the_new_order()
+    {
+        var (connection, rig) = await NewRigAsync();
+        await using var _ = rig;
+        await rig.LoadAsync("valid-v1");
+        var reordered = CopyFixture("valid-v1", dir => EditJson(Path.Combine(dir, "attributes.json"), root =>
+        {
+            var values = Attribute(root, "1001")["values"]!.AsArray();
+            var reversed = values.Select(v => v!.DeepClone()).Reverse().ToList();
+            values.Clear();
+            reversed.ForEach(values.Add);
+        }));
+
+        var report = await rig.LoadFromAsync(reordered);
+
+        Assert.Equal(LoadOutcome.Applied, report.Outcome);
+        Assert.Equal(4, report.Counts.ListValues.Reordered);
+        await using var read = new Rig(connection);
+        Assert.Equal([5004, 5003, 5002, 5001], await read.Db.AttributeValues.Where(v => v.AttributeId == 1001).OrderBy(v => v.Position).Select(v => v.Id).ToListAsync(Ct));
+    }
+
+    [Fact]
+    public async Task Tac_10_links_without_attributes_json_are_each_unknown()
+    {
+        var (connection, rig) = await NewRigAsync();
+        await using var _ = rig;
+        var source = CopyFixture("valid-v1", dir => File.Delete(Path.Combine(dir, "attributes.json")));
+
+        var report = await rig.LoadFromAsync(source);
+
+        Assert.Equal(LoadOutcome.Refused, report.Outcome);
+        Assert.Equal(19, report.Problems.Count);
+        Assert.All(report.Problems, p => Assert.Equal("attributes.unknown", p.Code));
+        Assert.Equal(0, (await RowCountsAsync(connection)).Categories);
+    }
+
+    [Fact]
+    public async Task Tac_10_a_non_boolean_allowsCustomValue_is_malformed_with_file_and_item()
+    {
+        var (_, rig) = await NewRigAsync();
+        await using var _r = rig;
+        var source = CopyFixture("valid-v1", dir => EditJson(Path.Combine(dir, "attributes.json"), root => Attribute(root, "1002")["allowsCustomValue"] = "yes"));
+
+        var problem = Assert.Single((await rig.LoadFromAsync(source)).Problems);
+
+        Assert.Equal(("file.malformed", "attributes.json item 1"), (problem.Code, problem.Key));
+        Assert.Contains("allowsCustomValue", problem.Detail, StringComparison.Ordinal);
+    }
+
+    [Fact]
+    public async Task Tac_10_an_attribute_defined_twice_is_a_duplicate_key()
+    {
+        var (_, rig) = await NewRigAsync();
+        await using var _r = rig;
+        var source = CopyFixture("valid-v1", dir => EditJson(Path.Combine(dir, "attributes.json"), root =>
+            root["attributes"]!.AsArray().Add(Attribute(root, "1005").DeepClone())));
+
+        var problem = Assert.Single((await rig.LoadFromAsync(source)).Problems);
+
+        Assert.Equal(("attribute.duplicate_key", "1005"), (problem.Code, problem.Key));
+    }
+
+    [Fact]
+    public async Task Tac_10_old_format_fields_on_a_link_are_ignored()
+    {
+        var (connection, rig) = await NewRigAsync();
+        await using var _ = rig;
+        var source = CopyFixture("valid-v1", dir => EditJson(Path.Combine(dir, "category-attributes", "01-phones-accessories.json"), root =>
+        {
+            var link = root["categories"]![0]!["attributes"]![0]!.AsObject();
+            link["name"] = new JsonObject { ["vi"] = "Khác", ["en"] = "Other" };
+            link["inputType"] = "Checkbox";
+            link["maxValueCount"] = 9;
+            link["values"] = new JsonArray(new JsonObject { ["sourceValueId"] = "9999", ["name"] = new JsonObject { ["vi"] = "X", ["en"] = "X" } });
+        }));
+
+        var report = await rig.LoadFromAsync(source);
+
+        Assert.Equal(LoadOutcome.Applied, report.Outcome);
+        await using var read = new Rig(connection);
+        var brand = await read.Db.Attributes.AsNoTracking().SingleAsync(a => a.Id == 1001, Ct);
+        Assert.Equal(("Thương hiệu", false, 1), (brand.Name.Vi, brand.AllowsMultiple, brand.MaxValues));
+        Assert.Null(await read.Db.AttributeValues.FindAsync([9999], Ct));
+        Assert.Equal((17, 7, 24, 19), await RowCountsAsync(connection) is var c ? (c.Categories, c.Attributes, c.Values, c.Links) : default);
+    }
+
+    /// <summary>A copy of a fixture in a fresh temporary directory, changed by <paramref name="change"/>.</summary>
+    private static string CopyFixture(string name, Action<string> change)
+    {
+        var target = Path.Combine(Path.GetTempPath(), "category-tree-" + Guid.NewGuid().ToString("N"));
+        foreach (var file in Directory.EnumerateFiles(Fixture(name), "*", SearchOption.AllDirectories))
+        {
+            var copy = Path.Combine(target, Path.GetRelativePath(Fixture(name), file));
+            Directory.CreateDirectory(Path.GetDirectoryName(copy)!);
+            File.Copy(file, copy);
+        }
+
+        change(target);
+        return target;
+    }
+
+    private static void EditJson(string path, Action<JsonNode> edit)
+    {
+        var root = JsonNode.Parse(File.ReadAllText(path))!;
+        edit(root);
+        File.WriteAllText(path, root.ToJsonString());
+    }
+
+    private static JsonObject Attribute(JsonNode root, string key) =>
+        root["attributes"]!.AsArray().Single(a => (string?)a!["sourceAttributeId"] == key)!.AsObject();
 
     private sealed class FailingStore(ICategoryTreeStore inner) : ICategoryTreeStore
     {
