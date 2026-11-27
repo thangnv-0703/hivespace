@@ -319,6 +319,29 @@ public sealed class CategoryTreeDiffTests
         Assert.Equal(("attribute.required_on_used_category", "103", 4), (problem.Code, problem.Key, problem.CategoryId));
     }
 
+    [Theory]
+    [InlineData("4")] // the used leaf gets its own links
+    [InlineData("3")] // a nearer ancestor gets links
+    public void Ac_2_9_an_inherited_optional_attribute_that_becomes_required_for_a_used_leaf_is_refused(string provider)
+    {
+        var file = Inherit(Entry("2", L("100", true), L("101")), Entry(provider, L("100", true), L("101", true)));
+
+        var problem = Assert.Single(Diff(InheritBaseline(), file, 4).Problems);
+
+        Assert.Equal(("attribute.tightened", "101", 4), (problem.Code, problem.Key, problem.CategoryId));
+        Assert.False(Diff(InheritBaseline(), file).IsRefused);
+    }
+
+    [Fact]
+    public void Ac_2_9_a_flip_to_required_on_the_same_provider_is_reported_once()
+    {
+        var file = Inherit(Entry("2", L("100", true), L("101", true)));
+
+        var problem = Assert.Single(Diff(InheritBaseline(), file, 4).Problems);
+
+        Assert.Equal(("attribute.tightened", "101", 2), (problem.Code, problem.Key, problem.CategoryId));
+    }
+
     [Fact]
     public void Images_can_be_added_changed_and_removed()
     {

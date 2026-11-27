@@ -98,7 +98,8 @@ public static class CategoryTreeDiff
     /// <summary>
     /// A category with products keeps what its products were filled against: its effective attributes in the file must not
     /// gain a required attribute (AC-014-2.7), and, when they come from another category than before, must keep every
-    /// attribute it had (AC-014-2.8). A superset passes (AC-014-2.9).
+    /// attribute it had (AC-014-2.8) without making an optional one required (BR-014-7). Otherwise a superset passes
+    /// (AC-014-2.9).
     /// </summary>
     private static void FindUsedLeafProblems(CurrentTree current, CategoryTreeSource source, IReadOnlySet<int> used, List<Problem> problems)
     {
@@ -127,9 +128,17 @@ public static class CategoryTreeDiff
                 problems.Add(new Problem("attribute.required_on_used_category", "attribute", Id(link.AttributeId), leaf, $"a new required attribute on a category with products{via}"));
             }
 
-            // With the same provider, a missing attribute is already reported as attribute.removed.
+            // With the same provider, the link checks already report a missing or newly required attribute.
             if (cur.FromCategoryId != src.FromCategoryId)
             {
+                var wasOptional = cur.Links.Where(l => !l.IsRequired).Select(l => l.AttributeId).ToHashSet();
+                foreach (var link in src.Links.Where(l => l.IsRequired && wasOptional.Contains(l.AttributeId)))
+                {
+                    problems.Add(new Problem(
+                        "attribute.tightened", "attribute", Id(link.AttributeId), leaf,
+                        $"optional → required: category {leaf} has products and its attributes would come from category {Id(src.FromCategoryId)} instead of {Id(cur.FromCategoryId)}"));
+                }
+
                 foreach (var link in cur.Links.Where(l => !has.Contains(l.AttributeId)))
                 {
                     problems.Add(new Problem(

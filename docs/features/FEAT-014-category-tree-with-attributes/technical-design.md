@@ -167,7 +167,7 @@ Problems (refused loads only), one per line:
 | `category.child_under_used_leaf` | a category with products gets a child (named: the parent) | BR-014-7, AC-014-2.5 |
 | `attribute.removed` | a stored category–attribute link absent (names the category), or a stored attribute definition absent from `attributes.json` | BR-014-7 |
 | `value.removed` | a stored value absent from its attribute's list | BR-014-7 |
-| `attribute.tightened` | on the attribute: multiple → single, a lower maximum, list → text or text → list, accepts other values → does not; on a link: optional → required (the detail names which) | BR-014-7, FR-CAT-019 |
+| `attribute.tightened` | on the attribute: multiple → single, a lower maximum, list → text or text → list, accepts other values → does not; on a link: optional → required; on a used leaf whose effective attributes come from a different category, an attribute it had as optional becomes required (names the leaf) (the detail names which) | BR-014-7, FR-CAT-019 |
 | `attribute.required_on_used_category` | a used leaf (one with products) gets a required attribute among its effective attributes that it did not have, whether through its own new link or through an ancestor it inherits from (names the leaf) | BR-014-7, AC-014-2.7 |
 | `attribute.inherited_dropped` (new) | a used leaf's effective attributes come from a different category in the file than in the store (it got its own links, or a nearer ancestor got links), and an attribute it had is missing (names the leaf and each attribute) | BR-014-7, AC-014-2.8 |
 
@@ -336,7 +336,8 @@ Reads: `GET /v1/categories[?parentId]` → `ListCategoriesHandler` → `ICategor
   - **Each leaf in `categoriesWithProducts`:** it computes the effective attributes of the stored tree (`cur`) and of the source (`src`).
     - `src` contains a required attribute that is not in `cur` → `attribute.required_on_used_category`, naming the leaf. This replaces the old own-link-only rule and covers inheritance (AC-014-2.7).
     - `cur.FromCategoryId != src.FromCategoryId` and an attribute of `cur` is missing from `src` → `attribute.inherited_dropped`, naming the leaf and each attribute (AC-014-2.8). With the same provider, a missing attribute is already reported as `attribute.removed`, so it is not reported twice.
-    - A superset passes (AC-014-2.9).
+    - `cur.FromCategoryId != src.FromCategoryId` and an attribute that is optional in `cur` is required in `src` → `attribute.tightened`, naming the leaf and the attribute (BR-014-7). With the same provider, the link check already reports it.
+    - Otherwise a superset passes (AC-014-2.9).
 - **`CategoryTreeDiff.Build`** (amended): `ChangeSet` replaces `LinkUpdates` with `AttributeUpdates(Id, AllowsMultiple, MaxValues, AllowsCustomValue)`, `LinkUpdates(CategoryId, AttributeId, Position, IsRequired)` and `ValueRepositions(Id, Position)`. `LoadCounts` gains the `attribute links` row (§3.4).
 
 **Application**
@@ -376,7 +377,7 @@ Reads: `GET /v1/categories[?parentId]` → `ListCategoriesHandler` → `ICategor
 | AC-014-2.6 | Unit + integration: a child under a leaf without products → APPLIED; the old leaf has `IsLeaf = false`, `GET /v1/categories/{old}` shows `isLeaf: false` and `attributes: []`; the child is a leaf and, having no links of its own, shows the old leaf's attributes (D-12). |
 | AC-014-2.7 | Unit with `categoriesWithProducts = {leaf}`: a new required link on the leaf → `attribute.required_on_used_category`, and the same link as optional → applied. With the leaf inheriting from parent P, a new required link on P → `attribute.required_on_used_category` naming the leaf, and as optional → applied. End-to-end once FEAT-012 lands (§8). |
 | AC-014-2.8 | Unit with `categoriesWithProducts = {leaf}`, where the leaf inherits P's attributes {A, B}: the file gives the leaf its own links {A} → `attribute.inherited_dropped`, naming the leaf and B. The file gives a nearer ancestor links {A} → the same problem. End-to-end once FEAT-012 lands (§8). |
-| AC-014-2.9 | Unit, same setup: the leaf gets its own links {A, B, C} (C optional) → applied, and its effective attributes become its own. With C required → `attribute.required_on_used_category`. Integration (no products): `inherit` then `inherit-own-superset` → APPLIED. |
+| AC-014-2.9 | Unit, same setup: the leaf gets its own links {A, B, C} (C optional) → applied, and its effective attributes become its own. With C required → `attribute.required_on_used_category`. The leaf's own links, or a nearer ancestor's, that make an inherited optional B required → `attribute.tightened`, naming the leaf; a flip on the same provider is reported once. Integration (no products): `inherit` then `inherit-own-superset` → APPLIED. |
 | AC-014-3.1 | Contract: `GET /v1/categories` items each carry `name.vi` and `name.en` equal to the seeded names (the client shows the one for its language, as `CategoryBar` does). |
 | AC-014-3.2 | Contract: children of a seeded parent come back ordered by `position`, which is the seeded file order, with the same order whatever `Accept-Language` is sent. |
 | AC-014-3.3 | Contract: each item has `isLeaf`; a leaf's `GET /v1/categories?parentId={leaf}` returns `[]`. FEAT-012 rejects a non-leaf product category (its design). |
